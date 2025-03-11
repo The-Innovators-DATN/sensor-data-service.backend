@@ -59,9 +59,10 @@ def normalize_parent(title):
     """
     Remove the prefix 'Thể loại:Sông tại ' from the given title if it exists.
     """
-    prefix = "Thể loại:Sông tại "
-    if title.startswith(prefix):
-        return title[len(prefix):].strip()
+    prefix_province = "Thể loại:Sông tại "
+    prefix_river_basin = "Thể loại:"
+    if title.startswith(prefix_river_basin):
+        return title[len(prefix_river_basin):].strip()
     return title
 
 def process_category_page(url, parent=""):
@@ -88,11 +89,11 @@ def process_category_page(url, parent=""):
             "water_body": water_body,
             "description": description
             })
-            # print({
-            # "catchment": normalized_parent,
-            # "water_body": water_body,
-            # "description": description
-            # })
+            print({
+            "river_basin": normalized_parent,
+            "water_body": water_body,
+            "description": description
+            })
         # Check if the linked page is itself a category page
         child_soup = fetch_soup(link["url"])
         if child_soup and child_soup.find("div", class_="mw-category mw-category-columns"):
@@ -100,11 +101,12 @@ def process_category_page(url, parent=""):
             results.extend(process_category_page(link["url"], parent=water_body))
     return results
 
-main_url = "https://vi.wikipedia.org/wiki/Th%E1%BB%83_lo%E1%BA%A1i:S%C3%B4ng_Vi%E1%BB%87t_Nam_theo_t%E1%BB%89nh_th%C3%A0nh"
+# bentre_wb= "https://vi.wikipedia.org/wiki/Th%E1%BB%83_lo%E1%BA%A1i:S%C3%B4ng_t%E1%BA%A1i_B%E1%BA%BFn_Tre"
+# province_wb = "https://vi.wikipedia.org/wiki/Th%E1%BB%83_lo%E1%BA%A1i:S%C3%B4ng_Vi%E1%BB%87t_Nam_theo_t%E1%BB%89nh_th%C3%A0nh"
+river_basin_water_body = "https://vi.wikipedia.org/wiki/Th%E1%BB%83_lo%E1%BA%A1i:H%E1%BB%87_th%E1%BB%91ng_s%C3%B4ng_Vi%E1%BB%87t_Nam"
+all_results = process_category_page(river_basin_water_body)
 
-all_results = process_category_page(main_url)
-
-csv_file = "../dataset/water_bodies.csv"
+csv_file = "../../dataset/river_basin_water_bodies.csv"
 with open(csv_file, "w", newline="", encoding="utf-8") as f:
     fieldnames = ["catchment", "water_body", "description"]
     writer = csv.DictWriter(f, fieldnames=fieldnames)
