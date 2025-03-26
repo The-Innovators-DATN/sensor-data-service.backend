@@ -12,12 +12,14 @@ CREATE TABLE station_metrics.messages_local ON CLUSTER StationCluster
 (
     value Float32,
     metric String,
-    station_id Int64,
-    timestamp DateTime64(0)
+    station_id Int,
+    predicted_value Float32,
+    local_error Float32,
+    datetime DateTime64(0)
 )
 ENGINE = MergeTree()
-PARTITION BY toYYYYMM(timestamp)  -- Optional, for partitioning by month
-ORDER BY (station_id, timestamp); -- Define order for efficient querying
+PARTITION BY toYYYYMM(datetime)  -- Optional, for partitioning by month
+ORDER BY (station_id, datetime, metric); -- Define order for efficient querying
 
 -- Create a distributed table referencing the local table on all nodes
 -- The table will be created on all nodes and will be used to query the local table on all nodes
@@ -28,8 +30,10 @@ ENGINE = Distributed(StationCluster, station_metrics, messages_local, station_id
 CREATE TABLE station_metrics.sensors_to_kafka ON CLUSTER StationCluster (
     value Float32,
     metric String,
-    station_id Int64,
-    timestamp DateTime64(0)
+    station_id Int,
+    predicted_value Float32,
+    local_error Float32,
+    datetime DateTime64(0)
 ) ENGINE = Kafka
 SETTINGS kafka_broker_list = '160.191.49.50:9092',
          kafka_topic_list = 'sensor_data',

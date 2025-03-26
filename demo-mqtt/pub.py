@@ -2,6 +2,7 @@
 
 import random
 import time
+from datetime import datetime
 import os
 import json
 from paho.mqtt import client as mqtt_client
@@ -41,7 +42,7 @@ def publish(client):
             "metric_value": random.uniform(0,100),
             "metric": random.choice(metric_list),
             "station_id": random.randint(0, 10),
-            "timestampt": time.time()
+            "datetime": datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         }
         result = client.publish(topic, json.dumps(msg))
         # result: [0, 1]
