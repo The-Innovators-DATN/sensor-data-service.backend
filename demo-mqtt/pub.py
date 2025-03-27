@@ -12,7 +12,7 @@ load_dotenv()
 
 broker = os.getenv('MQTT_BROKER_HOST')
 port = int(os.getenv('MQTT_BROKER_PORT'))
-topic = "t/test"
+topic = "stations/data"
 # Generate a Client ID with the publish prefix.
 client_id = f'publish-12'
 username = os.getenv('MQTT_BROKER_USERNAME')
