@@ -8,8 +8,18 @@ python -m virtualenv scrapper-env
 python3 -m virtualenv scrapper-env
 pip install -r requirements.txt
 
+apt update 
+apt install golang
 
+wget https://go.dev/dl/go1.24.1.linux-amd64.tar.gz
+sudo tar -C /usr/local -xzf go1.24.1.linux-amd64.tar.gz
+export PATH=$PATH:/usr/local/go/bin
+export PATH=/usr/local/go/bin:$PATH
+source ~/.bashrc   # or ~/.zshrc
 
+go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
 
-wget https://dl.influxdata.com/telegraf/releases/telegraf_1.30.2-1_amd64.deb
-sudo dpkg -i telegraf_1.30.2-1_amd64.deb
+go mod init github.com/The-Innovators-DATN/sensor-data-service.backend
+go mod tidy
+go get github.com/joho/godotenv
+go run cmd/station/main.go

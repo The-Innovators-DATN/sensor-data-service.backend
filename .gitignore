@@ -1,0 +1,62 @@
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Output of `go build`
+/bin/
+/build/
+/dist/
+main
+
+# Go workspace stuff
+go.work
+go.work.sum
+
+# Vendor directory (unless you commit vendor on purpose)
+/vendor/
+
+# Dependency directories
+/pkg/mod/
+/.gopath/
+
+# IDE/editor stuff
+.vscode/
+.idea/
+*.swp
+
+# Logs & debug
+*.log
+*.trace
+*.prof
+*.tmp
+.DS_Store
+
+# Env & secrets
+.env
+.env.*
+*.key
+*.pem
+
+# Coverage & test
+coverage.*
+*.coverprofile
+*.cov
+*.testresult
+
+# Go tools
+/go.sum
+/go.mod
+
+# GitHub Codespaces, JetBrains, etc.
+*.code-workspace
+*.iml
+*.ipr
+*.iws
+
+# Local-only data
+.local/
