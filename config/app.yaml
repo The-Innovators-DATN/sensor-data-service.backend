@@ -1,0 +1,4 @@
+name: StationService
+env: development
+port: 8080
+debug: true

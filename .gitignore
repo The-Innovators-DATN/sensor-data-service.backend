@@ -18,6 +18,7 @@ go.work
 go.work.sum
 
 # Vendor directory (unless you commit vendor on purpose)
+/vendor/
 vendor/github.com/*
 # Dependency directories
 /pkg/mod/

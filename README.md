@@ -22,4 +22,15 @@ go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
 go mod init github.com/The-Innovators-DATN/sensor-data-service.backend
 go mod tidy
 go get github.com/joho/godotenv
+
+go get github.com/spf13/viper
+go get github.com/ClickHouse/clickhouse-go/v2
+
+
 go run cmd/station/main.go
+
+
+go mod vendor
+
+go build -mod=vendor
+

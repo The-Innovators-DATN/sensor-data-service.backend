@@ -1,0 +1,7 @@
+# Clickhouse configuration file
+addr: localhost:9000
+user: default
+password: ''
+name: default
+secure: false
+compress: true

@@ -1,0 +1,8 @@
+# S3 config
+# This file is used to configure the S3 storage for the station
+# The S3 storage is used to store the station data
+region: us-east-1
+bucket: station-data
+access_key_id: YOUR_ACCESS_KEY_ID
+secret_access_key: YOUR_SECRET_ACCESS_KEY
+endpoint: https://s3.amazonaws.com
