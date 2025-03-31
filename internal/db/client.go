@@ -1,15 +1,15 @@
 package db
 
 import (
+	"context"
 	"fmt"
 	"log"
 
-	"github.com/jmoiron/sqlx"
-	_ "github.com/lib/pq"
+	"github.com/jackc/pgx/v5"
 	"sensor-data-service.backend/config" // đổi thành tên module của bạn
 )
 
-func InitDB(cfg config.DBConfig) (*sqlx.DB, error) {
+func InitDB(ctx context.Context, cfg config.DBConfig) (*pgx.Conn, error) {
 	// Validate config
 	if cfg.Host == "" || cfg.User == "" || cfg.Password == "" || cfg.Name == "" {
 		return nil, fmt.Errorf("missing database config values")
@@ -20,13 +20,12 @@ func InitDB(cfg config.DBConfig) (*sqlx.DB, error) {
 		cfg.Host, cfg.Port, cfg.User, cfg.Password, cfg.Name)
 
 	// Connect
-	db, err := sqlx.Connect(cfg.Driver, dbURL)
+	db, err := pgx.Connect(ctx, dbURL)
 	if err != nil {
 		log.Fatalf("DB connection failed: %v", err)
 		return nil, err
 	}
 
-	db.SetMaxOpenConns(25)
 	log.Println("Connected to database")
 	return db, nil
 }

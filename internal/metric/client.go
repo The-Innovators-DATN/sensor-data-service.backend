@@ -1,4 +1,4 @@
-package db
+package metric
 
 import (
 	"context"
@@ -35,4 +35,7 @@ func InitClickHouse(cfg config.ClickhouseConfig) (clickhouse.Conn, error) {
 
 	log.Println("Connected to ClickHouse")
 	return conn, nil
+}
+func PingClient(conn clickhouse.Conn) error {
+	return conn.Ping(context.Background())
 }

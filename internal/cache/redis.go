@@ -1,10 +1,11 @@
-package db
+package cache
 
 // Package db provides functions to initialize and manage Redis connections.
 
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/redis/go-redis/v9"
 	"sensor-data-service.backend/config"
@@ -24,4 +25,10 @@ func InitRedis(cfg config.RedisConfig) (*redis.Client, error) {
 	}
 	fmt.Println("Connected to Redis")
 	return rdb, nil
+}
+
+func PingRedis(client *redis.Client) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	return client.Ping(ctx).Err()
 }
