@@ -1,7 +1,7 @@
 # redis config
 
-host: localhost
-port: 6379
+add: localhost:6379
 password: secret
 db: 0
+protocol: 2
 # pool_size: 10

@@ -2,55 +2,75 @@ package main
 
 import (
 	"log"
+	"net"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"sensor-data-service.backend/config"
 	"sensor-data-service.backend/internal/db"
 )
 
 func main() {
+	// Load config
 	cfg, err := config.LoadAllConfigs("config")
 	if err != nil {
-		log.Fatalf("Error loading config: %v", err)
+		log.Fatalf("failed to load config: %v", err)
 	}
-	log.Println("App:", cfg.App)
-	log.Println("Clickhouse:", cfg.Clickhouse)
-	database, err := db.InitDB(cfg.DB) // inject config.DB
+
+	// Init Postgres
+	postgresDB, err := db.InitDB(cfg.DB)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("failed to connect to Postgres: %v", err)
 	}
-	defer database.Close()
-	clickhouse, err := db.InitClickHouse(cfg.Clickhouse) // inject config.Clickhouse
+	defer postgresDB.Close()
+
+	// Init ClickHouse
+	clickhouseDB, err := db.InitClickHouse(cfg.Clickhouse)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("failed to connect to ClickHouse: %v", err)
 	}
-	defer clickhouse.Close()
-	// if err := godotenv.Load("../.env"); err != nil {
-	// 	panic("Error loading .env file")
-	// }
+	defer clickhouseDB.Close()
 
-	// cfg, err := config.LoadAllConfigs("../configs")
-	// if err != nil {
-	// 	panic(err)
-	// }
+	// Init Redis
+	redisClient, err := db.InitRedis(cfg.Redis)
+	if err != nil {
+		log.Fatalf("failed to connect to Redis: %v", err)
+	}
+	defer redisClient.Close()
 
-	// dbConn, err := db.InitDB()
-	// if err != nil {
-	// 	panic(err)
-	// }
-	// defer dbConn.Close()
+	// TCP listener
+	listener, err := net.Listen("tcp", cfg.App.HostPort)
+	if err != nil {
+		log.Fatalf("failed to listen on %s: %v", cfg.App.HostPort, err)
+	}
+	defer listener.Close()
 
-	// listener, err := net.Listen("tcp", ":8080")
-	// if err != nil {
-	// 	panic(err)
-	// }
-	// defer listener.Close()
+	log.Printf("🚀 Server started on %s", cfg.App.HostPort)
 
-	// // Start the server
-	// for {
-	// 	conn, err := listener.Accept()
-	// 	if err != nil {
-	// 		panic(err)
-	// 	}
-	// 	go handleConnection(conn)
-	// }
+	// Graceful shutdown handler
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	go func() {
+		<-quit
+		log.Println("Shutting down server...")
+		listener.Close()
+		os.Exit(0)
+	}()
+
+	// Start accepting connections
+	for {
+		conn, err := listener.Accept()
+		if err != nil {
+			log.Printf("accept error: %v", err)
+			continue
+		}
+		go handleConnection(conn)
+	}
+}
+
+func handleConnection(conn net.Conn) {
+	defer conn.Close()
+	// Your handler logic
+	log.Printf("New connection from %s", conn.RemoteAddr())
 }

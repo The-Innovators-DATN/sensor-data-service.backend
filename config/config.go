@@ -13,7 +13,7 @@ type Config struct {
 	App        AppConfig
 	DB         DBConfig
 	Clickhouse ClickhouseConfig
-	// Redis RedisConfig
+	Redis      RedisConfig
 }
 
 func LoadAllConfigs(dir string) (*Config, error) {
@@ -25,7 +25,7 @@ func LoadAllConfigs(dir string) (*Config, error) {
 		"app":        &cfg.App,
 		"database":   &cfg.DB,
 		"clickhouse": &cfg.Clickhouse,
-		// "redis": &cfg.Redis,
+		"redis":      &cfg.Redis,
 	}
 
 	for name, target := range files {
@@ -48,6 +48,9 @@ func LoadAllConfigs(dir string) (*Config, error) {
 		}
 		if name == "clickhouse" {
 			overrideClickhouseEnv(&cfg.Clickhouse, viper)
+		}
+		if name == "redis" {
+			overrideRedisEnv(&cfg.Redis, viper)
 		}
 	}
 	return cfg, nil
@@ -82,5 +85,20 @@ func overrideClickhouseEnv(dbCfg *ClickhouseConfig, v *viper.Viper) {
 	}
 	if val := os.Getenv("CLICKHOUSE_NAME"); val != "" {
 		dbCfg.Name = val
+	}
+}
+
+func overrideRedisEnv(dbCfg *RedisConfig, v *viper.Viper) {
+	if val := os.Getenv("REDIS_ADDR"); val != "" {
+		dbCfg.Addr = val
+	}
+	if val := os.Getenv("REDIS_PASSWORD"); val != "" {
+		dbCfg.Password = val
+	}
+	if val := os.Getenv("REDIS_DB"); val != "" {
+		dbCfg.DB = v.GetInt("REDIS_DB")
+	}
+	if val := os.Getenv("REDIS_PROTOCOL"); val != "" {
+		dbCfg.Protocol = v.GetInt("REDIS_PROTOCOL")
 	}
 }
