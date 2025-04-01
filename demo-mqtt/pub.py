@@ -40,11 +40,22 @@ def publish(client):
         #TypeError: payload must be a string, bytearray, int, float or None.
         metric = random.choice(metric_list)
         msg = {
-            "value": random.uniform(0,100),
-            "metric": metric,
             "station_id": random.randint(0, 10),
             "datetime": datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-            "unit": "C" if metric == "temperature" else "hPa" if metric == "pressure" else "m/s" if metric == "wind_speed" else "°" if metric == "wind_direction" else "mm" if metric == "rainfall" else "%"
+            "sensors": [
+                {
+                    "sensor_id": random.randint(0, 10),
+                    "value": random.uniform(0,100),
+                    "metric": metric,
+                    "unit": "C" if metric == "temperature" else "hPa" if metric == "pressure" else "m/s" if metric == "wind_speed" else "°" if metric == "wind_direction" else "mm" if metric == "rainfall" else "%"
+                },
+                {
+                    "sensor_id": random.randint(0, 10),
+                    "value": random.uniform(0,100),
+                    "metric": metric,
+                    "unit": "C" if metric == "temperature" else "hPa" if metric == "pressure" else "m/s" if metric == "wind_speed" else "°" if metric == "wind_direction" else "mm" if metric == "rainfall" else "%"
+                }
+            ]
         }
         result = client.publish(topic, json.dumps(msg))
         # result: [0, 1]
