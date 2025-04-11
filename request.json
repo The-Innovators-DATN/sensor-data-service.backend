@@ -1,0 +1,27 @@
+{
+    "chart_type": "line_chart",
+    "time_range": {
+      "from": "2000-12-01T00:00:00Z",
+      "to": "2014-12-31T23:59:59Z"
+    },
+    "forecast": {
+      "enabled": true,
+      "time_step": 3600,
+      "horizon": 5
+    },
+    "series": [
+      {
+        "ref_id": "A",
+        "target_type": 1,
+        "target_id": 287,
+        "metric_id": 12
+      },
+      {
+        "ref_id": "B",
+        "target_type": 1,
+        "target_id": 288,
+        "metric_id": 12
+      }
+    ]
+  }
+  

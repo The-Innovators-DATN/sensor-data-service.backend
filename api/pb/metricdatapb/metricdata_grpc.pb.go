@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.5.1
 // - protoc             v3.12.4
-// source: metric_data.proto
+// source: metricdata.proto
 
 package metricdatapb
 
@@ -117,5 +117,5 @@ var MetricDataService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "metric_data.proto",
+	Metadata: "metricdata.proto",
 }

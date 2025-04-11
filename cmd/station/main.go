@@ -14,19 +14,21 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
+	metricpb "sensor-data-service.backend/api/pb/metricdatapb"
 	paramterpb "sensor-data-service.backend/api/pb/parameterpb"
 	"sensor-data-service.backend/config"
 
 	"sensor-data-service.backend/infrastructure/cache"
 	"sensor-data-service.backend/infrastructure/db"
 	"sensor-data-service.backend/infrastructure/metric"
+	"sensor-data-service.backend/internal/metricdata"
 	"sensor-data-service.backend/internal/parameter"
 )
 
 func main() {
 	// Load config
 	ctx := context.Background()
-
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
 	cfg, err := config.LoadAllConfigs("config")
 	if err != nil {
 		log.Fatalf("failed to load config: %v", err)
@@ -59,7 +61,7 @@ func main() {
 
 	CHStore := metric.NewClickhouseStore(clickhouseDB)
 
-	sql := `SELECT * FROM messages_local LIMIT 10`
+	sql := `SELECT * FROM sensors_to_kafka_mv LIMIT 10`
 	rows, err = CHStore.ExecQuery(ctx, sql)
 	if err != nil {
 		log.Fatal("Query failed:", err)
@@ -130,6 +132,10 @@ func main() {
 	// Register gRPC server
 	paramterpb.RegisterParameterServiceServer(grpcServer, paramGrpcHandler)
 
+	metricRepo := metricdata.NewMetricDataRepository(CHStore, PGStore, RedisStore)
+	metricService := metricdata.NewMetricDataService(metricRepo)
+	metricGrpcHandler := metricdata.NewMetricDataHandler(metricService)
+	metricpb.RegisterMetricDataServiceServer(grpcServer, metricGrpcHandler)
 	// (Optional) enable reflection để dùng grpcurl debug
 	reflection.Register(grpcServer)
 
@@ -159,6 +165,7 @@ func main() {
 			log.Fatalf("Failed to serve HTTP gateway: %v", err)
 		}
 	}()
+
 	// Graceful shutdown handling
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
