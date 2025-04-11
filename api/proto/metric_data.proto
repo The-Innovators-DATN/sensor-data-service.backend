@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+package metricdata;
+
+message MetricSeriesRequest {
+  repeated int32 metric_ids = 1;
+  repeated int32 station_ids = 2;
+  string chart_type = 3;
+  string from = 4;
+  string to = 5;
+  bool anomaly_detection = 6;
+  float local_error_threshold = 7;
+  bool forecast = 8;
+  int32 horizon = 9;
+  int32 time_step = 10;
+}
+
+message MetricPoint {
+  string datetime = 1;
+  float value = 2;
+  float predicted = 3;
+  float local_error = 4;
+  float incremental_loss = 5;
+  bool anomaly = 6;
+}
+
+message MetricSeries {
+  int32 station_id = 1;
+  int32 metric_id = 2;
+  string name = 3;
+  string unit = 4;
+  repeated MetricPoint values = 5;
+}
+
+message MetricSeriesResponse {
+  repeated MetricSeries series = 1;
+}
+
+service MetricDataService {
+  rpc GetMetricSeries(MetricSeriesRequest) returns (MetricSeriesResponse);
+}

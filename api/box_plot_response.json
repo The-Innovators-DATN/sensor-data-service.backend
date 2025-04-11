@@ -1,0 +1,30 @@
+{
+    "status": "success",
+    "message": "OK",
+    "data": [
+      {
+        "group": "2025-04-01",
+        "min": 6.4,
+        "q1": 6.8,
+        "median": 7.1,
+        "q3": 7.4,
+        "max": 7.8,
+        "outliers": [6.0, 8.2]
+      },
+      {
+        "group": "2025-04-02",
+        "min": 6.5,
+        "q1": 6.9,
+        "median": 7.2,
+        "q3": 7.5,
+        "max": 7.9,
+        "outliers": []
+      }
+    ],
+    "meta": {
+      "group_by": "day",
+      "unit": "pH",
+      "metric_name": "pH"
+    }
+  }
+  

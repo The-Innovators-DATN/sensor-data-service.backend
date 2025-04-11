@@ -18,6 +18,11 @@ export PATH=/usr/local/go/bin:$PATH
 source ~/.bashrc   # or ~/.zshrc
 
 go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway@latest
+
+export PATH="$PATH:$(go env GOPATH)/bin"
+
 
 go mod init github.com/The-Innovators-DATN/sensor-data-service.backend
 go get github.com/joho/godotenv
@@ -40,3 +45,22 @@ go mod vendor
 
 go build -mod=vendor
 
+protoc -I api/proto \
+  --go_out=paths=import:api \
+  --go-grpc_out=paths=import:api \
+  --grpc-gateway_out=import:api \
+  api/proto/parameter.proto
+
+
+wget https://github.com/fullstorydev/grpcurl/releases/download/v1.8.9/grpcurl_1.8.9_linux_x86_64.tar.gz
+tar -xzf grpcurl_1.8.9_linux_x86_64.tar.gz
+chmod +x grpcurl
+sudo mv grpcurl /usr/local/bin/
+
+
+grpcurl -plaintext localhost:8080 list
+
+
+curl -X POST http://localhost:8000/parameter.ParameterService/ListParameters \
+  -H "Content-Type: application/grpc-web+proto" \
+  --data-binary @grpc_request.bin

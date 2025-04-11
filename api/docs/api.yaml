@@ -1,0 +1,509 @@
+openapi: 3.0.3
+info:
+  title: Monitoring Dashboard API
+  version: v0
+  description: >
+    RESTful API for managing environmental monitoring dashboards, panels, stations, and starred views.
+    Optimized for large-scale time series data and observability use cases.
+servers:
+  - url: /api/v0
+
+paths:
+  /auth/login:
+    post:
+      summary: Login and get access token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '200':
+          description: JWT access token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+
+  /dashboards:
+    get:
+      summary: List all dashboards
+      parameters:
+        - $ref: '#/components/parameters/PaginationLimit'
+        - $ref: '#/components/parameters/PaginationOffset'
+      responses:
+        '200':
+          description: List of dashboards
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Dashboard'
+
+    post:
+      summary: Create a new dashboard
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DashboardInput'
+      responses:
+        '201':
+          description: Dashboard created
+
+  /dashboards/{dashboard_id}:
+    get:
+      summary: Get dashboard by ID
+      parameters:
+        - name: dashboard_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Dashboard detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Dashboard'
+
+    put:
+      summary: Update dashboard by ID
+      parameters:
+        - name: dashboard_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DashboardInput'
+      responses:
+        '200':
+          description: Dashboard updated
+
+    delete:
+      summary: Delete dashboard by ID
+      parameters:
+        - name: dashboard_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Deleted
+
+  /dashboards/{dashboard_id}/panels:
+    get:
+      summary: List all panels in a dashboard
+      parameters:
+        - name: dashboard_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of panels
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Panel'
+
+    post:
+      summary: Add a new panel to a dashboard
+      parameters:
+        - name: dashboard_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PanelInput'
+      responses:
+        '201':
+          description: Panel added
+
+  /panels/{panel_id}:
+    put:
+      summary: Update a panel
+      parameters:
+        - name: panel_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PanelInput'
+      responses:
+        '200':
+          description: Panel updated
+
+    delete:
+      summary: Delete a panel
+      parameters:
+        - name: panel_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Panel deleted
+
+  /starred:
+    get:
+      summary: Get list of starred dashboards
+      responses:
+        '200':
+          description: List of starred dashboards
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Dashboard'
+
+    post:
+      summary: Star a dashboard
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                dashboard_id:
+                  type: string
+      responses:
+        '200':
+          description: Starred
+
+  /stations:
+    get:
+      summary: List all stations
+      parameters:
+        - $ref: '#/components/parameters/PaginationLimit'
+        - $ref: '#/components/parameters/PaginationOffset'
+      responses:
+        '200':
+          description: List of stations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Station'
+
+    post:
+      summary: Add a new station
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StationInput'
+      responses:
+        '201':
+          description: Station created
+
+  /stations/{station_id}:
+    get:
+      summary: Get station by ID
+      parameters:
+        - name: station_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Station details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Station'
+
+    put:
+      summary: Update station
+      parameters:
+        - name: station_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StationInput'
+      responses:
+        '200':
+          description: Station updated
+
+    delete:
+      summary: Disable a station
+      parameters:
+        - name: station_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Station disabled
+
+  /metrics:
+    get:
+      summary: List all available metrics
+      responses:
+        '200':
+          description: List of metrics
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Metric'
+
+    post:
+      summary: Add new metric definition
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MetricInput'
+      responses:
+        '201':
+          description: Metric added
+
+  /data:
+    get:
+      summary: Get monitoring data
+      parameters:
+        - name: station_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: metric_ids
+          in: query
+          required: true
+          schema:
+            type: array
+            items:
+              type: string
+            style: form
+            explode: false
+        - name: start_time
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+        - name: end_time
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: Time series data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        timestamp:
+                          type: string
+                          format: date-time
+                        values:
+                          type: object
+                          additionalProperties:
+                            type: number
+
+components:
+  schemas:
+    Dashboard:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    DashboardInput:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+
+    Panel:
+      type: object
+      properties:
+        id:
+          type: string
+        dashboard_id:
+          type: string
+        title:
+          type: string
+        chart_type:
+          type: string
+        metrics:
+          type: array
+          items:
+            type: object
+            properties:
+              metric_id:
+                type: string
+              alias:
+                type: string
+              color:
+                type: string
+
+    PanelInput:
+      type: object
+      required:
+        - title
+        - chart_type
+        - metrics
+      properties:
+        title:
+          type: string
+        chart_type:
+          type: string
+        metrics:
+          type: array
+          items:
+            type: object
+            properties:
+              metric_id:
+                type: string
+              alias:
+                type: string
+              color:
+                type: string
+
+    Station:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        location:
+          type: string
+        status:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    StationInput:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+        location:
+          type: string
+        status:
+          type: string
+
+    Metric:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        unit:
+          type: string
+        description:
+          type: string
+
+    MetricInput:
+      type: object
+      required:
+        - name
+        - unit
+      properties:
+        name:
+          type: string
+        unit:
+          type: string
+        description:
+          type: string
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    PaginationLimit:
+      name: limit
+      in: query
+      description: Max number of items to return
+      schema:
+        type: integer
+        default: 50
+        maximum: 1000
+    PaginationOffset:
+      name: offset
+      in: query
+      description: Number of items to skip
+      schema:
+        type: integer
+        default: 0
+
+security:
+  - BearerAuth: []

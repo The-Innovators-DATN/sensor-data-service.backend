@@ -1,0 +1,65 @@
+syntax = "proto3";
+
+package dashboard;
+
+message TimeRange {
+  string from = 1;
+  string to = 2;
+}
+
+message MetricQuery {
+  repeated int32 metric_ids = 1;
+  repeated int32 station_ids = 2;
+  string chart_type = 3;
+  TimeRange time_range = 4;
+  bool forecast = 5;
+  int32 horizon = 6;
+  int32 time_step = 7;
+  bool anomaly_detection = 8;
+  float local_error_threshold = 9;
+}
+
+message Panel {
+  string id = 1;
+  string name = 2;
+  repeated MetricQuery queries = 3;
+  string chart_type = 4;
+  string color = 5;
+}
+
+message DashboardConfig {
+  string uid = 1;
+  string title = 2;
+  string refresh_interval = 3;
+  repeated Panel panels = 4;
+}
+
+message StarDashboard {
+  string dashboard_id = 1;
+  int32 user_id = 2;
+  string name = 3;
+}
+
+service DashboardService {
+  rpc GetDashboard(DashboardRequest) returns (DashboardConfig);
+  rpc SaveDashboard(DashboardConfig) returns (SaveResult);
+  rpc ListStarredDashboards(UserRequest) returns (StarredDashboards);
+  rpc StarDashboard(StarDashboard) returns (SaveResult);
+}
+
+message DashboardRequest {
+  string uid = 1;
+}
+
+message UserRequest {
+  int32 user_id = 1;
+}
+
+message SaveResult {
+  bool success = 1;
+  string message = 2;
+}
+
+message StarredDashboards {
+  repeated StarDashboard dashboards = 1;
+}

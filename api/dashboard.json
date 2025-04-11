@@ -1,0 +1,70 @@
+{
+    "uid": "dashboard-ho-tay",
+    "title": "Monitoring Hồ Tây",
+    "time": {
+      "from": "now-7d",
+      "to": "now"
+    },
+    "refresh": "300s",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Nhiệt độ theo thời gian",
+        "type": "line_chart",
+        "gridPos": { "x": 0, "y": 0, "w": 6, "h": 4 },
+        "targets": [
+          {
+            "refId": "A",
+            "target_type": "station",
+            "target_id": "1",
+            "metric_id": "1",
+            "display_name": "Nhiệt độ trạm A",
+            "color": "#ff5733"
+          },
+          {
+            "refId": "B",
+            "target_type": "water_body",
+            "target_id": "2",
+            "metric_id": "1",
+            "display_name": "Nhiệt độ hồ Tây",
+            "color": "#33c1ff"
+          }
+        ],
+        "options": {
+          "forecast": {
+            "enabled": true,
+            "time_step": "1h",
+            "horizon": 24
+          },
+          "anomaly_detection": {
+            "enabled": true,
+            "mode": "point",
+            "threshold": 0.8,
+            "anomaly_color": "#ff0000"
+          }
+        }
+      },
+      {
+        "id": 2,
+        "title": "Phân bố độ pH theo ngày",
+        "type": "box_plot",
+        "gridPos": { "x": 6, "y": 0, "w": 6, "h": 4 },
+        "targets": [
+          {
+            "refId": "C",
+            "target_type": "catchment",
+            "target_id": "1",
+            "metric_id": "2",
+            "display_name": "pH lưu vực X",
+            "color": "#8e44ad",
+            "api": "/api/metrics/distribution?target_type=catchment&target_id=1&metric_id=2"
+          }
+        ],
+        "options": {
+          "group_by": "day",
+          "show_outliers": true
+        }
+      }
+    ]
+  }
+  

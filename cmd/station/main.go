@@ -5,14 +5,22 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
+
+	paramterpb "sensor-data-service.backend/api/pb/parameterpb"
 	"sensor-data-service.backend/config"
-	"sensor-data-service.backend/internal/cache"
-	"sensor-data-service.backend/internal/db"
-	"sensor-data-service.backend/internal/metric"
+
+	"sensor-data-service.backend/infrastructure/cache"
+	"sensor-data-service.backend/infrastructure/db"
+	"sensor-data-service.backend/infrastructure/metric"
+	"sensor-data-service.backend/internal/parameter"
 )
 
 func main() {
@@ -76,34 +84,88 @@ func main() {
 	log.Println("Cached value:", val)
 	defer RedisStore.Delete(ctx, "station:123:last_reading")
 	// Print the value
-	// TCP listener
-	listener, err := net.Listen("tcp", cfg.App.HostPort)
+	// // TCP listener
+	// listener, err := net.Listen("tcp", cfg.App.HostPort)
+	// if err != nil {
+	// 	log.Fatalf("failed to listen on %s: %v", cfg.App.HostPort, err)
+	// }
+	// defer listener.Close()
+
+	// log.Printf("Server started on %s", cfg.App.HostPort)
+
+	// // Graceful shutdown handler
+	// quit := make(chan os.Signal, 1)
+	// signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	// go func() {
+	// 	<-quit
+	// 	log.Println("Shutting down server...")
+	// 	listener.Close()
+	// 	os.Exit(0)
+	// }()
+
+	// // Start accepting connections
+	// for {
+	// 	conn, err := listener.Accept()
+	// 	if err != nil {
+	// 		log.Printf("accept error: %v", err)
+	// 		continue
+	// 	}
+	// 	go handleConnection(conn)
+	// }
+
+	// TCP listener cho gRPC
+	grpcListener, err := net.Listen("tcp", cfg.App.HostPort)
 	if err != nil {
 		log.Fatalf("failed to listen on %s: %v", cfg.App.HostPort, err)
 	}
-	defer listener.Close()
+	defer grpcListener.Close()
 
-	log.Printf("Server started on %s", cfg.App.HostPort)
+	grpcServer := grpc.NewServer()
 
-	// Graceful shutdown handler
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	// Tạo repository & service & handler cho parameter
+	paramRepo := parameter.NewRepository(PGStore)
+	paramService := parameter.NewService(paramRepo)
+	paramGrpcHandler := parameter.NewGrpcHandler(paramService)
+	// Register gRPC server
+	paramterpb.RegisterParameterServiceServer(grpcServer, paramGrpcHandler)
+
+	// (Optional) enable reflection để dùng grpcurl debug
+	reflection.Register(grpcServer)
+
+	// Graceful shutdown
 	go func() {
-		<-quit
-		log.Println("Shutting down server...")
-		listener.Close()
-		os.Exit(0)
+		log.Printf("gRPC server listening at %s", cfg.App.HostPort)
+		if err := grpcServer.Serve(grpcListener); err != nil {
+			log.Fatalf("failed to serve gRPC server: %v", err)
+		}
 	}()
 
-	// Start accepting connections
-	for {
-		conn, err := listener.Accept()
+	// === REST Gateway ===
+	go func() {
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+
+		mux := runtime.NewServeMux()
+		opts := []grpc.DialOption{grpc.WithInsecure()}
+
+		err := paramterpb.RegisterParameterServiceHandlerFromEndpoint(ctx, mux, "localhost:8080", opts)
 		if err != nil {
-			log.Printf("accept error: %v", err)
-			continue
+			log.Fatalf("Failed to start HTTP gateway: %v", err)
 		}
-		go handleConnection(conn)
-	}
+
+		log.Println("REST gateway listening on :8081")
+		if err := http.ListenAndServe(":8081", mux); err != nil {
+			log.Fatalf("Failed to serve HTTP gateway: %v", err)
+		}
+	}()
+	// Graceful shutdown handling
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+
+	log.Println("Shutting down gRPC server...")
+	grpcServer.GracefulStop()
+
 }
 
 func handleConnection(conn net.Conn) {
