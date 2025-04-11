@@ -3,6 +3,7 @@ syntax = "proto3";
 package parameter;
 
 import "google/api/annotations.proto";
+
 option go_package = "pb/parameterpb;parameterpb";
 
 service ParameterService {
@@ -34,13 +35,6 @@ service ParameterService {
     };
   }
 }
-// service ParameterService {
-//   rpc ListParameters (Empty) returns (ParameterListResponse);
-//   rpc GetParameter (ParameterRequest) returns (ParameterResponse);
-//   rpc CreateParameter (ParameterCreateRequest) returns (ParameterResponse);
-//   rpc UpdateParameter (ParameterUpdateRequest) returns (ParameterResponse);
-//   rpc DeleteParameter (ParameterRequest) returns (DeleteResponse);
-// }
 
 message Empty {}
 

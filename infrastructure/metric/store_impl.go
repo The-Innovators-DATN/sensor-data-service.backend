@@ -27,12 +27,12 @@ func (s *store) ExecQuery(ctx context.Context, sql string, args ...any) ([]map[s
 	cols := rows.Columns()
 	colTypes := rows.ColumnTypes()
 
-	results := make([]map[string]interface{}, 0)
+	var results []map[string]interface{}
 
 	for rows.Next() {
 		values := make([]interface{}, len(cols))
 
-		// cấp đúng loại biến để scan
+		// Gán đúng loại cho từng cột để scan
 		for i, ct := range colTypes {
 			dbType := ct.DatabaseTypeName()
 
@@ -74,6 +74,14 @@ func (s *store) ExecQuery(ctx context.Context, sql string, args ...any) ([]map[s
 	}
 
 	return results, nil
+}
+
+func (s *store) Exec(ctx context.Context, sql string, args ...any) error {
+	_, err := s.conn.Exec(ctx, sql, args...)
+	if err != nil {
+		return fmt.Errorf("exec error: %w", err)
+	}
+	return nil
 }
 
 func deref(ptr interface{}) interface{} {
