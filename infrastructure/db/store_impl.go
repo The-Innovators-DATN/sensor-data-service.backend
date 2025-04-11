@@ -46,3 +46,10 @@ func (s *store) ExecQuery(ctx context.Context, sql string, args ...any) ([]map[s
 
 	return results, nil
 }
+func (s *store) Exec(ctx context.Context, query string, args ...any) error {
+	_, err := s.conn.Exec(ctx, query, args...)
+	if err != nil {
+		return fmt.Errorf("exec error: %w", err)
+	}
+	return nil
+}

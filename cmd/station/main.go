@@ -123,7 +123,8 @@ func main() {
 	grpcServer := grpc.NewServer()
 
 	// Tạo repository & service & handler cho parameter
-	paramRepo := parameter.NewRepository(PGStore)
+	paramRepo := parameter.NewRepository(PGStore, RedisStore)
+
 	paramService := parameter.NewService(paramRepo)
 	paramGrpcHandler := parameter.NewGrpcHandler(paramService)
 	// Register gRPC server
