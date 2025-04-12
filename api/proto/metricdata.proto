@@ -48,8 +48,8 @@ message MetricSeriesRequest {
 message MetricPoint {
   string datetime = 1;
   float value = 2;
-  float local_error = 3;
-  // bool anomaly = 3;
+  // float local_error = 3;
+  bool trend_anomaly = 3;
 }
 
 message SeriesData {

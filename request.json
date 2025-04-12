@@ -13,13 +13,13 @@
       {
         "ref_id": "A",
         "target_type": 1,
-        "target_id": 287,
+        "target_id": 420,
         "metric_id": 12
       },
       {
         "ref_id": "B",
         "target_type": 1,
-        "target_id": 288,
+        "target_id": 421,
         "metric_id": 12
       }
     ]

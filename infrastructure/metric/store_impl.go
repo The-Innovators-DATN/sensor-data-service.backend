@@ -55,6 +55,9 @@ func (s *store) ExecQuery(ctx context.Context, sql string, args ...any) ([]map[s
 			case dbType == "DateTime" || strings.HasPrefix(dbType, "DateTime64"):
 				var v time.Time
 				values[i] = &v
+			case dbType == "Bool":
+				var v bool
+				values[i] = &v
 			default:
 				var v interface{}
 				values[i] = &v

@@ -102,7 +102,7 @@ protoc \
   --go_out=paths=source_relative:api/pb/metricdatapb/ \
   --go-grpc_out=paths=source_relative:api/pb/metricdatapb/\
   --grpc-gateway_out=paths=source_relative:api/pb/metricdatapb/ \
-  api/proto/metric_data.proto
+  api/proto/metricdata.proto
 ```
 ---
 

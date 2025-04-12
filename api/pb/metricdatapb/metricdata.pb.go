@@ -327,10 +327,11 @@ func (x *MetricSeriesRequest) GetSeries() []*SeriesSelector {
 }
 
 type MetricPoint struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Datetime      string                 `protobuf:"bytes,1,opt,name=datetime,proto3" json:"datetime,omitempty"`
-	Value         float32                `protobuf:"fixed32,2,opt,name=value,proto3" json:"value,omitempty"`
-	LocalError    float32                `protobuf:"fixed32,3,opt,name=local_error,json=localError,proto3" json:"local_error,omitempty"` // bool anomaly = 3;
+	state    protoimpl.MessageState `protogen:"open.v1"`
+	Datetime string                 `protobuf:"bytes,1,opt,name=datetime,proto3" json:"datetime,omitempty"`
+	Value    float32                `protobuf:"fixed32,2,opt,name=value,proto3" json:"value,omitempty"`
+	// float local_error = 3;
+	TrendAnomaly  bool `protobuf:"varint,3,opt,name=trend_anomaly,json=trendAnomaly,proto3" json:"trend_anomaly,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -379,11 +380,11 @@ func (x *MetricPoint) GetValue() float32 {
 	return 0
 }
 
-func (x *MetricPoint) GetLocalError() float32 {
+func (x *MetricPoint) GetTrendAnomaly() bool {
 	if x != nil {
-		return x.LocalError
+		return x.TrendAnomaly
 	}
-	return 0
+	return false
 }
 
 type SeriesData struct {
@@ -539,12 +540,11 @@ const file_metricdata_proto_rawDesc = "" +
 	"\n" +
 	"time_range\x18\x02 \x01(\v2\x15.metricdata.TimeRangeR\ttimeRange\x126\n" +
 	"\bforecast\x18\x03 \x01(\v2\x1a.metricdata.ForecastConfigR\bforecast\x122\n" +
-	"\x06series\x18\x05 \x03(\v2\x1a.metricdata.SeriesSelectorR\x06series\"`\n" +
+	"\x06series\x18\x05 \x03(\v2\x1a.metricdata.SeriesSelectorR\x06series\"d\n" +
 	"\vMetricPoint\x12\x1a\n" +
 	"\bdatetime\x18\x01 \x01(\tR\bdatetime\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\x02R\x05value\x12\x1f\n" +
-	"\vlocal_error\x18\x03 \x01(\x02R\n" +
-	"localError\"\xfc\x01\n" +
+	"\x05value\x18\x02 \x01(\x02R\x05value\x12#\n" +
+	"\rtrend_anomaly\x18\x03 \x01(\bR\ftrendAnomaly\"\xfc\x01\n" +
 	"\n" +
 	"SeriesData\x12\x15\n" +
 	"\x06ref_id\x18\x01 \x01(\tR\x05refId\x127\n" +

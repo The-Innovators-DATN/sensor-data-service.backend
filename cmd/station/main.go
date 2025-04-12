@@ -61,15 +61,15 @@ func main() {
 
 	CHStore := metric.NewClickhouseStore(clickhouseDB)
 
-	sql := `SELECT * FROM sensors_to_kafka_mv LIMIT 10`
-	rows, err = CHStore.ExecQuery(ctx, sql)
-	if err != nil {
-		log.Fatal("Query failed:", err)
-	}
+	// sql := `SELECT * FROM messages_sharded LIMIT 10`
+	// rows, err = CHStore.ExecQuery(ctx, sql)
+	// if err != nil {
+	// 	log.Fatal("Query failed:", err)
+	// }
 
-	for _, row := range rows {
-		log.Println(row)
-	}
+	// for _, row := range rows {
+	// 	log.Println(row)
+	// }
 	// Init Redis
 	redisClient, err := cache.InitRedis(cfg.Redis)
 	if err != nil {

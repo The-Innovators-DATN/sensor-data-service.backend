@@ -2,9 +2,7 @@ package metricdata
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"log"
 	"strings"
 	"time"
 
@@ -25,12 +23,6 @@ func NewMetricDataRepository(chdb metric.Store, store db.Store, cache cache.Stor
 }
 func (r *MetricDataRepository) GetMetricSeriesData(ctx context.Context, req *metricpb.MetricSeriesRequest) ([]*metricpb.SeriesData, error) {
 	var results []*metricpb.SeriesData
-	reqJson, _ := json.MarshalIndent(req, "", "  ")
-	log.Println("🚨 RECEIVED RAW REQUEST:")
-	log.Println(string(reqJson))
-
-	log.Printf("DEBUG: chart_type=%q, from=%q, to=%q, series_len=%d",
-		req.ChartType, req.TimeRange.From, req.TimeRange.To, len(req.Series))
 
 	for _, s := range req.Series {
 		if s.TargetType != metricpb.TargetType_STATION {
@@ -42,14 +34,14 @@ func (r *MetricDataRepository) GetMetricSeriesData(ctx context.Context, req *met
 		query := fmt.Sprintf(`
 			SELECT
 				value,
-				metric,
+				metric_id,
 				station_id,
-				local_error,
+				trend_anomaly,
 				datetime
-			FROM sensors_to_kafka
+			FROM messages_sharded
 			WHERE datetime BETWEEN toDateTime('%s') AND toDateTime('%s')
 			AND station_id = %d
-			AND metric = %d
+			AND metric_id = %d
 			ORDER BY datetime
 		`, from, to, s.TargetId, s.MetricId)
 
@@ -61,11 +53,18 @@ func (r *MetricDataRepository) GetMetricSeriesData(ctx context.Context, req *met
 		var series []*metricpb.MetricPoint
 		for _, row := range records {
 			dt := row["datetime"].(time.Time)
+
+			// Convert trend_anomaly from *bool
+			var trendAnomaly bool
+			if b, ok := row["trend_anomaly"].(*bool); ok && b != nil {
+				trendAnomaly = *b
+			}
 			series = append(series, &metricpb.MetricPoint{
-				Datetime:   dt.Format(time.RFC3339),
-				Value:      float32(toFloat(row["value"])),
-				LocalError: float32(toFloat(row["local_error"])),
+				Datetime:     dt.Format(time.RFC3339),
+				Value:        float32(toFloat(row["value"])),
+				TrendAnomaly: trendAnomaly,
 			})
+			// log.Printf("series: %v", series)
 		}
 
 		results = append(results, &metricpb.SeriesData{
@@ -94,6 +93,26 @@ func toInt(v interface{}) int {
 		return int(x)
 	default:
 		return 0
+	}
+}
+
+// Safe convert interface{} -> bool
+func toBool(v interface{}) bool {
+	switch val := v.(type) {
+	case bool:
+		return val
+	case uint8:
+		return val != 0
+	case int:
+		return val != 0
+	case int64:
+		return val != 0
+	case float64:
+		return val != 0
+	case string:
+		return val == "1" || val == "true"
+	default:
+		return false
 	}
 }
 
