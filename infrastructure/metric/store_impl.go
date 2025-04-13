@@ -101,6 +101,8 @@ func deref(ptr interface{}) interface{} {
 		return *v
 	case *time.Time:
 		return *v
+	case *bool:
+		return *v
 	default:
 		return v
 	}

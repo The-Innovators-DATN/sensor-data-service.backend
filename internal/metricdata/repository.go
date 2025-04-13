@@ -29,6 +29,7 @@ func NewMetricDataRepository(chdb metric.Store, store db.Store, cache cache.Stor
 
 // GetMetricSeriesData: hàm chính xử lý request
 func (r *MetricDataRepository) GetMetricSeriesData(ctx context.Context, req *metricpb.MetricSeriesRequest) ([]*metricpb.SeriesData, error) {
+	log.Print("[debug] GetMetricSeriesData called")
 	var results []*metricpb.SeriesData
 
 	stepSeconds := req.StepSeconds
@@ -54,7 +55,7 @@ func (r *MetricDataRepository) GetMetricSeriesData(ctx context.Context, req *met
 		if sel.TargetType == metricpb.TargetType_STATION {
 			stationIDs = []int32{sel.TargetId}
 		} else {
-			list, err := r.store.GetStationsByTarget(ctx, sel.TargetType, sel.TargetId)
+			list, err := r.GetStationsByTarget(ctx, sel.TargetType, sel.TargetId)
 			if err != nil {
 				return nil, fmt.Errorf("getStationsByTarget failed: %w", err)
 			}
@@ -107,6 +108,65 @@ func (r *MetricDataRepository) GetMetricSeriesData(ctx context.Context, req *met
 	return results, nil
 }
 
+// GetStationsByTarget trả về danh sách station_id theo target_type
+// Nếu không tìm thấy trong Redis cache thì lấy từ DB và cache lại
+func (r *MetricDataRepository) GetStationsByTarget(ctx context.Context, targetType metricpb.TargetType, targetId int32) ([]int32, error) {
+	log.Print("[debug] GetStationsByTarget called")
+	cacheKey := fmt.Sprintf("station_targets:%d:%d", targetType, targetId)
+
+	// Redis cache first
+	var ids []int32
+	found, err := r.cache.GetJSON(ctx, cacheKey, &ids)
+	if err != nil {
+		log.Printf("[warn] GetStationsByTarget Redis fail: %v", err)
+	}
+	if found {
+		return ids, nil
+	}
+
+	// Query từ DB
+	var sql string
+	switch targetType {
+	case metricpb.TargetType_STATION:
+		sql = "SELECT id FROM station WHERE id = $1"
+	case metricpb.TargetType_WATER_BODY:
+		sql = "SELECT id FROM station WHERE water_body_id = $1"
+	case metricpb.TargetType_CATCHMENT:
+		sql = `
+			SELECT s.id
+			FROM station s
+			JOIN water_body w ON s.water_body_id = w.id
+			WHERE w.catchment_id = $1
+		`
+	case metricpb.TargetType_RIVER_BASIN:
+		sql = `
+			SELECT s.id
+			FROM station s
+			JOIN water_body w ON s.water_body_id = w.id
+			JOIN catchment c ON w.catchment_id = c.id
+			WHERE c.river_basin_id = $1
+		`
+	default:
+		return nil, fmt.Errorf("unsupported target type: %v", targetType)
+	}
+
+	rows, err := r.store.ExecQuery(ctx, sql, targetId)
+	if err != nil {
+		return nil, fmt.Errorf("GetStationsByTarget db query failed: %w", err)
+	}
+
+	for _, row := range rows {
+		ids = append(ids, int32(toInt(row["id"])))
+	}
+
+	// Cache lại
+	if err := r.cache.SetJSON(ctx, cacheKey, ids, int64(time.Hour.Seconds())); err != nil {
+		log.Printf("[warn] cache station target fail: %v", err)
+	}
+
+	return ids, nil
+}
+
 // ------------------- Aggregator CH -------------------
 
 // queryAggregatorCH: group by station(s) + interval => avg(value), maxOrNull(trend_anomaly)
@@ -117,7 +177,7 @@ func (r *MetricDataRepository) queryAggregatorCH(
 	from, to time.Time,
 	stepSeconds int32,
 ) ([]*metricpb.MetricPoint, error) {
-
+	log.Print("[debug] queryAggregatorCH called")
 	if len(stationIDs) == 0 {
 		return nil, nil
 	}
@@ -128,7 +188,7 @@ func (r *MetricDataRepository) queryAggregatorCH(
 SELECT
     toStartOfInterval(datetime, INTERVAL %d second) AS interval_time,
     avg(value) AS avg_val,
-    maxOrNull(trend_anomaly) AS anomaly
+    max(trend_anomaly) AS anomaly
 FROM messages_sharded
 WHERE station_id = %d
   AND metric_id = %d
@@ -145,7 +205,7 @@ ORDER BY interval_time`,
 SELECT
     toStartOfInterval(datetime, INTERVAL %d second) AS interval_time,
     avg(value) AS avg_val,
-    maxOrNull(trend_anomaly) AS anomaly
+    max(trend_anomaly) AS anomaly
 FROM messages_sharded
 WHERE station_id IN (%s)
   AND metric_id = %d
@@ -165,9 +225,14 @@ ORDER BY interval_time`,
 
 	var points []*metricpb.MetricPoint
 	for _, row := range rows {
+		// log.Printf("anomaly raw type: %T, value: %#v\n", row["anomaly"], row["anomaly"])
+
 		itime, _ := row["interval_time"].(time.Time)
 		avgVal, _ := toFloat(row["avg_val"])
-		anomaly := toBool(row["anomaly"])
+		var anomaly bool
+		if v, ok := row["anomaly"]; ok && v != nil {
+			anomaly, _ = v.(bool)
+		}
 
 		points = append(points, &metricpb.MetricPoint{
 			Datetime:     itime.Format(time.RFC3339),
@@ -189,7 +254,7 @@ func (r *MetricDataRepository) queryAggregatorRedis(
 	from, to time.Time,
 	stepSeconds int32,
 ) ([]*metricpb.MetricPoint, error) {
-
+	log.Print("[debug] queryAggregatorRedis called")
 	if len(stationIDs) == 0 {
 		return nil, nil
 	}
@@ -208,7 +273,7 @@ func (r *MetricDataRepository) queryRedisAggregatorSingle(
 	from, to time.Time,
 	stepSeconds int32,
 ) ([]*metricpb.MetricPoint, error) {
-
+	log.Print("[debug] queryRedisAggregatorSingle called")
 	tsKey := fmt.Sprintf("sensor_%d_%d", stationID, metricID)
 	anomalySetKey := fmt.Sprintf("trendanomaly:%d:%d", stationID, metricID)
 
@@ -260,7 +325,7 @@ func (r *MetricDataRepository) aggregateAcrossStationsRedis(
 	from, to time.Time,
 	stepSeconds int32,
 ) ([]*metricpb.MetricPoint, error) {
-
+	log.Print("[debug] aggregateAcrossStationsRedis called")
 	type bucketAgg struct {
 		sum     float64
 		count   int
@@ -349,13 +414,13 @@ func (r *MetricDataRepository) RefreshRedisSeriesData(
 	stationID, metricID int32,
 	from, to time.Time,
 ) error {
-
+	log.Print("[debug] RefreshRedisSeriesData called")
 	// Query CH data + anomaly
 	query := fmt.Sprintf(`
 SELECT
     toUnixTimestamp(datetime)*1000 AS ts_ms,
     value,
-    trend_anomaly
+    trend_anomaly as anomaly
 FROM messages_sharded
 WHERE station_id = %d
   AND metric_id = %d
@@ -377,9 +442,14 @@ ORDER BY datetime
 	anomalySetKey := fmt.Sprintf("trendanomaly:%d:%d", stationID, metricID)
 
 	for _, row := range rows {
-		tsMs := int64(toFloat(row["ts_ms"]))
+		tsF, _ := toFloat(row["ts_ms"])
+		tsMs := int64(tsF)
+
 		val, _ := toFloat(row["value"])
-		anomaly := toBool(row["trend_anomaly"])
+		var anomaly bool
+		if v, ok := row["anomaly"]; ok && v != nil {
+			anomaly, _ = v.(bool)
+		}
 
 		// Ghi data point vào Redis TimeSeries
 		// TS.ADD <key> <timestamp_ms> <value>
@@ -402,6 +472,7 @@ ORDER BY datetime
 // ------------------- Utils -------------------
 
 func mergeSeriesPoints(oldList, newList []*metricpb.MetricPoint) []*metricpb.MetricPoint {
+	log.Print("[debug] mergeSeriesPoints called")
 	merged := append(oldList, newList...)
 	sort.Slice(merged, func(i, j int) bool {
 		ti, _ := time.Parse(time.RFC3339, merged[i].Datetime)
@@ -410,7 +481,20 @@ func mergeSeriesPoints(oldList, newList []*metricpb.MetricPoint) []*metricpb.Met
 	})
 	return merged
 }
-
+func toInt(v interface{}) int {
+	switch x := v.(type) {
+	case int:
+		return x
+	case int32:
+		return int(x)
+	case int64:
+		return int(x)
+	case float64:
+		return int(x)
+	default:
+		return 0
+	}
+}
 func toFloat(v interface{}) (float64, bool) {
 	switch val := v.(type) {
 	case float32:

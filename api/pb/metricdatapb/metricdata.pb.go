@@ -258,12 +258,12 @@ func (x *ForecastConfig) GetHorizon() int32 {
 }
 
 type MetricSeriesRequest struct {
-	state     protoimpl.MessageState `protogen:"open.v1"`
-	ChartType string                 `protobuf:"bytes,1,opt,name=chart_type,json=chartType,proto3" json:"chart_type,omitempty"`
-	TimeRange *TimeRange             `protobuf:"bytes,2,opt,name=time_range,json=timeRange,proto3" json:"time_range,omitempty"`
-	Forecast  *ForecastConfig        `protobuf:"bytes,3,opt,name=forecast,proto3" json:"forecast,omitempty"`
-	// AnomalyDetectionConfig anomaly_detection = 4;
-	Series        []*SeriesSelector `protobuf:"bytes,5,rep,name=series,proto3" json:"series,omitempty"`
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ChartType     string                 `protobuf:"bytes,1,opt,name=chart_type,json=chartType,proto3" json:"chart_type,omitempty"`
+	TimeRange     *TimeRange             `protobuf:"bytes,2,opt,name=time_range,json=timeRange,proto3" json:"time_range,omitempty"`
+	StepSeconds   int32                  `protobuf:"varint,3,opt,name=step_seconds,json=stepSeconds,proto3" json:"step_seconds,omitempty"`
+	Forecast      *ForecastConfig        `protobuf:"bytes,4,opt,name=forecast,proto3" json:"forecast,omitempty"`
+	Series        []*SeriesSelector      `protobuf:"bytes,5,rep,name=series,proto3" json:"series,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -310,6 +310,13 @@ func (x *MetricSeriesRequest) GetTimeRange() *TimeRange {
 		return x.TimeRange
 	}
 	return nil
+}
+
+func (x *MetricSeriesRequest) GetStepSeconds() int32 {
+	if x != nil {
+		return x.StepSeconds
+	}
+	return 0
 }
 
 func (x *MetricSeriesRequest) GetForecast() *ForecastConfig {
@@ -533,13 +540,14 @@ const file_metricdata_proto_rawDesc = "" +
 	"\x0eForecastConfig\x12\x18\n" +
 	"\aenabled\x18\x01 \x01(\bR\aenabled\x12\x1b\n" +
 	"\ttime_step\x18\x02 \x01(\x05R\btimeStep\x12\x18\n" +
-	"\ahorizon\x18\x03 \x01(\x05R\ahorizon\"\xd6\x01\n" +
+	"\ahorizon\x18\x03 \x01(\x05R\ahorizon\"\xf9\x01\n" +
 	"\x13MetricSeriesRequest\x12\x1d\n" +
 	"\n" +
 	"chart_type\x18\x01 \x01(\tR\tchartType\x124\n" +
 	"\n" +
-	"time_range\x18\x02 \x01(\v2\x15.metricdata.TimeRangeR\ttimeRange\x126\n" +
-	"\bforecast\x18\x03 \x01(\v2\x1a.metricdata.ForecastConfigR\bforecast\x122\n" +
+	"time_range\x18\x02 \x01(\v2\x15.metricdata.TimeRangeR\ttimeRange\x12!\n" +
+	"\fstep_seconds\x18\x03 \x01(\x05R\vstepSeconds\x126\n" +
+	"\bforecast\x18\x04 \x01(\v2\x1a.metricdata.ForecastConfigR\bforecast\x122\n" +
 	"\x06series\x18\x05 \x03(\v2\x1a.metricdata.SeriesSelectorR\x06series\"d\n" +
 	"\vMetricPoint\x12\x1a\n" +
 	"\bdatetime\x18\x01 \x01(\tR\bdatetime\x12\x14\n" +

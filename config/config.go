@@ -92,9 +92,9 @@ func overrideRedisEnv(dbCfg *RedisConfig, v *viper.Viper) {
 	if val := os.Getenv("REDIS_ADDR"); val != "" {
 		dbCfg.Addr = val
 	}
-	if val := os.Getenv("REDIS_PASSWORD"); val != "" {
-		dbCfg.Password = val
-	}
+	// if val := os.Getenv("REDIS_PASSWORD"); val != "" {
+	// 	dbCfg.Password = val
+	// }
 	if val := os.Getenv("REDIS_DB"); val != "" {
 		dbCfg.DB = v.GetInt("REDIS_DB")
 	}
