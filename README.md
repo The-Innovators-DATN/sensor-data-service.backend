@@ -28,6 +28,7 @@ python3 -m virtualenv scrapper-env
 source scrapper-env/bin/activate
 pip install -r requirements.txt
 ```
+docker run -d -p 6379:6379 --name redis-stack redis/redis-stack-server:latest
 
 ---
 
@@ -161,7 +162,7 @@ curl -X PUT http://localhost:8081/v0/parameters/1   -H "Content-Type: applicatio
 
 curl -X DELETE http://localhost:8081/v0/parameters/1
 ```
-
+grpcurl -plaintext -d @ localhost:8080 metricdata.MetricDataService/GetMetricSeries < request.json
 ---
 
 ## ✅ Status

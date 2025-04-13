@@ -13,8 +13,8 @@ import (
 
 func InitRedis(cfg config.RedisConfig) (*redis.Client, error) {
 	rdb := redis.NewClient(&redis.Options{
-		Addr:     cfg.Addr,
-		Password: cfg.Password,
+		Addr: cfg.Addr,
+		// Password: cfg.Password,
 		DB:       cfg.DB,
 		Protocol: cfg.Protocol,
 	})

@@ -1,27 +1,27 @@
 {
-    "chart_type": "line_chart",
-    "time_range": {
-      "from": "2000-12-01T00:00:00Z",
-      "to": "2014-12-31T23:59:59Z"
+  "chart_type": "line_chart",
+  "time_range": {
+    "from": "2000-12-01T00:00:00Z",
+    "to": "2014-12-31T23:59:59Z"
+  },
+  "step_seconds": 3600,
+  "forecast": {
+    "enabled": true,
+    "time_step": 3600,
+    "horizon": 5
+  },
+  "series": [
+    {
+      "ref_id": "A",
+      "target_type": 1,
+      "target_id": 420,
+      "metric_id": 12
     },
-    "forecast": {
-      "enabled": true,
-      "time_step": 3600,
-      "horizon": 5
-    },
-    "series": [
-      {
-        "ref_id": "A",
-        "target_type": 1,
-        "target_id": 420,
-        "metric_id": 12
-      },
-      {
-        "ref_id": "B",
-        "target_type": 1,
-        "target_id": 421,
-        "metric_id": 12
-      }
-    ]
-  }
-  
+    {
+      "ref_id": "B",
+      "target_type": 1,
+      "target_id": 421,
+      "metric_id": 12
+    }
+  ]
+}

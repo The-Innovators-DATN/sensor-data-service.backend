@@ -55,3 +55,52 @@ func (r *redisStore) GetJSON(ctx context.Context, key string, out interface{}) (
 	}
 	return true, nil
 }
+func (r *redisStore) TSCreate(ctx context.Context, key string, retention time.Duration) error {
+	opts := &redis.TSOptions{
+		Retention: retention.Milliseconds(),
+	}
+	return r.client.TSCreateWithArgs(ctx, key, opts).Err()
+}
+
+func (r *redisStore) TSAdd(ctx context.Context, key string, timestamp time.Time, value float64) error {
+	return r.client.TSAdd(ctx, key, timestamp.UnixMilli(), value).Err()
+}
+
+func (r *redisStore) TSRange(ctx context.Context, key string, from, to time.Time) ([]redis.TSTimestampValue, error) {
+	res := r.client.TSRange(ctx, key, int(from.UnixMilli()), int(to.UnixMilli()))
+	return res.Val(), res.Err()
+}
+
+// redis.Avg
+// redis.Min
+// redis.Max
+// redis.Sum
+// redis.Count
+// redis.First
+// redis.Last
+// redis.StdP
+// redis.StdS
+// redis.VarP
+// redis.VarS
+
+func (r *redisStore) TSRangeAgg(
+	ctx context.Context,
+	key string,
+	from, to time.Time,
+	agg redis.Aggregator, // like "avg", "min", "max"
+	bucketDuration time.Duration, // size of each aggregation bucket
+) ([]redis.TSTimestampValue, error) {
+	opts := &redis.TSRangeOptions{
+		Aggregation:    agg,
+		BucketDuration: bucketDuration.Milliseconds(),
+	}
+
+	res := r.client.TSRangeWithArgs(ctx, key, int(from.UnixMilli()), int(to.UnixMilli()), opts)
+	return res.Val(), res.Err()
+}
+func (r *redisStore) SIsMember(ctx context.Context, setKey, member string) (bool, error) {
+	return r.client.SIsMember(ctx, setKey, member).Bool()
+}
+func (r *redisStore) SAdd(ctx context.Context, key string, members ...string) error {
+	return r.client.SAdd(ctx, key, members).Err()
+}

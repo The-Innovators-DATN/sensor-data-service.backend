@@ -40,8 +40,8 @@ message ForecastConfig {
 message MetricSeriesRequest {
   string chart_type = 1;
   TimeRange time_range = 2;
-  ForecastConfig forecast = 3;
-  // AnomalyDetectionConfig anomaly_detection = 4;
+  int32 step_seconds     = 3;
+  ForecastConfig forecast = 4;
   repeated SeriesSelector series = 5;
 }
 
