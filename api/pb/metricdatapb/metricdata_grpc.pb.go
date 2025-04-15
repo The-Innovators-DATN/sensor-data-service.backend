@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.5.1
 // - protoc             v3.12.4
-// source: metricdata.proto
+// source: metricdatapb/metricdata.proto
 
 package metricdatapb
 
@@ -11,6 +11,7 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	commonpb "sensor-data-service.backend/api/pb/commonpb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -26,7 +27,7 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type MetricDataServiceClient interface {
-	GetMetricSeries(ctx context.Context, in *MetricSeriesRequest, opts ...grpc.CallOption) (*MetricSeriesResponse, error)
+	GetMetricSeries(ctx context.Context, in *MetricSeriesRequest, opts ...grpc.CallOption) (*commonpb.StandardResponse, error)
 }
 
 type metricDataServiceClient struct {
@@ -37,9 +38,9 @@ func NewMetricDataServiceClient(cc grpc.ClientConnInterface) MetricDataServiceCl
 	return &metricDataServiceClient{cc}
 }
 
-func (c *metricDataServiceClient) GetMetricSeries(ctx context.Context, in *MetricSeriesRequest, opts ...grpc.CallOption) (*MetricSeriesResponse, error) {
+func (c *metricDataServiceClient) GetMetricSeries(ctx context.Context, in *MetricSeriesRequest, opts ...grpc.CallOption) (*commonpb.StandardResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(MetricSeriesResponse)
+	out := new(commonpb.StandardResponse)
 	err := c.cc.Invoke(ctx, MetricDataService_GetMetricSeries_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -51,7 +52,7 @@ func (c *metricDataServiceClient) GetMetricSeries(ctx context.Context, in *Metri
 // All implementations must embed UnimplementedMetricDataServiceServer
 // for forward compatibility.
 type MetricDataServiceServer interface {
-	GetMetricSeries(context.Context, *MetricSeriesRequest) (*MetricSeriesResponse, error)
+	GetMetricSeries(context.Context, *MetricSeriesRequest) (*commonpb.StandardResponse, error)
 	mustEmbedUnimplementedMetricDataServiceServer()
 }
 
@@ -62,7 +63,7 @@ type MetricDataServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedMetricDataServiceServer struct{}
 
-func (UnimplementedMetricDataServiceServer) GetMetricSeries(context.Context, *MetricSeriesRequest) (*MetricSeriesResponse, error) {
+func (UnimplementedMetricDataServiceServer) GetMetricSeries(context.Context, *MetricSeriesRequest) (*commonpb.StandardResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetMetricSeries not implemented")
 }
 func (UnimplementedMetricDataServiceServer) mustEmbedUnimplementedMetricDataServiceServer() {}
@@ -117,5 +118,5 @@ var MetricDataService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "metricdata.proto",
+	Metadata: "metricdatapb/metricdata.proto",
 }

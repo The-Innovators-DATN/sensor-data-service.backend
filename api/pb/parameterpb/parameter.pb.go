@@ -2,7 +2,7 @@
 // versions:
 // 	protoc-gen-go v1.36.6
 // 	protoc        v3.12.4
-// source: parameter.proto
+// source: parameterpb/parameter.proto
 
 package parameterpb
 
@@ -11,6 +11,7 @@ import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
+	commonpb "sensor-data-service.backend/api/pb/commonpb"
 	sync "sync"
 	unsafe "unsafe"
 )
@@ -30,7 +31,7 @@ type Empty struct {
 
 func (x *Empty) Reset() {
 	*x = Empty{}
-	mi := &file_parameter_proto_msgTypes[0]
+	mi := &file_parameterpb_parameter_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -42,7 +43,7 @@ func (x *Empty) String() string {
 func (*Empty) ProtoMessage() {}
 
 func (x *Empty) ProtoReflect() protoreflect.Message {
-	mi := &file_parameter_proto_msgTypes[0]
+	mi := &file_parameterpb_parameter_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -55,7 +56,7 @@ func (x *Empty) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Empty.ProtoReflect.Descriptor instead.
 func (*Empty) Descriptor() ([]byte, []int) {
-	return file_parameter_proto_rawDescGZIP(), []int{0}
+	return file_parameterpb_parameter_proto_rawDescGZIP(), []int{0}
 }
 
 type ParameterRequest struct {
@@ -67,7 +68,7 @@ type ParameterRequest struct {
 
 func (x *ParameterRequest) Reset() {
 	*x = ParameterRequest{}
-	mi := &file_parameter_proto_msgTypes[1]
+	mi := &file_parameterpb_parameter_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -79,7 +80,7 @@ func (x *ParameterRequest) String() string {
 func (*ParameterRequest) ProtoMessage() {}
 
 func (x *ParameterRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_parameter_proto_msgTypes[1]
+	mi := &file_parameterpb_parameter_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -92,7 +93,7 @@ func (x *ParameterRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ParameterRequest.ProtoReflect.Descriptor instead.
 func (*ParameterRequest) Descriptor() ([]byte, []int) {
-	return file_parameter_proto_rawDescGZIP(), []int{1}
+	return file_parameterpb_parameter_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *ParameterRequest) GetId() int32 {
@@ -114,7 +115,7 @@ type ParameterCreateRequest struct {
 
 func (x *ParameterCreateRequest) Reset() {
 	*x = ParameterCreateRequest{}
-	mi := &file_parameter_proto_msgTypes[2]
+	mi := &file_parameterpb_parameter_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -126,7 +127,7 @@ func (x *ParameterCreateRequest) String() string {
 func (*ParameterCreateRequest) ProtoMessage() {}
 
 func (x *ParameterCreateRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_parameter_proto_msgTypes[2]
+	mi := &file_parameterpb_parameter_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -139,7 +140,7 @@ func (x *ParameterCreateRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ParameterCreateRequest.ProtoReflect.Descriptor instead.
 func (*ParameterCreateRequest) Descriptor() ([]byte, []int) {
-	return file_parameter_proto_rawDescGZIP(), []int{2}
+	return file_parameterpb_parameter_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *ParameterCreateRequest) GetName() string {
@@ -183,7 +184,7 @@ type ParameterUpdateRequest struct {
 
 func (x *ParameterUpdateRequest) Reset() {
 	*x = ParameterUpdateRequest{}
-	mi := &file_parameter_proto_msgTypes[3]
+	mi := &file_parameterpb_parameter_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -195,7 +196,7 @@ func (x *ParameterUpdateRequest) String() string {
 func (*ParameterUpdateRequest) ProtoMessage() {}
 
 func (x *ParameterUpdateRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_parameter_proto_msgTypes[3]
+	mi := &file_parameterpb_parameter_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -208,7 +209,7 @@ func (x *ParameterUpdateRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ParameterUpdateRequest.ProtoReflect.Descriptor instead.
 func (*ParameterUpdateRequest) Descriptor() ([]byte, []int) {
-	return file_parameter_proto_rawDescGZIP(), []int{3}
+	return file_parameterpb_parameter_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *ParameterUpdateRequest) GetId() int32 {
@@ -261,7 +262,7 @@ type ParameterResponse struct {
 
 func (x *ParameterResponse) Reset() {
 	*x = ParameterResponse{}
-	mi := &file_parameter_proto_msgTypes[4]
+	mi := &file_parameterpb_parameter_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -273,7 +274,7 @@ func (x *ParameterResponse) String() string {
 func (*ParameterResponse) ProtoMessage() {}
 
 func (x *ParameterResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_parameter_proto_msgTypes[4]
+	mi := &file_parameterpb_parameter_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -286,7 +287,7 @@ func (x *ParameterResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ParameterResponse.ProtoReflect.Descriptor instead.
 func (*ParameterResponse) Descriptor() ([]byte, []int) {
-	return file_parameter_proto_rawDescGZIP(), []int{4}
+	return file_parameterpb_parameter_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *ParameterResponse) GetId() int32 {
@@ -347,7 +348,7 @@ type ParameterListResponse struct {
 
 func (x *ParameterListResponse) Reset() {
 	*x = ParameterListResponse{}
-	mi := &file_parameter_proto_msgTypes[5]
+	mi := &file_parameterpb_parameter_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -359,7 +360,7 @@ func (x *ParameterListResponse) String() string {
 func (*ParameterListResponse) ProtoMessage() {}
 
 func (x *ParameterListResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_parameter_proto_msgTypes[5]
+	mi := &file_parameterpb_parameter_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -372,7 +373,7 @@ func (x *ParameterListResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ParameterListResponse.ProtoReflect.Descriptor instead.
 func (*ParameterListResponse) Descriptor() ([]byte, []int) {
-	return file_parameter_proto_rawDescGZIP(), []int{5}
+	return file_parameterpb_parameter_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *ParameterListResponse) GetParameters() []*ParameterResponse {
@@ -391,7 +392,7 @@ type DeleteResponse struct {
 
 func (x *DeleteResponse) Reset() {
 	*x = DeleteResponse{}
-	mi := &file_parameter_proto_msgTypes[6]
+	mi := &file_parameterpb_parameter_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -403,7 +404,7 @@ func (x *DeleteResponse) String() string {
 func (*DeleteResponse) ProtoMessage() {}
 
 func (x *DeleteResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_parameter_proto_msgTypes[6]
+	mi := &file_parameterpb_parameter_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -416,7 +417,7 @@ func (x *DeleteResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteResponse.ProtoReflect.Descriptor instead.
 func (*DeleteResponse) Descriptor() ([]byte, []int) {
-	return file_parameter_proto_rawDescGZIP(), []int{6}
+	return file_parameterpb_parameter_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *DeleteResponse) GetStatus() string {
@@ -426,11 +427,11 @@ func (x *DeleteResponse) GetStatus() string {
 	return ""
 }
 
-var File_parameter_proto protoreflect.FileDescriptor
+var File_parameterpb_parameter_proto protoreflect.FileDescriptor
 
-const file_parameter_proto_rawDesc = "" +
+const file_parameterpb_parameter_proto_rawDesc = "" +
 	"\n" +
-	"\x0fparameter.proto\x12\tparameter\x1a\x1cgoogle/api/annotations.proto\"\a\n" +
+	"\x1bparameterpb/parameter.proto\x12\tparameter\x1a\x1cgoogle/api/annotations.proto\x1a\x15commonpb/common.proto\"\a\n" +
 	"\x05Empty\"\"\n" +
 	"\x10ParameterRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x05R\x02id\"\x8b\x01\n" +
@@ -460,48 +461,49 @@ const file_parameter_proto_rawDesc = "" +
 	"parameters\x18\x01 \x03(\v2\x1c.parameter.ParameterResponseR\n" +
 	"parameters\"(\n" +
 	"\x0eDeleteResponse\x12\x16\n" +
-	"\x06status\x18\x01 \x01(\tR\x06status2\xa3\x04\n" +
-	"\x10ParameterService\x12\\\n" +
-	"\x0eListParameters\x12\x10.parameter.Empty\x1a .parameter.ParameterListResponse\"\x16\x82\xd3\xe4\x93\x02\x10\x12\x0e/v0/parameters\x12f\n" +
-	"\fGetParameter\x12\x1b.parameter.ParameterRequest\x1a\x1c.parameter.ParameterResponse\"\x1b\x82\xd3\xe4\x93\x02\x15\x12\x13/v0/parameters/{id}\x12m\n" +
-	"\x0fCreateParameter\x12!.parameter.ParameterCreateRequest\x1a\x1c.parameter.ParameterResponse\"\x19\x82\xd3\xe4\x93\x02\x13:\x01*\"\x0e/v0/parameters\x12r\n" +
-	"\x0fUpdateParameter\x12!.parameter.ParameterUpdateRequest\x1a\x1c.parameter.ParameterResponse\"\x1e\x82\xd3\xe4\x93\x02\x18:\x01*\x1a\x13/v0/parameters/{id}\x12f\n" +
-	"\x0fDeleteParameter\x12\x1b.parameter.ParameterRequest\x1a\x19.parameter.DeleteResponse\"\x1b\x82\xd3\xe4\x93\x02\x15*\x13/v0/parameters/{id}B\x1cZ\x1apb/parameterpb;parameterpbb\x06proto3"
+	"\x06status\x18\x01 \x01(\tR\x06status2\x8e\x04\n" +
+	"\x10ParameterService\x12T\n" +
+	"\x0eListParameters\x12\x10.parameter.Empty\x1a\x18.common.StandardResponse\"\x16\x82\xd3\xe4\x93\x02\x10\x12\x0e/v0/parameters\x12b\n" +
+	"\fGetParameter\x12\x1b.parameter.ParameterRequest\x1a\x18.common.StandardResponse\"\x1b\x82\xd3\xe4\x93\x02\x15\x12\x13/v0/parameters/{id}\x12i\n" +
+	"\x0fCreateParameter\x12!.parameter.ParameterCreateRequest\x1a\x18.common.StandardResponse\"\x19\x82\xd3\xe4\x93\x02\x13:\x01*\"\x0e/v0/parameters\x12n\n" +
+	"\x0fUpdateParameter\x12!.parameter.ParameterUpdateRequest\x1a\x18.common.StandardResponse\"\x1e\x82\xd3\xe4\x93\x02\x18:\x01*\x1a\x13/v0/parameters/{id}\x12e\n" +
+	"\x0fDeleteParameter\x12\x1b.parameter.ParameterRequest\x1a\x18.common.StandardResponse\"\x1b\x82\xd3\xe4\x93\x02\x15*\x13/v0/parameters/{id}B<Z:sensor-data-service.backend/api/pb/parameterpb;parameterpbb\x06proto3"
 
 var (
-	file_parameter_proto_rawDescOnce sync.Once
-	file_parameter_proto_rawDescData []byte
+	file_parameterpb_parameter_proto_rawDescOnce sync.Once
+	file_parameterpb_parameter_proto_rawDescData []byte
 )
 
-func file_parameter_proto_rawDescGZIP() []byte {
-	file_parameter_proto_rawDescOnce.Do(func() {
-		file_parameter_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_parameter_proto_rawDesc), len(file_parameter_proto_rawDesc)))
+func file_parameterpb_parameter_proto_rawDescGZIP() []byte {
+	file_parameterpb_parameter_proto_rawDescOnce.Do(func() {
+		file_parameterpb_parameter_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_parameterpb_parameter_proto_rawDesc), len(file_parameterpb_parameter_proto_rawDesc)))
 	})
-	return file_parameter_proto_rawDescData
+	return file_parameterpb_parameter_proto_rawDescData
 }
 
-var file_parameter_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
-var file_parameter_proto_goTypes = []any{
-	(*Empty)(nil),                  // 0: parameter.Empty
-	(*ParameterRequest)(nil),       // 1: parameter.ParameterRequest
-	(*ParameterCreateRequest)(nil), // 2: parameter.ParameterCreateRequest
-	(*ParameterUpdateRequest)(nil), // 3: parameter.ParameterUpdateRequest
-	(*ParameterResponse)(nil),      // 4: parameter.ParameterResponse
-	(*ParameterListResponse)(nil),  // 5: parameter.ParameterListResponse
-	(*DeleteResponse)(nil),         // 6: parameter.DeleteResponse
+var file_parameterpb_parameter_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
+var file_parameterpb_parameter_proto_goTypes = []any{
+	(*Empty)(nil),                     // 0: parameter.Empty
+	(*ParameterRequest)(nil),          // 1: parameter.ParameterRequest
+	(*ParameterCreateRequest)(nil),    // 2: parameter.ParameterCreateRequest
+	(*ParameterUpdateRequest)(nil),    // 3: parameter.ParameterUpdateRequest
+	(*ParameterResponse)(nil),         // 4: parameter.ParameterResponse
+	(*ParameterListResponse)(nil),     // 5: parameter.ParameterListResponse
+	(*DeleteResponse)(nil),            // 6: parameter.DeleteResponse
+	(*commonpb.StandardResponse)(nil), // 7: common.StandardResponse
 }
-var file_parameter_proto_depIdxs = []int32{
+var file_parameterpb_parameter_proto_depIdxs = []int32{
 	4, // 0: parameter.ParameterListResponse.parameters:type_name -> parameter.ParameterResponse
 	0, // 1: parameter.ParameterService.ListParameters:input_type -> parameter.Empty
 	1, // 2: parameter.ParameterService.GetParameter:input_type -> parameter.ParameterRequest
 	2, // 3: parameter.ParameterService.CreateParameter:input_type -> parameter.ParameterCreateRequest
 	3, // 4: parameter.ParameterService.UpdateParameter:input_type -> parameter.ParameterUpdateRequest
 	1, // 5: parameter.ParameterService.DeleteParameter:input_type -> parameter.ParameterRequest
-	5, // 6: parameter.ParameterService.ListParameters:output_type -> parameter.ParameterListResponse
-	4, // 7: parameter.ParameterService.GetParameter:output_type -> parameter.ParameterResponse
-	4, // 8: parameter.ParameterService.CreateParameter:output_type -> parameter.ParameterResponse
-	4, // 9: parameter.ParameterService.UpdateParameter:output_type -> parameter.ParameterResponse
-	6, // 10: parameter.ParameterService.DeleteParameter:output_type -> parameter.DeleteResponse
+	7, // 6: parameter.ParameterService.ListParameters:output_type -> common.StandardResponse
+	7, // 7: parameter.ParameterService.GetParameter:output_type -> common.StandardResponse
+	7, // 8: parameter.ParameterService.CreateParameter:output_type -> common.StandardResponse
+	7, // 9: parameter.ParameterService.UpdateParameter:output_type -> common.StandardResponse
+	7, // 10: parameter.ParameterService.DeleteParameter:output_type -> common.StandardResponse
 	6, // [6:11] is the sub-list for method output_type
 	1, // [1:6] is the sub-list for method input_type
 	1, // [1:1] is the sub-list for extension type_name
@@ -509,26 +511,26 @@ var file_parameter_proto_depIdxs = []int32{
 	0, // [0:1] is the sub-list for field type_name
 }
 
-func init() { file_parameter_proto_init() }
-func file_parameter_proto_init() {
-	if File_parameter_proto != nil {
+func init() { file_parameterpb_parameter_proto_init() }
+func file_parameterpb_parameter_proto_init() {
+	if File_parameterpb_parameter_proto != nil {
 		return
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: unsafe.Slice(unsafe.StringData(file_parameter_proto_rawDesc), len(file_parameter_proto_rawDesc)),
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_parameterpb_parameter_proto_rawDesc), len(file_parameterpb_parameter_proto_rawDesc)),
 			NumEnums:      0,
 			NumMessages:   7,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
-		GoTypes:           file_parameter_proto_goTypes,
-		DependencyIndexes: file_parameter_proto_depIdxs,
-		MessageInfos:      file_parameter_proto_msgTypes,
+		GoTypes:           file_parameterpb_parameter_proto_goTypes,
+		DependencyIndexes: file_parameterpb_parameter_proto_depIdxs,
+		MessageInfos:      file_parameterpb_parameter_proto_msgTypes,
 	}.Build()
-	File_parameter_proto = out.File
-	file_parameter_proto_goTypes = nil
-	file_parameter_proto_depIdxs = nil
+	File_parameterpb_parameter_proto = out.File
+	file_parameterpb_parameter_proto_goTypes = nil
+	file_parameterpb_parameter_proto_depIdxs = nil
 }

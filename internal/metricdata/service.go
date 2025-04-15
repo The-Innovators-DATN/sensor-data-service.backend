@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	metricpb "sensor-data-service.backend/api/pb/metricdatapb"
+	metricdatapb "sensor-data-service.backend/api/pb/metricdatapb"
 )
 
 type MetricDataService struct {
@@ -16,7 +16,7 @@ func NewMetricDataService(repo *MetricDataRepository) *MetricDataService {
 }
 
 // GetMetricSeries processes the MetricSeriesRequest and returns the results.
-func (s *MetricDataService) GetMetricSeries(ctx context.Context, req *metricpb.MetricSeriesRequest) (*metricpb.MetricSeriesResponse, error) {
+func (s *MetricDataService) GetMetricSeries(ctx context.Context, req *metricdatapb.MetricSeriesRequest) (*metricdatapb.MetricSeriesResponse, error) {
 
 	seriesData, err := s.repo.GetMetricSeriesData(ctx, req)
 	if err != nil {
@@ -25,5 +25,5 @@ func (s *MetricDataService) GetMetricSeries(ctx context.Context, req *metricpb.M
 
 	// Optional forecast/anomaly logic here
 
-	return &metricpb.MetricSeriesResponse{Results: seriesData}, nil
+	return &metricdatapb.MetricSeriesResponse{Results: seriesData}, nil
 }

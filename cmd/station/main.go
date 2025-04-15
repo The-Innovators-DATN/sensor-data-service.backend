@@ -16,6 +16,7 @@ import (
 
 	metricpb "sensor-data-service.backend/api/pb/metricdatapb"
 	paramterpb "sensor-data-service.backend/api/pb/parameterpb"
+	stationpb "sensor-data-service.backend/api/pb/stationpb"
 	"sensor-data-service.backend/config"
 
 	"sensor-data-service.backend/infrastructure/cache"
@@ -23,6 +24,9 @@ import (
 	"sensor-data-service.backend/infrastructure/metric"
 	"sensor-data-service.backend/internal/metricdata"
 	"sensor-data-service.backend/internal/parameter"
+	"sensor-data-service.backend/internal/station/repository"
+	"sensor-data-service.backend/internal/station/service"
+	"sensor-data-service.backend/internal/station/transport"
 )
 
 func main() {
@@ -136,6 +140,13 @@ func main() {
 	metricService := metricdata.NewMetricDataService(metricRepo)
 	metricGrpcHandler := metricdata.NewMetricDataHandler(metricService)
 	metricpb.RegisterMetricDataServiceServer(grpcServer, metricGrpcHandler)
+
+	stationRepo := repository.NewStationDataRepository(PGStore, RedisStore)
+	stationService := service.NewStationService(stationRepo)
+
+	stationGrpcHandler := transport.NewStationHandler(stationService)
+	stationpb.RegisterStationServiceServer(grpcServer, stationGrpcHandler)
+
 	// (Optional) enable reflection để dùng grpcurl debug
 	reflection.Register(grpcServer)
 
@@ -159,7 +170,14 @@ func main() {
 		if err != nil {
 			log.Fatalf("Failed to start HTTP gateway: %v", err)
 		}
-
+		err = metricpb.RegisterMetricDataServiceHandlerFromEndpoint(ctx, mux, "localhost:8080", opts)
+		if err != nil {
+			log.Fatalf("Failed to start HTTP gateway: %v", err)
+		}
+		err = stationpb.RegisterStationServiceHandlerFromEndpoint(ctx, mux, "localhost:8080", opts)
+		if err != nil {
+			log.Fatalf("Failed to start HTTP gateway: %v", err)
+		}
 		log.Println("REST gateway listening on :8081")
 		if err := http.ListenAndServe(":8081", mux); err != nil {
 			log.Fatalf("Failed to serve HTTP gateway: %v", err)

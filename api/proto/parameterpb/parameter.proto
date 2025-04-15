@@ -1,0 +1,77 @@
+syntax = "proto3";
+
+package parameter;
+
+import "google/api/annotations.proto";
+import "commonpb/common.proto";
+
+option go_package = "sensor-data-service.backend/api/pb/parameterpb;parameterpb";
+
+service ParameterService {
+  rpc ListParameters (Empty) returns (common.StandardResponse) {
+    option (google.api.http) = {
+      get: "/v0/parameters"
+    };
+  }
+  rpc GetParameter (ParameterRequest) returns (common.StandardResponse) {
+    option (google.api.http) = {
+      get: "/v0/parameters/{id}"
+    };
+  }
+  rpc CreateParameter (ParameterCreateRequest) returns (common.StandardResponse) {
+    option (google.api.http) = {
+      post: "/v0/parameters"
+      body: "*"
+    };
+  }
+  rpc UpdateParameter (ParameterUpdateRequest) returns (common.StandardResponse) {
+    option (google.api.http) = {
+      put: "/v0/parameters/{id}"
+      body: "*"
+    };
+  }
+  rpc DeleteParameter (ParameterRequest) returns (common.StandardResponse) {
+    option (google.api.http) = {
+      delete: "/v0/parameters/{id}"
+    };
+  }
+}
+
+message Empty {}
+
+message ParameterRequest {
+  int32 id = 1;
+}
+
+message ParameterCreateRequest {
+  string name = 1;
+  string unit = 2;
+  string parameter_group = 3;
+  string description = 4;
+}
+
+message ParameterUpdateRequest {
+  int32 id = 1;
+  string name = 2;
+  string unit = 3;
+  string parameter_group = 4;
+  string description = 5;
+}
+
+message ParameterResponse {
+  int32 id = 1;
+  string name = 2;
+  string unit = 3;
+  string parameter_group = 4;
+  string description = 5;
+  string created_at = 6;
+  string updated_at = 7;
+}
+
+message ParameterListResponse {
+  repeated ParameterResponse parameters = 1;
+}
+
+message DeleteResponse {
+  string status = 1;
+}

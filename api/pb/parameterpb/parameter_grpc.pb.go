@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.5.1
 // - protoc             v3.12.4
-// source: parameter.proto
+// source: parameterpb/parameter.proto
 
 package parameterpb
 
@@ -11,6 +11,7 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	commonpb "sensor-data-service.backend/api/pb/commonpb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -30,11 +31,11 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ParameterServiceClient interface {
-	ListParameters(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*ParameterListResponse, error)
-	GetParameter(ctx context.Context, in *ParameterRequest, opts ...grpc.CallOption) (*ParameterResponse, error)
-	CreateParameter(ctx context.Context, in *ParameterCreateRequest, opts ...grpc.CallOption) (*ParameterResponse, error)
-	UpdateParameter(ctx context.Context, in *ParameterUpdateRequest, opts ...grpc.CallOption) (*ParameterResponse, error)
-	DeleteParameter(ctx context.Context, in *ParameterRequest, opts ...grpc.CallOption) (*DeleteResponse, error)
+	ListParameters(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*commonpb.StandardResponse, error)
+	GetParameter(ctx context.Context, in *ParameterRequest, opts ...grpc.CallOption) (*commonpb.StandardResponse, error)
+	CreateParameter(ctx context.Context, in *ParameterCreateRequest, opts ...grpc.CallOption) (*commonpb.StandardResponse, error)
+	UpdateParameter(ctx context.Context, in *ParameterUpdateRequest, opts ...grpc.CallOption) (*commonpb.StandardResponse, error)
+	DeleteParameter(ctx context.Context, in *ParameterRequest, opts ...grpc.CallOption) (*commonpb.StandardResponse, error)
 }
 
 type parameterServiceClient struct {
@@ -45,9 +46,9 @@ func NewParameterServiceClient(cc grpc.ClientConnInterface) ParameterServiceClie
 	return &parameterServiceClient{cc}
 }
 
-func (c *parameterServiceClient) ListParameters(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*ParameterListResponse, error) {
+func (c *parameterServiceClient) ListParameters(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*commonpb.StandardResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ParameterListResponse)
+	out := new(commonpb.StandardResponse)
 	err := c.cc.Invoke(ctx, ParameterService_ListParameters_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -55,9 +56,9 @@ func (c *parameterServiceClient) ListParameters(ctx context.Context, in *Empty, 
 	return out, nil
 }
 
-func (c *parameterServiceClient) GetParameter(ctx context.Context, in *ParameterRequest, opts ...grpc.CallOption) (*ParameterResponse, error) {
+func (c *parameterServiceClient) GetParameter(ctx context.Context, in *ParameterRequest, opts ...grpc.CallOption) (*commonpb.StandardResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ParameterResponse)
+	out := new(commonpb.StandardResponse)
 	err := c.cc.Invoke(ctx, ParameterService_GetParameter_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -65,9 +66,9 @@ func (c *parameterServiceClient) GetParameter(ctx context.Context, in *Parameter
 	return out, nil
 }
 
-func (c *parameterServiceClient) CreateParameter(ctx context.Context, in *ParameterCreateRequest, opts ...grpc.CallOption) (*ParameterResponse, error) {
+func (c *parameterServiceClient) CreateParameter(ctx context.Context, in *ParameterCreateRequest, opts ...grpc.CallOption) (*commonpb.StandardResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ParameterResponse)
+	out := new(commonpb.StandardResponse)
 	err := c.cc.Invoke(ctx, ParameterService_CreateParameter_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -75,9 +76,9 @@ func (c *parameterServiceClient) CreateParameter(ctx context.Context, in *Parame
 	return out, nil
 }
 
-func (c *parameterServiceClient) UpdateParameter(ctx context.Context, in *ParameterUpdateRequest, opts ...grpc.CallOption) (*ParameterResponse, error) {
+func (c *parameterServiceClient) UpdateParameter(ctx context.Context, in *ParameterUpdateRequest, opts ...grpc.CallOption) (*commonpb.StandardResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ParameterResponse)
+	out := new(commonpb.StandardResponse)
 	err := c.cc.Invoke(ctx, ParameterService_UpdateParameter_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -85,9 +86,9 @@ func (c *parameterServiceClient) UpdateParameter(ctx context.Context, in *Parame
 	return out, nil
 }
 
-func (c *parameterServiceClient) DeleteParameter(ctx context.Context, in *ParameterRequest, opts ...grpc.CallOption) (*DeleteResponse, error) {
+func (c *parameterServiceClient) DeleteParameter(ctx context.Context, in *ParameterRequest, opts ...grpc.CallOption) (*commonpb.StandardResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(DeleteResponse)
+	out := new(commonpb.StandardResponse)
 	err := c.cc.Invoke(ctx, ParameterService_DeleteParameter_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -99,11 +100,11 @@ func (c *parameterServiceClient) DeleteParameter(ctx context.Context, in *Parame
 // All implementations must embed UnimplementedParameterServiceServer
 // for forward compatibility.
 type ParameterServiceServer interface {
-	ListParameters(context.Context, *Empty) (*ParameterListResponse, error)
-	GetParameter(context.Context, *ParameterRequest) (*ParameterResponse, error)
-	CreateParameter(context.Context, *ParameterCreateRequest) (*ParameterResponse, error)
-	UpdateParameter(context.Context, *ParameterUpdateRequest) (*ParameterResponse, error)
-	DeleteParameter(context.Context, *ParameterRequest) (*DeleteResponse, error)
+	ListParameters(context.Context, *Empty) (*commonpb.StandardResponse, error)
+	GetParameter(context.Context, *ParameterRequest) (*commonpb.StandardResponse, error)
+	CreateParameter(context.Context, *ParameterCreateRequest) (*commonpb.StandardResponse, error)
+	UpdateParameter(context.Context, *ParameterUpdateRequest) (*commonpb.StandardResponse, error)
+	DeleteParameter(context.Context, *ParameterRequest) (*commonpb.StandardResponse, error)
 	mustEmbedUnimplementedParameterServiceServer()
 }
 
@@ -114,19 +115,19 @@ type ParameterServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedParameterServiceServer struct{}
 
-func (UnimplementedParameterServiceServer) ListParameters(context.Context, *Empty) (*ParameterListResponse, error) {
+func (UnimplementedParameterServiceServer) ListParameters(context.Context, *Empty) (*commonpb.StandardResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListParameters not implemented")
 }
-func (UnimplementedParameterServiceServer) GetParameter(context.Context, *ParameterRequest) (*ParameterResponse, error) {
+func (UnimplementedParameterServiceServer) GetParameter(context.Context, *ParameterRequest) (*commonpb.StandardResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetParameter not implemented")
 }
-func (UnimplementedParameterServiceServer) CreateParameter(context.Context, *ParameterCreateRequest) (*ParameterResponse, error) {
+func (UnimplementedParameterServiceServer) CreateParameter(context.Context, *ParameterCreateRequest) (*commonpb.StandardResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateParameter not implemented")
 }
-func (UnimplementedParameterServiceServer) UpdateParameter(context.Context, *ParameterUpdateRequest) (*ParameterResponse, error) {
+func (UnimplementedParameterServiceServer) UpdateParameter(context.Context, *ParameterUpdateRequest) (*commonpb.StandardResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateParameter not implemented")
 }
-func (UnimplementedParameterServiceServer) DeleteParameter(context.Context, *ParameterRequest) (*DeleteResponse, error) {
+func (UnimplementedParameterServiceServer) DeleteParameter(context.Context, *ParameterRequest) (*commonpb.StandardResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteParameter not implemented")
 }
 func (UnimplementedParameterServiceServer) mustEmbedUnimplementedParameterServiceServer() {}
@@ -269,5 +270,5 @@ var ParameterService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "parameter.proto",
+	Metadata: "parameterpb/parameter.proto",
 }

@@ -1,0 +1,293 @@
+syntax = "proto3";
+
+package station;
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/wrappers.proto";
+import "google/api/annotations.proto";
+import "commonpb/common.proto";
+
+option go_package = "sensor-data-service.backend/api/pb/stationpb;stationpb";
+
+enum TargetType {
+  UNKNOWN = 0;
+  STATION = 1;
+  WATER_BODY = 2;
+  CATCHMENT = 3;
+  RIVER_BASIN = 4;
+}
+
+// ENUM WRAPPER
+message EnumValue {
+  string name = 1;
+}
+
+// STATION
+message Station {
+  int32 id = 1;
+  string name = 2;
+  string description = 3;
+  float lat = 4;
+  float long = 5;
+  string status = 6;
+  string station_type = 7;
+  string country = 8;
+  int32 water_body_id = 9;
+  int32 station_manager = 10;
+  string created_at = 11;
+  string updated_at = 12;
+}
+
+message StationQuery {
+  string keyword = 1;
+  int32 water_body_id = 2;
+  int32 catchment_id = 3;
+  int32 river_basin_id = 4;
+}
+
+message StationID {
+  int32 id = 1;
+}
+
+message StationList {
+  repeated Station stations = 1;
+}
+
+message StationResponse {
+  Station station = 1;
+}
+
+message StationLocation {
+  string water_body_name = 1;
+  string water_body_type = 2;
+  int32 catchment_id = 3;
+  string catchment_name = 4;
+  string catchment_desc = 5;
+  int32 river_basin_id = 6;
+  string river_basin_name = 7;
+}
+
+message StationWithLocation {
+  Station station = 1;
+  StationLocation location = 2;
+}
+
+// WATER BODY
+message WaterBody {
+  int32 id = 1;
+  string name = 2;
+  string type = 3;
+  int32 catchment_id = 4;
+  string description = 5;
+  string updated_at = 6;
+}
+
+message WaterBodyList {
+  repeated WaterBody water_bodies = 1;
+}
+
+message WaterBodyResponse {
+  WaterBody water_body = 1;
+}
+
+// CATCHMENT
+message Catchment {
+  int32 id = 1;
+  string name = 2;
+  string river_basin_id = 3;
+  string country = 4;
+  string description = 5;
+  string status = 6;
+  string updated_at = 7;
+}
+
+message CatchmentList {
+  repeated Catchment catchments = 1;
+}
+
+message CatchmentResponse {
+  Catchment catchment = 1;
+}
+
+// RIVER BASIN
+message RiverBasin {
+  int32 id = 1;
+  string name = 2;
+  string description = 3;
+  string status = 4;
+  string updated_at = 5;
+}
+
+message RiverBasinList {
+  repeated RiverBasin river_basins = 1;
+}
+
+message RiverBasinResponse {
+  RiverBasin river_basin = 1;
+}
+
+// STATION UPLOAD
+message UploadRequest {
+  int32 station_id = 1;
+  string file_name = 2;
+  bytes file_content = 3;
+}
+
+// TARGET SELECTOR
+message TargetSelector {
+  TargetType target_type = 1;
+  int32 target_id = 2;
+}
+
+message StationIDList {
+  repeated int32 station_ids = 1;
+}
+
+// STATUS
+message OperationStatus {
+  bool success = 1;
+  string message = 2;
+}
+
+// ENUM TABLE LIST RESPONSE
+message EnumList {
+  repeated EnumValue values = 1;
+}
+
+service StationService {
+  // ===== STATION =====
+  rpc ListStations(StationQuery) returns (common.StandardResponse) {
+    option (google.api.http) = {
+      get: "/v0/stations"
+    };
+  }
+
+  rpc CreateStation(Station) returns (common.StandardResponse) {
+    option (google.api.http) = {
+      post: "/v0/stations"
+      body: "*"
+    };
+  }
+
+  rpc GetStationsByTarget(TargetSelector) returns (common.StandardResponse) {
+    option (google.api.http) = {
+      post: "/v0/stations_target/filter"
+      body: "*"
+    };
+  }
+  rpc GetStation(StationID) returns (common.StandardResponse) {
+    option (google.api.http) = {
+      get: "/v0/stations/{id}"
+    };
+  }
+
+  rpc DisableStation(StationID) returns (common.StandardResponse) {
+    option (google.api.http) = {
+      post: "/v0/stations/{id}/disable"
+      body: "*"
+    };
+  }
+
+  rpc UploadStationData(UploadRequest) returns (common.StandardResponse) {
+    option (google.api.http) = {
+      post: "/v0/stations/{station_id}/upload"
+      body: "*"
+    };
+  }
+  // ===== WATER BODY =====
+  rpc ListWaterBodies(google.protobuf.Empty) returns (common.StandardResponse) {
+    option (google.api.http) = {
+      get: "/v0/water_bodies"
+    };
+  }
+
+  rpc CreateWaterBody(WaterBody) returns (common.StandardResponse) {
+    option (google.api.http) = {
+      post: "/v0/water_bodies"
+      body: "*"
+    };
+  }
+
+  rpc DeleteWaterBody(google.protobuf.Int32Value) returns (common.StandardResponse) {
+    option (google.api.http) = {
+      delete: "/v0/water_bodies/{value}"
+    };
+  }
+
+  rpc GetWaterBody(google.protobuf.Int32Value) returns (common.StandardResponse) {
+    option (google.api.http) = {
+      get: "/v0/water_bodies/{value}"
+    };
+  }
+
+  // ===== CATCHMENT =====
+  rpc ListCatchments(google.protobuf.Empty) returns (common.StandardResponse) {
+    option (google.api.http) = {
+      get: "/v0/catchments"
+    };
+  }
+
+  rpc CreateCatchment(Catchment) returns (common.StandardResponse) {
+    option (google.api.http) = {
+      post: "/v0/catchments"
+      body: "*"
+    };
+  }
+
+  rpc DeleteCatchment(google.protobuf.Int32Value) returns (common.StandardResponse) {
+    option (google.api.http) = {
+      delete: "/v0/catchments/{value}"
+    };
+  }
+
+  rpc GetCatchment(google.protobuf.Int32Value) returns (common.StandardResponse) {
+    option (google.api.http) = {
+      get: "/v0/catchments/{value}"
+    };
+  }
+
+  // ===== RIVER BASIN =====
+  rpc ListRiverBasins(google.protobuf.Empty) returns (common.StandardResponse) {
+    option (google.api.http) = {
+      get: "/v0/river_basins"
+    };
+  }
+
+  rpc CreateRiverBasin(RiverBasin) returns (common.StandardResponse) {
+    option (google.api.http) = {
+      post: "/v0/river_basins"
+      body: "*"
+    };
+  }
+
+  rpc DeleteRiverBasin(google.protobuf.Int32Value) returns (common.StandardResponse) {
+    option (google.api.http) = {
+      delete: "/v0/river_basins/{value}"
+    };
+  }
+
+  rpc GetRiverBasin(google.protobuf.Int32Value) returns (common.StandardResponse) {
+    option (google.api.http) = {
+      get: "/v0/river_basins/{value}"
+    };
+  }
+
+  // ===== ENUM TABLES =====
+  rpc ListCountries(google.protobuf.Empty) returns (common.StandardResponse) {
+    option (google.api.http) = {
+      get: "/v0/enum/countries"
+    };
+  }
+
+  rpc ListStationTypes(google.protobuf.Empty) returns (common.StandardResponse) {
+    option (google.api.http) = {
+      get: "/v0/enum/station_types"
+    };
+  }
+
+  rpc ListStatus(google.protobuf.Empty) returns (common.StandardResponse) {
+    option (google.api.http) = {
+      get: "/v0/enum/status"
+    };
+  }
+}

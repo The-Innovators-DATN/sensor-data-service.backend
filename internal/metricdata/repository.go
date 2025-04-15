@@ -12,6 +12,7 @@ import (
 	"sensor-data-service.backend/infrastructure/cache"
 	"sensor-data-service.backend/infrastructure/db"
 	"sensor-data-service.backend/infrastructure/metric"
+	"sensor-data-service.backend/internal/common/castutil"
 )
 
 // Thời hạn mà data nằm trong RedisTimeSeries
@@ -156,7 +157,7 @@ func (r *MetricDataRepository) GetStationsByTarget(ctx context.Context, targetTy
 	}
 
 	for _, row := range rows {
-		ids = append(ids, int32(toInt(row["id"])))
+		ids = append(ids, int32(castutil.ToInt(row["id"])))
 	}
 
 	// Cache lại
@@ -228,7 +229,7 @@ ORDER BY interval_time`,
 		// log.Printf("anomaly raw type: %T, value: %#v\n", row["anomaly"], row["anomaly"])
 
 		itime, _ := row["interval_time"].(time.Time)
-		avgVal, _ := toFloat(row["avg_val"])
+		avgVal, _ := castutil.ToFloat(row["avg_val"])
 		var anomaly bool
 		if v, ok := row["anomaly"]; ok && v != nil {
 			anomaly, _ = v.(bool)
@@ -442,10 +443,10 @@ ORDER BY datetime
 	anomalySetKey := fmt.Sprintf("trendanomaly:%d:%d", stationID, metricID)
 
 	for _, row := range rows {
-		tsF, _ := toFloat(row["ts_ms"])
+		tsF, _ := castutil.ToFloat(row["ts_ms"])
 		tsMs := int64(tsF)
 
-		val, _ := toFloat(row["value"])
+		val, _ := castutil.ToFloat(row["value"])
 		var anomaly bool
 		if v, ok := row["anomaly"]; ok && v != nil {
 			anomaly, _ = v.(bool)
@@ -480,47 +481,4 @@ func mergeSeriesPoints(oldList, newList []*metricpb.MetricPoint) []*metricpb.Met
 		return ti.Before(tj)
 	})
 	return merged
-}
-func toInt(v interface{}) int {
-	switch x := v.(type) {
-	case int:
-		return x
-	case int32:
-		return int(x)
-	case int64:
-		return int(x)
-	case float64:
-		return int(x)
-	default:
-		return 0
-	}
-}
-func toFloat(v interface{}) (float64, bool) {
-	switch val := v.(type) {
-	case float32:
-		return float64(val), true
-	case float64:
-		return val, true
-	default:
-		return 0, false
-	}
-}
-
-func toBool(v interface{}) bool {
-	switch val := v.(type) {
-	case bool:
-		return val
-	case uint8:
-		return val != 0
-	case int:
-		return val != 0
-	case int64:
-		return val != 0
-	case float64:
-		return val != 0
-	case string:
-		return val == "1" || val == "true"
-	default:
-		return false
-	}
 }

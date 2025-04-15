@@ -1,157 +1,253 @@
-DROP TABLE IF EXISTS "station" CASCADE;
-CREATE TABLE "station" (
-	"id" SERIAL NOT NULL UNIQUE,
-	"name" VARCHAR(255) NOT NULL,
-	"description" TEXT NOT NULL,
-	"status" VARCHAR(255) NOT NULL,
-	"long" REAL NOT NULL,
-	"lat" REAL NOT NULL,
-	"country" VARCHAR(50),
-	"station_type" VARCHAR(255) NOT NULL,
-	"created_at" TIMESTAMP NOT NULL,
-	"updated_at" TIMESTAMP NOT NULL,
-	"station_manager" INTEGER NOT NULL,
-	"water_body_id" INTEGER NOT NULL,
-	PRIMARY KEY("id")
+-- ========================
+-- ENUM TABLES (dùng name làm PRIMARY KEY)
+-- ========================
+
+DROP TABLE IF EXISTS unit CASCADE;
+CREATE TABLE unit (
+    name VARCHAR(50) PRIMARY KEY
 );
 
-DROP TABLE IF EXISTS "water_body" CASCADE;
-CREATE TABLE "water_body" (
-	"id" SERIAL NOT NULL UNIQUE,
-	"type" VARCHAR(255) NOT NULL,
-	"name" VARCHAR(255) NOT NULL,
-	"catchment_id" INTEGER NOT NULL,
-	"updated_at" TIMESTAMP NOT NULL,
-	"description" TEXT NOT NULL,
-	PRIMARY KEY("id")
+DROP TABLE IF EXISTS station_type CASCADE;
+CREATE TABLE station_type (
+    name TEXT PRIMARY KEY
 );
 
-DROP TABLE IF EXISTS "parameter" CASCADE;
-CREATE TABLE "parameter" (
-	"id" SERIAL NOT NULL UNIQUE,
-	"name" VARCHAR(255) NOT NULL,
-	"unit" VARCHAR(255) NOT NULL,
-	"parameter_group" VARCHAR(255),
-	"description" TEXT,
-	"created_at" TIMESTAMP NOT NULL,
-	"updated_at" TIMESTAMP NOT NULL,
-	PRIMARY KEY("id")
+DROP TABLE IF EXISTS parameter_group CASCADE;
+CREATE TABLE parameter_group (
+    name TEXT PRIMARY KEY
 );
 
-DROP TABLE IF EXISTS "station_parameter" CASCADE;
-CREATE TABLE "station_parameter" (
-	"parameter_id" INTEGER NOT NULL,
-	"created_at" TIMESTAMP NOT NULL,
-	"updated_at" TIMESTAMP NOT NULL,
-	"station_id" INTEGER NOT NULL,
-	"last_receiv_at" TIMESTAMP,
-	"last_value" REAL,
-	PRIMARY KEY("parameter_id", "station_id")
+-- Bảng cho status của station (ví dụ: active, inactive, deleted)
+DROP TABLE IF EXISTS status CASCADE;
+CREATE TABLE status (
+    name VARCHAR(50) PRIMARY KEY
 );
 
+
+DROP TABLE IF EXISTS country CASCADE;
+CREATE TABLE country (
+    name VARCHAR(255) PRIMARY KEY
+);
+
+-- ========================
+-- MAIN TABLES
+-- ========================
+
+-- 1. Catchment (phải tạo trước water_body vì water_body tham chiếu)
 DROP TABLE IF EXISTS "catchment" CASCADE;
 CREATE TABLE "catchment" (
-	"id" SERIAL NOT NULL UNIQUE,
-	"name" VARCHAR(255) NOT NULL,
-	"river_basin_id" VARCHAR(255) NOT NULL,
-	"country" VARCHAR(255) NOT NULL,
+    "id" SERIAL PRIMARY KEY,
+    "name" VARCHAR(255) NOT NULL,
+    "river_basin_id" INTEGER NOT NULL,
+    "country" VARCHAR(255),
     "description" TEXT,
-	"updated_at" TIMESTAMP NOT NULL,
-	PRIMARY KEY("id")
+    "updated_at" TIMESTAMP NOT NULL,
+    "status" VARCHAR(50)
 );
+
+-- 2. River Basin
 DROP TABLE IF EXISTS "river_basin" CASCADE;
 CREATE TABLE "river_basin" (
-	"id" SERIAL NOT NULL UNIQUE,
-	"name" VARCHAR(255) NOT NULL,
-	"description" TEXT NOT NULL,
-	"updated_at" TIMESTAMP NOT NULL,
-	PRIMARY KEY("id")
+    "id" SERIAL PRIMARY KEY,
+    "name" VARCHAR(255) NOT NULL,
+    "description" TEXT NOT NULL,
+    "updated_at" TIMESTAMP NOT NULL,
+    "status" VARCHAR(50)
 );
 
-DROP TABLE IF EXISTS "country" CASCADE;
-CREATE TABLE "country" (
-	"id" SERIAL NOT NULL UNIQUE,
-	"name" VARCHAR(255) NOT NULL,
-	"updated_at" TIMESTAMP NOT NULL,
-	PRIMARY KEY("id")
+-- 3. Water Body (tham chiếu catchment)
+DROP TABLE IF EXISTS "water_body" CASCADE;
+CREATE TABLE "water_body" (
+    "id" SERIAL PRIMARY KEY,
+    "type" VARCHAR(255) NOT NULL,
+    "name" VARCHAR(255) NOT NULL,
+    "catchment_id" INTEGER NOT NULL,
+    "updated_at" TIMESTAMP NOT NULL,
+    "description" TEXT NOT NULL
 );
 
+-- 4. Station (tham chiếu: water_body, country, station_type, status)
+DROP TABLE IF EXISTS "station" CASCADE;
+CREATE TABLE "station" (
+    "id" SERIAL PRIMARY KEY,
+    "name" VARCHAR(255) NOT NULL,
+    "description" TEXT NOT NULL,
+    "status" VARCHAR(50) NOT NULL default 'active',
+    "long" REAL NOT NULL,
+    "lat" REAL NOT NULL,
+    "country" VARCHAR(255) NOT NULL,
+    "station_type" TEXT NOT NULL,
+    "created_at" TIMESTAMP NOT NULL,
+    "updated_at" TIMESTAMP NOT NULL,
+    "station_manager" INTEGER NOT NULL,
+    "water_body_id" INTEGER NOT NULL
+);
+
+-- 5. Parameter (tham chiếu: unit, parameter_group, status)
+DROP TABLE IF EXISTS "parameter" CASCADE;
+CREATE TABLE "parameter" (
+    "id" SERIAL PRIMARY KEY,
+    "name" VARCHAR(255) NOT NULL,
+    "unit" VARCHAR(50) NOT NULL,
+    "parameter_group" TEXT,
+    "description" TEXT,
+    "created_at" TIMESTAMP NOT NULL,
+    "updated_at" TIMESTAMP NOT NULL,
+    "status" VARCHAR(50) default 'active'
+);
+
+-- 6. Station Parameter (tham chiếu: parameter, station, status)
+DROP TABLE IF EXISTS "station_parameter" CASCADE;
+CREATE TABLE "station_parameter" (
+    "parameter_id" INTEGER NOT NULL,
+    "station_id" INTEGER NOT NULL,
+    "created_at" TIMESTAMP NOT NULL,
+    "updated_at" TIMESTAMP NOT NULL,
+    "last_receiv_at" TIMESTAMP,
+    "last_value" REAL,
+    "status" VARCHAR(50) NOT NULL default 'active',
+    PRIMARY KEY("parameter_id", "station_id")
+);
+
+-- 7. Star Dashboard (tham chiếu: status)
 DROP TABLE IF EXISTS "star_dashboard" CASCADE;
 CREATE TABLE "star_dashboard" (
-	"id" UUID NOT NULL UNIQUE,
-	"user_id" INTEGER NOT NULL,
-	"created_at" TIMESTAMP NOT NULL,
-	"update_at" TIMESTAMP NOT NULL,
-	"version" INTEGER NOT NULL,
-	"layout_configuration" TEXT NOT NULL,
-	PRIMARY KEY("id")
+    "id" UUID PRIMARY KEY,
+    "user_id" INTEGER NOT NULL,
+    "created_at" TIMESTAMP NOT NULL,
+    "update_at" TIMESTAMP NOT NULL,
+    "version" INTEGER NOT NULL,
+    "layout_configuration" TEXT NOT NULL,
+    "status" VARCHAR(50) NOT NULL DEFAULT 'active'
 );
 
+-- 8. Station Key (tham chiếu: station)
 DROP TABLE IF EXISTS "station_key" CASCADE;
 CREATE TABLE "station_key" (
-	"id" SERIAL NOT NULL UNIQUE,
-	"station_id" INTEGER NOT NULL,
-	"org_id" INTEGER NOT NULL,
-	"is_revoked" SMALLINT NOT NULL DEFAULT 0,
-	"name" VARCHAR(255) NOT NULL,
-	"key" TEXT NOT NULL,
-	"created_at" TIMESTAMP NOT NULL,
-	"update_at" TIMESTAMP NOT NULL,
-	PRIMARY KEY("id")
+    "id" SERIAL PRIMARY KEY,
+    "station_id" INTEGER NOT NULL,
+    "org_id" INTEGER NOT NULL,
+    "is_revoked" SMALLINT NOT NULL DEFAULT 0,
+    "name" VARCHAR(255) NOT NULL,
+    "key" TEXT NOT NULL,
+    "created_at" TIMESTAMP NOT NULL,
+    "update_at" TIMESTAMP NOT NULL
 );
 
+-- 9. Station Upload Status (tham chiếu: status)
 DROP TABLE IF EXISTS "station_upload_status" CASCADE;
 CREATE TABLE "station_upload_status" (
-	"uid" SERIAL NOT NULL UNIQUE,
-	"attachment_id" INTEGER NOT NULL,
-	"created_at" TIMESTAMP NOT NULL,
-	"updated_at" TIMESTAMP NOT NULL,
-	"status" VARCHAR(255) NOT NULL,
-	"user_id" INTEGER,
-	PRIMARY KEY("uid")
+    "uid" SERIAL PRIMARY KEY,
+    "attachment_id" INTEGER NOT NULL,
+    "created_at" TIMESTAMP NOT NULL,
+    "updated_at" TIMESTAMP NOT NULL,
+    "status" VARCHAR(50) NOT NULL DEFAULT 'pending',
+    "user_id" INTEGER
 );
 
+-- 10. Station Attachments (tham chiếu: station)
 DROP TABLE IF EXISTS "station_attachments" CASCADE;
 CREATE TABLE "station_attachments" (
-	"uid" UUID NOT NULL UNIQUE,
-	"size" INTEGER NOT NULL,
-	"filename" TEXT NOT NULL,
-	"content_type" VARCHAR(255) NOT NULL,
-	"display_name" TEXT NOT NULL,
-	"workflow_state" VARCHAR(255) NOT NULL,
-	"user_id" INTEGER NOT NULL,
-	"file_state" VARCHAR(255) NOT NULL,
-	"namespace" VARCHAR(255) NOT NULL,
-	"station_id" INTEGER NOT NULL,
-	"created_at" TIMESTAMP NOT NULL,
-	"updated_at" TIMESTAMP NOT NULL,
-	PRIMARY KEY("uid")
+    "uid" UUID PRIMARY KEY,
+    "size" INTEGER NOT NULL,
+    "filename" TEXT NOT NULL,
+    "content_type" VARCHAR(255) NOT NULL,
+    "display_name" TEXT NOT NULL,
+    "workflow_state" VARCHAR(255) NOT NULL,
+    "user_id" INTEGER NOT NULL,
+    "file_state" VARCHAR(255) NOT NULL,
+    "namespace" VARCHAR(255) NOT NULL,
+    "station_id" INTEGER NOT NULL,
+    "created_at" TIMESTAMP NOT NULL,
+    "updated_at" TIMESTAMP NOT NULL
 );
-ALTER TABLE "station_parameter"
-ADD FOREIGN KEY("station_id") REFERENCES "station"("id")
-ON UPDATE NO ACTION ON DELETE NO ACTION;
-ALTER TABLE "station_parameter"
-ADD FOREIGN KEY("parameter_id") REFERENCES "parameter"("id")
-ON UPDATE NO ACTION ON DELETE NO ACTION;
-ALTER TABLE "water_body"
-ADD FOREIGN KEY("catchment_id") REFERENCES "catchment"("id")
-ON UPDATE CASCADE ON DELETE SET NULL;
-ALTER TABLE "station"
-ADD FOREIGN KEY("water_body_id") REFERENCES "water_body"("id")
-ON UPDATE CASCADE ON DELETE SET NULL;
--- ALTER TABLE "star_dashboard"
--- ADD FOREIGN KEY("user_id") REFERENCES "user"("id")
--- ON UPDATE CASCADE ON DELETE CASCADE;
 
+-------------------------------------------------------------------
+-- BỔ SUNG FOREIGN KEY (ALTER TABLE) cho các bảng chính
+-------------------------------------------------------------------
+
+-- TABLE catchment
+ALTER TABLE "catchment"
+  ADD CONSTRAINT fk_catchment_country FOREIGN KEY ("country")
+  REFERENCES country(name) ON UPDATE CASCADE ON DELETE SET NULL;
+
+ALTER TABLE "catchment"
+  ADD CONSTRAINT fk_catchment_status FOREIGN KEY ("status")
+  REFERENCES status(name) ON UPDATE CASCADE ON DELETE SET NULL;
+
+-- TABLE river_basin
+ALTER TABLE "river_basin"
+  ADD CONSTRAINT fk_river_basin_status FOREIGN KEY ("status")
+  REFERENCES status(name) ON UPDATE CASCADE ON DELETE SET NULL;
+
+-- TABLE water_body
+ALTER TABLE "water_body"
+  ADD CONSTRAINT fk_water_body_catchment FOREIGN KEY ("catchment_id")
+  REFERENCES "catchment"(id) ON UPDATE CASCADE ON DELETE SET NULL;
+
+-- TABLE station
+ALTER TABLE "station"
+  ADD CONSTRAINT fk_status FOREIGN KEY ("status")
+  REFERENCES status(name) ON UPDATE CASCADE ON DELETE RESTRICT;
+
+ALTER TABLE "station"
+  ADD CONSTRAINT fk_station_type FOREIGN KEY ("station_type")
+  REFERENCES station_type(name) ON UPDATE CASCADE ON DELETE RESTRICT;
+
+ALTER TABLE "station"
+  ADD CONSTRAINT fk_station_country FOREIGN KEY ("country")
+  REFERENCES country(name) ON UPDATE CASCADE ON DELETE SET NULL;
+
+ALTER TABLE "station"
+  ADD CONSTRAINT fk_station_water_body FOREIGN KEY ("water_body_id")
+  REFERENCES "water_body"(id) ON UPDATE CASCADE ON DELETE SET NULL;
+
+-- TABLE parameter
+ALTER TABLE "parameter"
+  ADD CONSTRAINT fk_parameter_unit FOREIGN KEY ("unit")
+  REFERENCES unit(name) ON UPDATE CASCADE ON DELETE RESTRICT;
+
+ALTER TABLE "parameter"
+  ADD CONSTRAINT fk_parameter_group FOREIGN KEY ("parameter_group")
+  REFERENCES parameter_group(name) ON UPDATE CASCADE ON DELETE SET NULL;
+
+ALTER TABLE "parameter"
+  ADD CONSTRAINT fk_parameter_status FOREIGN KEY ("status")
+  REFERENCES status(name) ON UPDATE CASCADE ON DELETE SET NULL;
+
+-- TABLE station_parameter
+ALTER TABLE "station_parameter"
+  ADD CONSTRAINT fk_station_parameter_parameter FOREIGN KEY ("parameter_id")
+  REFERENCES "parameter"(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+ALTER TABLE "station_parameter"
+  ADD CONSTRAINT fk_station_parameter_station FOREIGN KEY ("station_id")
+  REFERENCES "station"(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+ALTER TABLE "station_parameter"
+  ADD CONSTRAINT fk_station_parameter_status FOREIGN KEY ("status")
+  REFERENCES status(name) ON UPDATE CASCADE ON DELETE SET NULL;
+
+-- TABLE star_dashboard
+ALTER TABLE "star_dashboard"
+  ADD CONSTRAINT fk_star_dashboard_status FOREIGN KEY ("status")
+  REFERENCES status(name) ON UPDATE CASCADE ON DELETE SET NULL;
+
+-- TABLE station_key
 ALTER TABLE "station_key"
-ADD FOREIGN KEY("station_id") REFERENCES "station"("id")
-ON UPDATE NO ACTION ON DELETE NO ACTION;
+  ADD CONSTRAINT fk_station_key_station FOREIGN KEY ("station_id")
+  REFERENCES "station"(id) ON UPDATE CASCADE ON DELETE NO ACTION;
+
+-- TABLE station_upload_status
+ALTER TABLE "station_upload_status"
+  ADD CONSTRAINT fk_station_upload_status FOREIGN KEY ("status")
+  REFERENCES status(name) ON UPDATE CASCADE ON DELETE RESTRICT;
+
+-- TABLE station_attachments
 ALTER TABLE "station_attachments"
-ADD FOREIGN KEY("station_id") REFERENCES "station"("id")
-ON UPDATE NO ACTION ON DELETE NO ACTION;
--- ALTER TABLE "station_attachments"
--- ADD FOREIGN KEY("user_id") REFERENCES "user"("id")
--- ON UPDATE NO ACTION ON DELETE NO ACTION;
+  ADD CONSTRAINT fk_station_attachments_station FOREIGN KEY ("station_id")
+  REFERENCES "station"(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
 
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
@@ -221,11 +317,6 @@ BEFORE UPDATE OR INSERT ON "river_basin"
 FOR EACH ROW
 EXECUTE FUNCTION update_updated_at_column();
 
--- Trigger for table: country
-CREATE TRIGGER update_country_updated_at
-BEFORE UPDATE OR INSERT ON "country"
-FOR EACH ROW
-EXECUTE FUNCTION update_updated_at_column();
 
 -- Trigger for table: star_dashboard
 CREATE TRIGGER update_star_dashboard_updated_at
@@ -239,1314 +330,1547 @@ BEFORE UPDATE OR INSERT ON "station_key"
 FOR EACH ROW
 EXECUTE FUNCTION update_updated_at_column();
 
+INSERT INTO unit (name) VALUES 
+('m'), ('no.'), ('unitless'), ('coded'), ('no/100ml'), ('%'), ('ug/l'),
+('phunits'), ('ftu'), ('g'), ('mg/l'), ('hazen'), ('abs/cm'), ('abs/m'),
+('ng/l'), ('mg/kg'), ('cfu/0.1l'), ('ml'), ('ntu'), ('lgn/0.1l'), ('cel'),
+('mg/L'), ('ppt'), ('us/cm');
+
+INSERT INTO station_type (name) VALUES
+('ANY FISH - NOT INCLUDING FLATFISH - WHOLE ANIMAL'),
+('PLATICTHYS FLESUS - FLOUNDER - MUSCLE'),
+('POND / LAKE / RESERVOIR WATER'),
+('ESTUARINE WATER'),
+('CANAL WATER'),
+('RIVER / RUNNING SURFACE WATER'),
+('FINAL SEWAGE EFFLUENT'),
+('MYTILUS EDULIS - MUSSEL - MUSCLE'),
+('ESTUARY SEDIMENT - SUB TIDAL - <63UM FRACTION'),
+('MYTILUS EDULIS - MUSSEL - WHOLE ANIMAL');
+
+INSERT INTO parameter_group (name) VALUES
+('Organic Pollutants'),
+(''), -- vẫn insert nếu cần giữ record rỗng
+('Nutrients'),
+('Microbiological'),
+('Other Chemicals'),
+('Physical'),
+('solid'),
+('Metals');
+
+-- Upload status
+INSERT INTO status (name) VALUES
+('success'),
+('error'),
+('pending');
+
+-- Station status
+INSERT INTO status (name) VALUES
+('active'),
+('inactive'),
+('deleted');
+
+INSERT INTO country (name) VALUES
+('Afghanistan'),
+('Albania'),
+('Algeria'),
+('Andorra'),
+('Angola'),
+('Argentina'),
+('Armenia'),
+('Australia'),
+('Austria'),
+('Azerbaijan'),
+('Bahamas'),
+('Bahrain'),
+('Bangladesh'),
+('Barbados'),
+('Belarus'),
+('Belgium'),
+('Belize'),
+('Benin'),
+('Bhutan'),
+('Bolivia'),
+('Bosnia and Herzegovina'),
+('Botswana'),
+('Brazil'),
+('Brunei'),
+('Bulgaria'),
+('Burkina Faso'),
+('Burundi'),
+('Cambodia'),
+('Cameroon'),
+('Canada'),
+('Cape Verde'),
+('Central African Republic'),
+('Chad'),
+('Chile'),
+('China'),
+('Colombia'),
+('Comoros'),
+('Costa Rica'),
+('Croatia'),
+('Cuba'),
+('Cyprus'),
+('Czech Republic'),
+('Democratic Republic of the Congo'),
+('Denmark'),
+('Djibouti'),
+('Dominica'),
+('Dominican Republic'),
+('Ecuador'),
+('Egypt'),
+('El Salvador'),
+('Equatorial Guinea'),
+('Eritrea'),
+('Estonia'),
+('Eswatini'),
+('Ethiopia'),
+('Fiji'),
+('Finland'),
+('France'),
+('Gabon'),
+('Gambia'),
+('Georgia'),
+('Germany'),
+('Ghana'),
+('Greece'),
+('Grenada'),
+('Guatemala'),
+('Guinea'),
+('Guinea-Bissau'),
+('Guyana'),
+('Haiti'),
+('Honduras'),
+('Hungary'),
+('Iceland'),
+('India'),
+('Indonesia'),
+('Iran'),
+('Iraq'),
+('Ireland'),
+('Israel'),
+('Italy'),
+('Ivory Coast'),
+('Jamaica'),
+('Japan'),
+('Jordan'),
+('Kazakhstan'),
+('Kenya'),
+('Kiribati'),
+('Kuwait'),
+('Kyrgyzstan'),
+('Laos'),
+('Latvia'),
+('Lebanon'),
+('Lesotho'),
+('Liberia'),
+('Libya'),
+('Liechtenstein'),
+('Lithuania'),
+('Luxembourg'),
+('Madagascar'),
+('Malawi');
+INSERT INTO country (name) VALUES
+('Malaysia'),
+('Maldives'),
+('Mali'),
+('Malta'),
+('Marshall Islands'),
+('Mauritania'),
+('Mauritius'),
+('Mexico'),
+('Micronesia'),
+('Moldova'),
+('Monaco'),
+('Mongolia'),
+('Montenegro'),
+('Morocco'),
+('Mozambique'),
+('Myanmar'),
+('Namibia'),
+('Nauru'),
+('Nepal'),
+('Netherlands'),
+('New Zealand'),
+('Nicaragua'),
+('Niger'),
+('Nigeria'),
+('North Macedonia'),
+('Norway'),
+('Oman'),
+('Pakistan'),
+('Palau'),
+('Panama'),
+('Papua New Guinea');
+INSERT INTO country (name) VALUES
+('Paraguay'),
+('Peru'),
+('Philippines'),
+('Poland'),
+('Portugal'),
+('Qatar'),
+('Romania'),
+('Rwanda'),
+('Saint Kitts and Nevis'),
+('Saint Lucia'),
+('Saint Vincent and the Grenadines'),
+('Samoa'),
+('San Marino'),
+('Sao Tome and Principe'),
+('Saudi Arabia'),
+('Senegal'),
+('Serbia'),
+('Seychelles'),
+('Sierra Leone'),
+('Singapore'),
+('Slovakia'),
+('Slovenia'),
+('Solomon Islands'),
+('Somalia'),
+('South Africa'),
+('South Korea'),
+('South Sudan'),
+('Spain');
+INSERT INTO country (name) VALUES
+('Sri Lanka'),
+('Sudan'),
+('Suriname'),
+('Sweden'),
+('Switzerland'),
+('Syria'),
+('Tajikistan'),
+('Tanzania'),
+('Thailand'),
+('Timor-Leste'),
+('Togo'),
+('Tonga'),
+('Trinidad and Tobago'),
+('Tunisia'),
+('Turkey'),
+('Turkmenistan'),
+('Tuvalu'),
+('Uganda'),
+('Ukraine'),
+('United Arab Emirates'),
+('United Kingdom'),
+('United States of America'),
+('Uruguay'),
+('Uzbekistan'),
+('Vanuatu'),
+('Vatican City State (Holy See)'),
+('Venezuela'),
+('Vietnam');
+INSERT INTO country (name) VALUES
+('Yemen'),
+('Zambia'),
+('Zimbabwe');
+
 INSERT INTO river_basin (id, name, description) VALUES (1, 'Humber', 'lorem');
 
-
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (1, 'Alky pH 4.5', 'mg/l', 'Alkalinity to pH 4.5 as CaCO3', 'Physical');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (2, 'Ammonia(N)', 'mg/l', 'Ammoniacal Nitrogen as N', 'Nutrients');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (3, 'Cond @ 25C', 'us/cm', 'Conductivity at 25 C', 'Physical');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (4, 'N Oxidised', 'mg/l', 'Nitrogen, Total Oxidised as N', 'Nutrients');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (5, 'NH3 un-ion', 'mg/l', 'Ammonia un-ionised as N', 'Nutrients');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (6, 'Nitrate-N', 'mg/l', 'Nitrate as N', 'Nutrients');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (7, 'Nitrite-N', 'mg/l', 'Nitrite as N', 'Nutrients');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (8, 'O Diss %sat', '%', 'Oxygen, Dissolved, % Saturation', 'Physical');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (9, 'Orthophospht', 'mg/l', 'Orthophosphate, reactive as P', 'Nutrients');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (10, 'Oxygen Diss', 'mg/l', 'Oxygen, Dissolved as O2', 'Physical');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (11, 'Temp Water', 'cel', 'Temperature of Water', 'Physical');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (12, 'pH', 'phunits', 'pH', 'Physical');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (13, 'Chloride Ion', 'mg/l', 'Chloride', 'Other Chemicals');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (14, 'E.coli C-MF', 'no/100ml', 'Escherichia coli : Confirmed : MF', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (15, 'IE Conf', 'cfu/0.1l', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (16, 'IE Pres', 'cfu/0.1l', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (17, 'C - Org Filt', 'mg/l', 'Carbon, Organic, Dissolved as C :- {DOC}', 'Physical');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (18, 'Nitrogen - N', 'mg/l', 'Nitrogen, Total as N', 'Nutrients');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (19, 'Phosphorus-P', 'mg/l', 'Phosphorus, Total as P', 'Nutrients');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (20, 'SiO2 Rv', 'mg/l', 'Silica, reactive as SiO2', 'Other Chemicals');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (21, '1234678HpCDD', 'ug/l', '1,2,3,4,6,7,8-Heptachlorodibenzo-p-dioxin : Dry Wt', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (22, '1234678HpCDF', 'ug/l', '1,2,3,4,6,7,8-Heptachlorodibenzofuran : Dry Wt', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (23, '123478-HxCDD', 'ug/l', '1,2,3,4,7,8-Hexachlorodibenzo-p-dioxin : Dry Wt', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (24, '1234789HpCDF', 'ug/l', '1,2,3,4,7,8,9-Heptachlorodibenzofuran : Dry Wt', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (25, '123478HxCDFd', 'ug/l', '1,2,3,4,7,8-Hexachlorodibenzofuran : Dry Wt', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (26, '123678-HxCDD', 'ug/l', '1,2,3,6,7,8-Hexachlorodibenzo-p-dioxin : Dry Wt', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (27, '123678HxCDFd', 'ug/l', '1,2,3,6,7,8-Hexachlorodibenzofuran : Dry Wt', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (28, '123789-HxCDD', 'ug/l', '1,2,3,7,8,9-Hexachlorodibenzo-p-dioxin : Dry Wt', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (29, '12378PeCDDdw', 'ug/l', '1,2,3,7,8-Pentachlorodibenzo-p-dioxin : Dry Wt', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (30, '12378PeCDFdw', 'ug/l', '1,2,3,7,8-Pentachlorodibenzofuran : Dry Wt', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (31, '23478PeCDFdw', 'ug/l', '2,3,4,7,8-Pentachlorodibenzofuran : Dry Wt', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (32, '2378-TCDD DW', 'ug/l', '2,3,7,8-Tetrachlorodibenzo-p-dioxin : Dry Wt', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (33, '2378-TCDF DW', 'ug/l', '2,3,7,8-Tetrachlorodibenzofuran : Dry Wt', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (34, 'HBCDD TOT WW', 'ug/l', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (35, 'Lead - wet w', 'ug/l', 'Lead : Wet Wt', 'Metals');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (36, 'OCDD', 'ug/l', 'Octachlorodibenzo-p-dioxin : Dry Wt', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (37, 'OCDF DW', 'ug/l', 'Octachlorodibenzofuran : Dry Wt', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (38, 'PBDE 100 WW', 'ug/l', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (39, 'PBDE 153 WW', 'ug/l', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (40, 'PBDE 154 WW', 'ug/l', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (41, 'PBDE 28 WW', 'ug/l', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (42, 'PBDE 47 WW', 'ug/l', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (43, 'PBDE 99 WW', 'ug/l', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (44, 'PCB 081 DW', 'ug/l', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (45, 'PCB 114 DW', 'ug/l', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (46, 'PCB 123 DW', 'ug/l', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (47, 'PCB 167 DW', 'ug/l', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (48, 'PCB 189 DW', 'ug/l', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (49, 'PFOS WW', 'ug/l', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (50, 'WHOTEQ Low B', 'ug/l', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (51, 'a -HBCDD WW', 'ug/l', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (52, 'Calcium - Ca', 'mg/l', 'Calcium', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (53, 'Fe- Filt', 'ug/l', 'Iron, Dissolved', 'Metals');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (54, 'Hardness', 'mg/l', 'Hardness, Total as CaCO3', 'Physical');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (55, 'Magnesium-Mg', 'mg/l', 'Magnesium', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (56, 'Sld Sus@105C', 'mg/l', 'Solids, Suspended at 105 C', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (57, 'Mn- Filtered', 'ug/l', 'Manganese, Dissolved', 'Physical');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (58, 'Ca Filtered', 'mg/l', 'Calcium, Dissolved', 'Physical');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (59, 'Mn BLM Bio', 'ug/l', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (60, 'Mg Filtered', 'mg/l', 'Magnesium, Dissolved', 'Physical');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (61, 'Arsenic - As', 'ug/l', 'Arsenic', 'Metals');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (62, 'As-Filtered', 'ug/l', 'Arsenic, Dissolved', 'Metals');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (63, 'BOD ATU', 'mg/l', 'BOD : 5 Day ATU', 'Organic Pollutants');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (64, 'Chromium -Cr', 'ug/l', 'Chromium', 'Metals');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (65, 'Copper - Cu', 'ug/l', 'Copper', 'Metals');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (66, 'Cu Filtered', 'ug/l', 'Copper, Dissolved', 'Metals');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (67, 'Iron - as Fe', 'ug/l', 'Iron', 'Metals');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (68, 'Lead - as Pb', 'ug/l', 'Lead', 'Metals');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (69, 'Ni- Filtered', 'ug/l', 'Nickel, Dissolved', 'Physical');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (70, 'Nickel - Ni', 'ug/l', 'Nickel', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (71, 'Pb Filtered', 'ug/l', 'Lead, Dissolved', 'Metals');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (72, 'WethPresTemp', 'coded', 'Weather : Temperature', 'Physical');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (73, 'Zinc - as Zn', 'ug/l', 'Zinc', 'Metals');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (74, 'Potassium- K', 'mg/l', 'Potassium', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (75, 'Chlorophylls', 'ug/l', 'Chlorophyll a + b', 'Physical');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (76, 'Cond @ 20C', 'us/cm', 'Conductivity at 20 C', 'Physical');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (77, 'CHLOROPHYLL', 'ug/l', 'Chlorophyll : Acetone Extract', 'Physical');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (78, 'Al- Filtered', 'ug/l', 'Aluminium, Dissolved', 'Metals');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (79, 'Aluminium-Al', 'ug/l', 'Aluminium', 'Metals');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (80, 'Cd Filtered', 'ug/l', 'Cadmium, Dissolved', 'Metals');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (81, 'Manganse-Mn', 'ug/l', 'Manganese', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (82, 'Mercury - Hg', 'ug/l', 'Mercury', 'Metals');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (83, 'Dimethoate', 'ug/l', 'Dimethoate', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (84, 'Pendimethaln', 'ug/l', 'Pendimethalin', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (85, 'Propachlor', 'ug/l', 'Propachlor', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (86, 'B-[a]-pyrene', 'ug/l', 'Benzo(a)Pyrene', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (87, 'B-[b]-fluora', 'ug/l', 'Benzo(b)Fluoranthene', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (88, 'B-[ghi]-pery', 'ug/l', 'Benzo(g,h,i)Perylene', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (89, 'B-[k]-fluora', 'ug/l', 'Benzo(k)Fluoranthene', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (90, 'Fluoranthene', 'ug/l', 'Fluoranthene', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (91, 'Ind123pyrene', 'ug/l', 'Indeno(1,2,3-cd)pyrene', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (92, 'N Organic', 'mg/l', 'Nitrogen, Organic as N', 'Nutrients');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (93, 'N-Kjeldahl', 'mg/l', 'Nitrogen, Kjeldahl as N', 'Nutrients');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (94, 'Phosphate', 'mg/l', 'Phosphate :- {TIP}', 'Physical');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (95, 'Zn- Filtered', 'ug/l', 'Zinc, Dissolved', 'Metals');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (96, '123478HxCDF', 'ug/l', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (97, '12378PeCDF', 'ug/l', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (98, '2378-TCDF', 'ug/l', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (99, 'OCDF  WW', 'ug/l', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (100, 'PCB 081', 'ug/l', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (101, 'PCB 114', 'ug/l', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (102, 'PCB 118 WWt', 'ug/l', 'PCB - 118 : Wet Wt', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (103, 'PCB 123', 'ug/l', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (104, 'PCB 126 WW', 'ug/l', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (105, 'PCB 157 WW', 'ug/l', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (106, 'PCB 167 WW', 'ug/l', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (107, 'PCB 169 WW', 'ug/l', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (108, 'PCB 189 WW', 'ug/l', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (109, 'PCB 77 WW', 'ug/l', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (110, '112TCEthan', 'ug/l', '1,1,2-Trichloroethane', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (111, '2,4-D', 'ug/l', '2,4-D :- {2,4-Dichlorophenoxyacetic acid}', 'Physical');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (112, '2,4-D be', 'ug/l', '2,4-D Butyl Ester', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (113, '2,4-D bge', 'ug/l', '2,4-D Glycol Butyl Ester', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (114, '2,4-D esters', 'ug/l', '2,4-D Esters : Total', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (115, '2,4-D ioe', 'ug/l', '2,4-D Iso Octyl Ester', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (116, '2,4-D m e', 'ug/l', '2,4-D Methyl Ester', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (117, '2-CHLORO-4-N', 'ug/l', '2-Chloro-4-nitrotoluene', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (118, '2-CHLORO-6-N', 'ug/l', '2-Chloro-6-nitrotoluene', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (119, '24Dichloropl', 'ug/l', '2,4-Dichlorophenol', 'Physical');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (120, '2Chlorophenl', 'ug/l', '2-Chlorophenol', 'Physical');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (121, '4Cl2Ntoluene', 'ug/l', '4-Chloro-2-nitrotoluene :- {2-Nitro-4-Chlorotoluene}', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (122, '4Cl3MePhenol', 'ug/l', '4-Chloro-3-methylphenol :- {p-Chloro-m-cresol}', 'Physical');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (123, '4Cl3NToluene', 'ug/l', '4-Chloro-3-nitrotoluene', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (124, 'Atrazine', 'ug/l', 'Atrazine', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (125, 'Bentazone', 'ug/l', 'Bentazone', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (126, 'Biphenyl', 'ug/l', 'Biphenyl', 'Physical');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (127, 'Boron - as B', 'ug/l', 'Boron', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (128, 'CL-N-Toluens', 'ug/l', 'Chloronitrotoluene : Total Isomers', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (129, 'Cyfluthrin', 'ug/l', 'Cyfluthrin', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (130, 'DemetonSMyl', 'ug/l', 'Demeton-S-methyl', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (131, 'Dichlorvos', 'ug/l', 'Dichlorvos', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (132, 'EndosulphanA', 'ug/l', 'Endosulfan A', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (133, 'Flucofuron', 'ug/l', 'Flucofuron', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (134, 'Malathion', 'ug/l', 'Malathion', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (135, 'Mecoprop', 'ug/l', 'Mecoprop', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (136, 'Mevinphos', 'ug/l', 'Mevinphos', 'Physical');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (137, 'Naphthalene', 'ug/l', 'Naphthalene', 'Physical');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (138, 'PCSDs', 'ug/l', 'PCSDs :- {chlorphenylid}', 'Physical');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (139, 'Simazine', 'ug/l', 'Simazine', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (140, 'SulcofuronNa', 'ug/l', 'Sulcofuron', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (141, 'Toluene', 'ug/l', 'Toluene :- {Methylbenzene}', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (142, 'TriBT Cation', 'ug/l', 'Tributyl Tin as Cation', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (143, 'Triazophos', 'ug/l', 'Triazophos', 'Physical');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (144, 'Trifluralin', 'ug/l', 'Trifluralin', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (145, 'Vanadium - V', 'ug/l', 'Vanadium', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (146, 'Xylene Tot', 'ug/l', 'Dimethylbenzene : Sum of (1,2- 1,3- 1,4-) :- {Xylene}', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (147, 'm-p-Xylene', 'ug/l', 'Dimethylbenzene : Sum of isomers (1,3- 1,4-)', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (148, 'o-Xylene', 'ug/l', '1,2-Dimethylbenzene :- {o-Xylene}', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (149, '4-nonPhenol', 'ug/l', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (150, 'DEHP', 'ug/l', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (151, 'ptOctylPheno', 'ug/l', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (152, 'Triclosan', 'ug/l', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (153, 'COD as O2', 'mg/l', 'Chemical Oxygen Demand :- {COD}', 'Organic Pollutants');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (154, 'Cu BLM Bio', 'ug/l', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (155, 'Ni BLM Bio', 'ug/l', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (156, 'Pb BLM Bio', 'ug/l', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (157, 'Zn BLM Bio', 'ug/l', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (158, 'PFOS', 'ug/l', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (159, 'pFoctanoate', 'ug/l', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (160, 'Ba- Filtered', 'ug/l', 'Barium, Dissolved', 'Physical');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (161, 'IonicBal Dis', '%', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (162, 'K- Filtered', 'mg/l', 'Potassium, Dissolved', 'Physical');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (163, 'Na- Filtered', 'mg/l', 'Sodium, Dissolved', 'Physical');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (164, 'SALinsitu', 'ppt', 'Salinity : In Situ', 'Physical');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (165, 'SO4dis', 'mg/l', 'Sulphate, Dissolved as SO4', 'Physical');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (166, 'StrontumFilt', 'ug/l', 'Strontium, Filtered', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (167, 'pH in-situ', 'phunits', 'pH : In Situ', 'Physical');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (168, 'Colour Filt', 'hazen', 'Colour, Filtered', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (169, 'N Oxid Filt', 'mg/l', 'Nitrogen, Total Oxidised, Filtered as N', 'Nutrients');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (170, 'OrthophsFilt', 'mg/l', 'Orthophosphate, Filtered as P', 'Nutrients');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (171, 'NH3 filt N', 'mg/l', 'Ammoniacal Nitrogen, Filtered as N', 'Nutrients');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (172, 'Sodium - Na', 'mg/l', 'Sodium', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (173, 'Sulphate SO4', 'mg/l', 'Sulphate as SO4', 'Physical');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (174, '12-DCA', 'ug/l', '1,2-Dichloroethane', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (175, 'Chloroform', 'ug/l', 'Chloroform :- {Trichloromethane}', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (176, 'DDT (OP'''')', 'ug/l', 'DDT -op', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (177, 'DDT Derived', 'ug/l', 'DDT : Sum of components', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (178, 'PCBs', 'ug/l', 'PCB : Total', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (179, 'PClBenzene', 'ug/l', 'Pentachlorobenzene', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (180, 'Cr Hex Filt', 'ug/l', 'Chromium Hexavalent, Dissolved :- {Cr VI}', 'Metals');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (181, 'DiClBenzPhWW', 'ug/l', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (182, 'HCH Alpha', 'ug/l', 'HCH -alpha', 'Physical');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (183, 'HCH Beta', 'ug/l', 'HCH -beta', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (184, 'HCH Gamma', 'ug/l', 'HCH -gamma :- {Lindane}', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (185, 'HEXACHLORO 1', 'ug/l', 'Hexachlorobutadiene', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (186, 'Heptachlor', 'ug/l', 'Heptachlor', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (187, 'Irgarol 1051', 'ug/l', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (188, 'Terbutryne', 'ug/l', 'Terbutryn', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (189, 'c-Hept Epox', 'ug/l', 'cis-Heptachlor epoxide', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (190, 't-Hept Epox', 'ug/l', 'trans-Heptachlor epoxide', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (191, 'Cypermethrin', 'ug/l', 'Cypermethrin', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (192, 'Glyphosate', 'ug/l', 'Glyphosate', 'Physical');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (193, 'Flutriafol', 'ug/l', 'Flutriafol', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (194, 'B-[a]-pyrWW', 'ug/l', 'Benzo(a)Pyrene : Wet Wt', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (195, 'Fluoranth WW', 'ug/l', 'Fluoranthene : Wet Wt', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (196, 'Hg - wet wt', 'ug/l', 'Mercury : Wet Wt', 'Metals');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (197, 'TurbidityNTU', 'ntu', 'Turbidity', 'Physical');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (198, 'HBCDD', 'ug/l', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (199, 'Imazalil', 'ug/l', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (200, 'ColfmF Conf', 'no/100ml', 'Coliforms, Faecal : Confirmed', 'Microbiological');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (201, 'ColformsPre', 'no/100ml', 'Coliforms, Total : Presumptive : MF', 'Microbiological');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (202, 'F Coli Pre', 'no/100ml', 'Coliforms, Faecal : Presumptive : MF', 'Microbiological');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (203, 'StrepF PMF', 'no/100ml', 'Streptococci : Faecal : Presumptive : MF', 'Organic Pollutants');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (204, 'Tot Coli CMF', 'no/100ml', 'Coliforms, Total : Confirmed : MF', 'Microbiological');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (205, 'Bact All CN', 'lgn/0.1l', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (206, 'BactHumanCN', 'lgn/0.1l', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (207, 'BactRumnt CN', 'lgn/0.1l', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (208, 'StrepF C-MF', 'no/100ml', 'Streptococci : Faecal : Confirmed : MF', 'Organic Pollutants');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (209, 'HumanMito CN', 'lgn/0.1l', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (210, 'Ag - wet wt', 'ug/l', 'Silver : Wet Wt', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (211, 'Aldrin WWt', 'ug/l', 'Aldrin : Wet Wt', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (212, 'AnthracenWW', 'ug/l', 'Anthracene : Wet Wt', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (213, 'As WET WT', 'ug/l', 'Arsenic : Wet Wt', 'Metals');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (214, 'B-[a]-antWW', 'ug/l', 'Benzo(a)Anthracene : Wet Wt', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (215, 'BenzGHIper W', 'ug/l', 'Benzo(g,h,i)Perylene : Wet Wt', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (216, 'ChryseneWW', 'ug/l', 'Chrysene : Wet Wt', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (217, 'Cr - wet wt', 'ug/l', 'Chromium : Wet Wt', 'Metals');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (218, 'Cu - wet wt', 'ug/l', 'Copper : Wet Wt', 'Metals');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (219, 'DDE (PP'''')WWt', 'ug/l', 'DDE -pp : Wet Wt', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (220, 'DDT (OP'''')WWt', 'ug/l', 'DDT -op : Wet Wt', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (221, 'DDT(PP'''')WWt', 'ug/l', 'DDT -pp : Wet Wt', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (222, 'Dieldrin WWt', 'ug/l', 'Dieldrin : Wet Wt', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (223, 'Endrin WWt', 'ug/l', 'Endrin : Wet Wt', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (224, 'HCH Beta WWt', 'ug/l', 'HCH -beta : Wet Wt', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (225, 'HCHAlpha WWt', 'ug/l', 'HCH -alpha : Wet Wt', 'Physical');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (226, 'HCHDelta WWt', 'ug/l', 'HCH -delta : Wet Wt', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (227, 'HCHGamma WWt', 'ug/l', 'HCH -gamma : Wet Wt :- {Lindane}', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (228, 'HexachlrbnzW', 'ug/l', 'Hexachlorobenzene : Wet Wt', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (229, 'Ind123pyrWWt', 'ug/l', 'Indeno(1,2,3-cd)pyrene : Wet Wt', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (230, 'Isodrin WWt', 'ug/l', 'Isodrin : Wet Wt', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (231, 'Lipid tot ww', '%', 'Lipids : Total : Wet Wt', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (232, 'NaphthalnWW', 'ug/l', 'Naphthalene : Wet Wt', 'Physical');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (233, 'Ni - wet wt', 'ug/l', 'Nickel : Wet Wt', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (234, 'PCB 101 WWt', 'ug/l', 'PCB - 101 : Wet Wt', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (235, 'PCB 138 WWt', 'ug/l', 'PCB - 138 : Wet Wt', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (236, 'PCB 153 WWt', 'ug/l', 'PCB - 153 : Wet Wt', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (237, 'PCB 180 WWt', 'ug/l', 'PCB - 180 : Wet Wt', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (238, 'PCB 28 WWt', 'ug/l', 'PCB - 028 : Wet Wt', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (239, 'PCB 52 WWt', 'ug/l', 'PCB - 052 : Wet Wt', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (240, 'PhennthrnWW', 'ug/l', 'Phenanthrene : Wet Wt', 'Physical');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (241, 'Pyrene WW', 'ug/l', 'Pyrene : Wet Wt', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (242, 'Se - wet wt', 'ug/l', 'Selenium : Wet Wt', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (243, 'Solids @105C', '%', 'Residual mass: after drying at 105 C', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (244, 'TBTCationWWT', 'ug/l', 'Tributyl Tin : Wet Wt as Cation', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (245, 'TDE (PP'''')WWt', 'ug/l', 'TDE -pp : Wet Wt', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (246, 'Zn - wet wt', 'ug/l', 'Zinc : Wet Wt', 'Metals');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (247, 'NumOrganisms', 'no.', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (248, 'SzRnLenMax', 'unitless', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (249, 'SzRnLenMin', 'unitless', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (250, 'Wet Wt', 'g', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (251, 'DtrgtAnc&Nnc', 'mg/l', 'Detergents : Anionic + non-ionic', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (252, 'PHENOL Grp 3', 'ug/l', 'Phenols : Total (7 Compounds) : Group 3', 'Physical');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (253, 'Solid quanty', 'coded', 'Appearance of solid : Quantity', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (254, 'Flumethrin', 'ug/l', 'Flumethrin', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (255, 'P Digested', 'ug/l', 'Phosphorus, Digested', 'Nutrients');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (256, 'PBDE 100 DW', 'ug/l', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (257, 'PBDE 153 DW', 'ug/l', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (258, 'PBDE 154 DW', 'ug/l', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (259, 'PBDE 28 DW', 'ug/l', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (260, 'PBDE 47 DW', 'ug/l', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (261, 'PBDE 99 DW', 'ug/l', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (262, 'Dry Matter %', '%', 'Dry Matter : %', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (263, 'HCH Epsilon', 'ug/l', 'HCH -epsilon', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (264, 'PCB 105 DW', 'ug/l', 'PCB - 105 : Dry Wt', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (265, 'PCB 118 DW', 'ug/l', 'PCB - 118 : Dry Wt', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (266, 'PCB 126 DW', 'ug/l', 'PCB - 126 : Dry Wt', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (267, 'PCB 156 DW', 'ug/l', 'PCB - 156 : Dry Wt', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (268, 'PCB 157 DW', 'ug/l', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (269, 'PCB 169 DW', 'ug/l', 'PCB - 169 : Dry Wt', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (270, 'PCB 77 DW', 'ug/l', 'PCB - 077 : Dry Wt', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (271, 'Hg - Dry Wt', 'mg/kg', 'Mercury : Dry Wt', 'Metals');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (272, 'PCB 105 WWt', 'ug/l', 'PCB - 105 : Wet Wt', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (273, 'PCB 156 WWt', 'ug/l', 'PCB - 156 : Wet Wt', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (274, 'Endrin', 'ug/l', 'Endrin', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (275, 'Tot Drins(4)', 'ug/l', 'Drins : Total (Aldrin, Dieldrin, Endrin, Isodrin)', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (276, 'Tot HCHs ABG', 'ug/l', 'HCH : Total (Alpha, Beta, Gamma)', 'Physical');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (277, 'Barium - Ba', 'ug/l', 'Barium', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (278, 'Strontium-Sr', 'ug/l', 'Strontium', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (279, 'Chlorophyl-A', 'ug/l', 'Chlorophyll a', 'Physical');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (280, 'CHLOR A', 'ug/l', 'Chlorophyll : Methanol Extract', 'Physical');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (281, 'Sld Filt@105', 'mg/l', 'Solids, Dissolved at 105 C', 'Physical');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (282, '1,3 -DICHLOR', 'ug/l', 'cis-1,3-Dichloropropylene :- {cis-1,3-Dichloropropene}', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (283, 'Fluoride Dis', 'mg/l', 'Fluoride, Dissolved', 'Physical');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (284, 'Phenols Mono', 'mg/l', 'Phenols : Monohydric as Phenol', 'Physical');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (285, 'Thiocyanate', 'mg/l', 'Thiocyanate as CNS', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (286, 'Titanium -Ti', 'ug/l', 'Titanium', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (287, 'TitaniumFilt', 'ug/l', 'Titanium, Filtered', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (288, '3,4 DICHLORO', 'ug/l', '3,4-Dichloroaniline :- {3,4-Chlorobenzamine}', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (289, 'S CrReduce', 'mg/l', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (290, 'Sulphide - S', 'mg/l', 'Sulphide as S', 'Physical');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (291, 'Water Depth', 'm', 'Water Depth', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (292, 'AzinphsEthyl', 'ug/l', 'Azinphos-ethyl', 'Physical');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (293, 'Chlorfenvphs', 'ug/l', 'Chlorfenvinphos', 'Physical');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (294, 'Desmetryne', 'ug/l', 'Desmetryn', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (295, 'Fenthion', 'ug/l', 'Fenthion', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (296, 'Parathion', 'ug/l', 'Parathion-ethyl :- {Parathion}', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (297, 'ParathionMyl', 'ug/l', 'Parathion-methyl', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (298, 'Prometryn', 'ug/l', 'Prometryn', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (299, 'Propazine', 'ug/l', 'Propazine', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (300, 'Propetamphos', 'ug/l', 'Propetamphos', 'Physical');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (301, 'Acetate', 'mg/l', 'Acetate', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (302, '2Phenoxyprop', 'ug/l', '2-Phenoxypropionic acid :- {PPA}', 'Physical');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (303, '4-CAA', 'ug/l', '4-Chlorophenoxyacetic acid', 'Physical');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (304, '4Phenoxbutyr', 'ug/l', '4-Phenoxybutyric acid :- {PBA}', 'Physical');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (305, 'Bromoxynil', 'ug/l', 'Bromoxynil', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (306, 'Carbophenthn', 'ug/l', 'Carbophenothion', 'Physical');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (307, 'DNBP', 'ug/l', 'Dinoseb :- {2-Methyl-n-propyl-4,6-dinitrophenol} :- {DNBP}', 'Physical');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (308, 'DNOC', 'ug/l', 'DNOC :- {4,6-dinitro-o-cresol}', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (309, 'Fenoprop', 'ug/l', 'Fenoprop', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (310, 'MCPB', 'ug/l', 'MCPB :- {4-Chloro-2-methylphenoxybutyric acid}', 'Physical');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (311, 'Permthrn c+t', 'ug/l', 'Permethrin (cis- and trans-)', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (312, 'PhenoxytcAcd', 'ug/l', 'Phenoxyacetic acid :- {PAA}', 'Physical');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (313, 'Chloroprophm', 'ug/l', 'Chlorpropham', 'Physical');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (314, 'Dichlobenil', 'ug/l', 'Dichlobenil', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (315, 'Methoxychlor', 'ug/l', 'Methoxychlor', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (316, 'PCB 149', 'ug/l', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (317, 'PCB Con 31', 'ug/l', 'PCB - 031', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (318, 'TRIALLATE', 'ug/l', 'Tri-allate', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (319, 'Vinclozolin', 'ug/l', 'Vinclozolin', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (320, 'Dtrgt NncSyn', 'mg/l', 'Detergents, Non-ionic', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (321, 'ApColU AB400', 'abs/m', 'Absorbance at 400 nm, Unfiltered :- {Apparent Colour}', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (322, 'TRI CLET P', 'ug/l', 'Tris-Chloroethyl phosphate', 'Physical');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (323, 'TRI CLPR P', 'ug/l', 'Tris-Chloropropyl phosphate', 'Physical');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (324, 'Colour', 'hazen', 'Colour', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (325, 'Coumaphos', 'ug/l', 'Coumaphos', 'Physical');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (326, 'IonicBalance', '%', 'Ionic Balance', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (327, 'Alk-Gran', 'mg/l', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (328, 'Fluoride - F', 'mg/l', 'Fluoride', 'Other Chemicals');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (329, 'Vol Filtered', 'ml', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (330, 'U - Filtered', 'ug/l', 'Uranium, Dissolved', 'Physical');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (331, 'PBDE 138', 'ug/l', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (332, 'PBDE 66', 'ug/l', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (333, '17alpha EE2', 'ng/l', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (334, '17beta E2', 'ng/l', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (335, 'Diclofenac', 'ug/l', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (336, 'Erythromycin', 'ug/l', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (337, 'Fluoxetine', 'ug/l', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (338, 'Ibuprofen', 'ug/l', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (339, 'OestroneE1', 'ng/l', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (340, 'Oxytetracycl', 'ug/l', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (341, 'Propranolol', 'ug/l', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (342, 'OptDens@400F', 'abs/cm', 'Optical Density at 400 nm, Filtered', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (343, 'OptDens@450F', 'abs/cm', 'Optical Density at 450 nm, Filtered', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (344, 'OptDens@500F', 'abs/cm', 'Optical Density at 500 nm, Filtered', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (345, 'OptDens@550F', 'abs/cm', 'Optical Density at 550 nm, Filtered', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (346, 'OptDens@600F', 'abs/cm', 'Optical Density at 600 nm, Filtered', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (347, 'OptDens@700F', 'abs/cm', 'Optical Density at 700 nm, Filtered', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (348, 'Molybdenm-Mo', 'ug/l', 'Molybdenum', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (349, 'Bicarb HCO3', 'mg/l', 'Bicarbonate as HCO3', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (350, 'OptDens@410F', 'abs/cm', 'Optical Density at 410 nm, Filtered', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (351, 'OptDens@420F', 'abs/cm', 'Optical Density at 420 nm, Filtered', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (352, 'OptDens@430F', 'abs/cm', 'Optical Density at 430 nm, Filtered', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (353, 'OptDens@440F', 'abs/cm', 'Optical Density at 440 nm, Filtered', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (354, 'OptDens@460F', 'abs/cm', 'Optical Density at 460 nm, Filtered', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (355, 'OptDens@470F', 'abs/cm', 'Optical Density at 470 nm, Filtered', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (356, 'OptDens@480F', 'abs/cm', 'Optical Density at 480 nm, Filtered', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (357, 'OptDens@490F', 'abs/cm', 'Optical Density at 490 nm, Filtered', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (358, 'OptDens@520F', 'abs/cm', 'Optical Density at 520 nm, Filtered', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (359, 'OptDens@530F', 'abs/cm', 'Optical Density at 530 nm, Filtered', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (360, 'OptDens@540F', 'abs/cm', 'Optical Density at 540 nm, Filtered', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (361, 'OptDens@570F', 'abs/cm', 'Optical Density at 570 nm, Filtered', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (362, 'OptDens@580F', 'abs/cm', 'Optical Density at 580 nm, Filtered', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (363, 'OptDens@610F', 'abs/cm', 'Optical Density at 610 nm, Filtered', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (364, 'OptDens@620F', 'abs/cm', 'Optical Density at 620 nm, Filtered', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (365, 'OptDens@630F', 'abs/cm', 'Optical Density at 630 nm, Filtered', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (366, 'OptDens@640F', 'abs/cm', 'Optical Density at 640 nm, Filtered', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (367, 'OptDens@660F', 'abs/cm', 'Optical Density at 660 nm, Filtered', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (368, 'OptDens@670F', 'abs/cm', 'Optical Density at 670 nm, Filtered', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (369, 'OptDens@680F', 'abs/cm', 'Optical Density at 680 nm, Filtered', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (370, 'OptDens@690F', 'abs/cm', 'Optical Density at 690 nm, Filtered', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (371, 'PFdecncAcid', 'ug/l', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (372, 'PFheptncAcid', 'ug/l', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (373, 'PFhexncAcid', 'ug/l', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (374, 'PFnonncAcid', 'ug/l', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (375, 'PFoctncAcid', 'ug/l', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (376, 'PFpentncAcid', 'ug/l', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (377, 'PFundencAcid', 'ug/l', '', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (378, 'IRON -LOOSE', 'ug/l', 'Iron, Loosely bound : Total', 'Metals');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (379, 'ClostS-R MF', 'no/100ml', 'Clostridium : Sulphite reducing : MF : Wet Wt', 'Physical');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (380, 'Liver WWt', 'g', 'Weight of Liver : Wet Wt', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (381, 'Iron -Loose', 'mg/kg', 'Iron, Loosely bound : Dry Wt', 'Metals');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (382, 'MoistCont105', '%', 'Moisture Content, Air dried 105 C', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (383, 'C - Organic', 'mg/l', 'Carbon, Organic, Total as C :- {TOC}', 'Organic Pollutants');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (384, 'O Diss% Satn', '%', 'Oxygen, Dissolved, % Saturation : (Laboratory)', 'Physical');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (385, 'O Dissolved', 'mg/l', 'Oxygen, Dissolved : (Laboratory) as O2', 'Physical');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (386, 'Oil,Grse,Fat', 'mg/l', 'Oils, Grease and Fats', '');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (387, 'Turbidity', 'ftu', 'Turbidity', 'Physical');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (388, 'pH Inst unit', 'phunits', 'pH : Instrumental', 'Physical');
-INSERT INTO parameter (id, name, unit, description, parameter_group) VALUES (389, 'Sld VSus@500', 'mg/l', 'Solids, Volatile at 500 C', '');
-
-
-INSERT INTO catchment (id, name, river_basin_id, country, description) VALUES (1, 'Wharfe and Ouse Lower', 1, 'England', 'Lorem');
-INSERT INTO catchment (id, name, river_basin_id, country, description) VALUES (2, 'Esk and Coast', 1, 'England', 'Lorem');
-INSERT INTO catchment (id, name, river_basin_id, country, description) VALUES (3, 'Dove', 1, 'England', 'Lorem');
-INSERT INTO catchment (id, name, river_basin_id, country, description) VALUES (4, 'Derwent Humber', 1, 'England', 'Lorem');
-INSERT INTO catchment (id, name, river_basin_id, country, description) VALUES (5, 'Trent Lower and Erewash', 1, 'England', 'Lorem');
-INSERT INTO catchment (id, name, river_basin_id, country, description) VALUES (6, 'Trent Valley Staffordshire', 1, 'England', 'Lorem');
-INSERT INTO catchment (id, name, river_basin_id, country, description) VALUES (7, 'Idle and Torne', 1, 'England', 'Lorem');
-INSERT INTO catchment (id, name, river_basin_id, country, description) VALUES (8, 'Aire and Calder', 1, 'England', 'Lorem');
-INSERT INTO catchment (id, name, river_basin_id, country, description) VALUES (9, 'Soar', 1, 'England', 'Lorem');
-INSERT INTO catchment (id, name, river_basin_id, country, description) VALUES (10, 'Humber TraC', 1, 'England', 'Lorem');
-INSERT INTO catchment (id, name, river_basin_id, country, description) VALUES (11, 'Hull and East Riding', 1, 'England', 'Lorem');
-INSERT INTO catchment (id, name, river_basin_id, country, description) VALUES (12, 'Don and Rother', 1, 'England', 'Lorem');
-INSERT INTO catchment (id, name, river_basin_id, country, description) VALUES (13, 'Swale Ure Nidd and Ouse Upper', 1, 'England', 'Lorem');
-INSERT INTO catchment (id, name, river_basin_id, country, description) VALUES (14, 'Humber AWB', 1, 'England', 'Lorem');
-INSERT INTO catchment (id, name, river_basin_id, country, description) VALUES (15, 'Derwent Derbyshire', 1, 'England', 'Lorem');
-INSERT INTO catchment (id, name, river_basin_id, country, description) VALUES (16, 'Tame Anker and Mease', 1, 'England', 'Lorem');
-INSERT INTO catchment (id, name, river_basin_id, country, description) VALUES (17, 'Louth Grimsby and Ancholme', 1, 'England', 'Lorem');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Alky pH 4.5', 'mg/l', 'Alkalinity to pH 4.5 as CaCO3', 'Physical');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Ammonia(N)', 'mg/l', 'Ammoniacal Nitrogen as N', 'Nutrients');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Cond @ 25C', 'us/cm', 'Conductivity at 25 C', 'Physical');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('N Oxidised', 'mg/l', 'Nitrogen, Total Oxidised as N', 'Nutrients');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('NH3 un-ion', 'mg/l', 'Ammonia un-ionised as N', 'Nutrients');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Nitrate-N', 'mg/l', 'Nitrate as N', 'Nutrients');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Nitrite-N', 'mg/l', 'Nitrite as N', 'Nutrients');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('O Diss %sat', '%', 'Oxygen, Dissolved, % Saturation', 'Physical');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Orthophospht', 'mg/l', 'Orthophosphate, reactive as P', 'Nutrients');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( 'Oxygen Diss', 'mg/l', 'Oxygen, Dissolved as O2', 'Physical');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( 'Temp Water', 'cel', 'Temperature of Water', 'Physical');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( 'pH', 'phunits', 'pH', 'Physical');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( 'Chloride Ion', 'mg/l', 'Chloride', 'Other Chemicals');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( 'E.coli C-MF', 'no/100ml', 'Escherichia coli : Confirmed : MF', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( 'IE Conf', 'cfu/0.1l', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( 'IE Pres', 'cfu/0.1l', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( 'C - Org Filt', 'mg/l', 'Carbon, Organic, Dissolved as C :- {DOC}', 'Physical');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( 'Nitrogen - N', 'mg/l', 'Nitrogen, Total as N', 'Nutrients');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( 'Phosphorus-P', 'mg/l', 'Phosphorus, Total as P', 'Nutrients');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( 'SiO2 Rv', 'mg/l', 'Silica, reactive as SiO2', 'Other Chemicals');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( '1234678HpCDD', 'ug/l', '1,2,3,4,6,7,8-Heptachlorodibenzo-p-dioxin : Dry Wt', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( '1234678HpCDF', 'ug/l', '1,2,3,4,6,7,8-Heptachlorodibenzofuran : Dry Wt', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( '123478-HxCDD', 'ug/l', '1,2,3,4,7,8-Hexachlorodibenzo-p-dioxin : Dry Wt', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( '1234789HpCDF', 'ug/l', '1,2,3,4,7,8,9-Heptachlorodibenzofuran : Dry Wt', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( '123478HxCDFd', 'ug/l', '1,2,3,4,7,8-Hexachlorodibenzofuran : Dry Wt', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( '123678-HxCDD', 'ug/l', '1,2,3,6,7,8-Hexachlorodibenzo-p-dioxin : Dry Wt', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( '123678HxCDFd', 'ug/l', '1,2,3,6,7,8-Hexachlorodibenzofuran : Dry Wt', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( '123789-HxCDD', 'ug/l', '1,2,3,7,8,9-Hexachlorodibenzo-p-dioxin : Dry Wt', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( '12378PeCDDdw', 'ug/l', '1,2,3,7,8-Pentachlorodibenzo-p-dioxin : Dry Wt', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( '12378PeCDFdw', 'ug/l', '1,2,3,7,8-Pentachlorodibenzofuran : Dry Wt', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( '23478PeCDFdw', 'ug/l', '2,3,4,7,8-Pentachlorodibenzofuran : Dry Wt', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( '2378-TCDD DW', 'ug/l', '2,3,7,8-Tetrachlorodibenzo-p-dioxin : Dry Wt', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( '2378-TCDF DW', 'ug/l', '2,3,7,8-Tetrachlorodibenzofuran : Dry Wt', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( 'HBCDD TOT WW', 'ug/l', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( 'Lead - wet w', 'ug/l', 'Lead : Wet Wt', 'Metals');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( 'OCDD', 'ug/l', 'Octachlorodibenzo-p-dioxin : Dry Wt', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( 'OCDF DW', 'ug/l', 'Octachlorodibenzofuran : Dry Wt', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( 'PBDE 100 WW', 'ug/l', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( 'PBDE 153 WW', 'ug/l', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( 'PBDE 154 WW', 'ug/l', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( 'PBDE 28 WW', 'ug/l', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( 'PBDE 47 WW', 'ug/l', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( 'PBDE 99 WW', 'ug/l', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( 'PCB 081 DW', 'ug/l', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( 'PCB 114 DW', 'ug/l', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( 'PCB 123 DW', 'ug/l', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( 'PCB 167 DW', 'ug/l', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( 'PCB 189 DW', 'ug/l', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( 'PFOS WW', 'ug/l', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( 'WHOTEQ Low B', 'ug/l', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( 'a -HBCDD WW', 'ug/l', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( 'Calcium - Ca', 'mg/l', 'Calcium', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( 'Fe- Filt', 'ug/l', 'Iron, Dissolved', 'Metals');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( 'Hardness', 'mg/l', 'Hardness, Total as CaCO3', 'Physical');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( 'Magnesium-Mg', 'mg/l', 'Magnesium', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( 'Sld Sus@105C', 'mg/l', 'Solids, Suspended at 105 C', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( 'Mn- Filtered', 'ug/l', 'Manganese, Dissolved', 'Physical');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( 'Ca Filtered', 'mg/l', 'Calcium, Dissolved', 'Physical');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( 'Mn BLM Bio', 'ug/l', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( 'Mg Filtered', 'mg/l', 'Magnesium, Dissolved', 'Physical');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( 'Arsenic - As', 'ug/l', 'Arsenic', 'Metals');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( 'As-Filtered', 'ug/l', 'Arsenic, Dissolved', 'Metals');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( 'BOD ATU', 'mg/l', 'BOD : 5 Day ATU', 'Organic Pollutants');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( 'Chromium -Cr', 'ug/l', 'Chromium', 'Metals');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( 'Copper - Cu', 'ug/l', 'Copper', 'Metals');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( 'Cu Filtered', 'ug/l', 'Copper, Dissolved', 'Metals');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( 'Iron - as Fe', 'ug/l', 'Iron', 'Metals');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( 'Lead - as Pb', 'ug/l', 'Lead', 'Metals');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( 'Ni- Filtered', 'ug/l', 'Nickel, Dissolved', 'Physical');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( 'Nickel - Ni', 'ug/l', 'Nickel', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( 'Pb Filtered', 'ug/l', 'Lead, Dissolved', 'Metals');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( 'WethPresTemp', 'coded', 'Weather : Temperature', 'Physical');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( 'Zinc - as Zn', 'ug/l', 'Zinc', 'Metals');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( 'Potassium- K', 'mg/l', 'Potassium', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( 'Chlorophylls', 'ug/l', 'Chlorophyll a + b', 'Physical');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( 'Cond @ 20C', 'us/cm', 'Conductivity at 20 C', 'Physical');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( 'CHLOROPHYLL', 'ug/l', 'Chlorophyll : Acetone Extract', 'Physical');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( 'Al- Filtered', 'ug/l', 'Aluminium, Dissolved', 'Metals');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( 'Aluminium-Al', 'ug/l', 'Aluminium', 'Metals');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( 'Cd Filtered', 'ug/l', 'Cadmium, Dissolved', 'Metals');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( 'Manganse-Mn', 'ug/l', 'Manganese', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( 'Mercury - Hg', 'ug/l', 'Mercury', 'Metals');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( 'Dimethoate', 'ug/l', 'Dimethoate', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( 'Pendimethaln', 'ug/l', 'Pendimethalin', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( 'Propachlor', 'ug/l', 'Propachlor', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( 'B-[a]-pyrene', 'ug/l', 'Benzo(a)Pyrene', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( 'B-[b]-fluora', 'ug/l', 'Benzo(b)Fluoranthene', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( 'B-[ghi]-pery', 'ug/l', 'Benzo(g,h,i)Perylene', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( 'B-[k]-fluora', 'ug/l', 'Benzo(k)Fluoranthene', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( 'Fluoranthene', 'ug/l', 'Fluoranthene', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( 'Ind123pyrene', 'ug/l', 'Indeno(1,2,3-cd)pyrene', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( 'N Organic', 'mg/l', 'Nitrogen, Organic as N', 'Nutrients');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( 'N-Kjeldahl', 'mg/l', 'Nitrogen, Kjeldahl as N', 'Nutrients');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( 'Phosphate', 'mg/l', 'Phosphate :- {TIP}', 'Physical');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( 'Zn- Filtered', 'ug/l', 'Zinc, Dissolved', 'Metals');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( '123478HxCDF', 'ug/l', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( '12378PeCDF', 'ug/l', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( '2378-TCDF', 'ug/l', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ( 'OCDF  WW', 'ug/l', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('PCB 081', 'ug/l', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('PCB 114', 'ug/l', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('PCB 118 WWt', 'ug/l', 'PCB - 118 : Wet Wt', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('PCB 123', 'ug/l', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('PCB 126 WW', 'ug/l', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('PCB 157 WW', 'ug/l', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('PCB 167 WW', 'ug/l', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('PCB 169 WW', 'ug/l', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('PCB 189 WW', 'ug/l', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('PCB 77 WW', 'ug/l', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('112TCEthan', 'ug/l', '1,1,2-Trichloroethane', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('2,4-D', 'ug/l', '2,4-D :- {2,4-Dichlorophenoxyacetic acid}', 'Physical');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('2,4-D be', 'ug/l', '2,4-D Butyl Ester', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('2,4-D bge', 'ug/l', '2,4-D Glycol Butyl Ester', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('2,4-D esters', 'ug/l', '2,4-D Esters : Total', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('2,4-D ioe', 'ug/l', '2,4-D Iso Octyl Ester', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('2,4-D m e', 'ug/l', '2,4-D Methyl Ester', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('2-CHLORO-4-N', 'ug/l', '2-Chloro-4-nitrotoluene', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('2-CHLORO-6-N', 'ug/l', '2-Chloro-6-nitrotoluene', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('24Dichloropl', 'ug/l', '2,4-Dichlorophenol', 'Physical');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('2Chlorophenl', 'ug/l', '2-Chlorophenol', 'Physical');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('4Cl2Ntoluene', 'ug/l', '4-Chloro-2-nitrotoluene :- {2-Nitro-4-Chlorotoluene}', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('4Cl3MePhenol', 'ug/l', '4-Chloro-3-methylphenol :- {p-Chloro-m-cresol}', 'Physical');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('4Cl3NToluene', 'ug/l', '4-Chloro-3-nitrotoluene', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Atrazine', 'ug/l', 'Atrazine', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Bentazone', 'ug/l', 'Bentazone', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Biphenyl', 'ug/l', 'Biphenyl', 'Physical');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Boron - as B', 'ug/l', 'Boron', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('CL-N-Toluens', 'ug/l', 'Chloronitrotoluene : Total Isomers', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Cyfluthrin', 'ug/l', 'Cyfluthrin', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('DemetonSMyl', 'ug/l', 'Demeton-S-methyl', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Dichlorvos', 'ug/l', 'Dichlorvos', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('EndosulphanA', 'ug/l', 'Endosulfan A', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Flucofuron', 'ug/l', 'Flucofuron', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Malathion', 'ug/l', 'Malathion', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Mecoprop', 'ug/l', 'Mecoprop', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Mevinphos', 'ug/l', 'Mevinphos', 'Physical');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Naphthalene', 'ug/l', 'Naphthalene', 'Physical');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('PCSDs', 'ug/l', 'PCSDs :- {chlorphenylid}', 'Physical');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Simazine', 'ug/l', 'Simazine', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('SulcofuronNa', 'ug/l', 'Sulcofuron', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Toluene', 'ug/l', 'Toluene :- {Methylbenzene}', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('TriBT Cation', 'ug/l', 'Tributyl Tin as Cation', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Triazophos', 'ug/l', 'Triazophos', 'Physical');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Trifluralin', 'ug/l', 'Trifluralin', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Vanadium - V', 'ug/l', 'Vanadium', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Xylene Tot', 'ug/l', 'Dimethylbenzene : Sum of (1,2- 1,3- 1,4-) :- {Xylene}', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('m-p-Xylene', 'ug/l', 'Dimethylbenzene : Sum of isomers (1,3- 1,4-)', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('o-Xylene', 'ug/l', '1,2-Dimethylbenzene :- {o-Xylene}', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('4-nonPhenol', 'ug/l', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('DEHP', 'ug/l', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('ptOctylPheno', 'ug/l', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Triclosan', 'ug/l', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('COD as O2', 'mg/l', 'Chemical Oxygen Demand :- {COD}', 'Organic Pollutants');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Cu BLM Bio', 'ug/l', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Ni BLM Bio', 'ug/l', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Pb BLM Bio', 'ug/l', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Zn BLM Bio', 'ug/l', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('PFOS', 'ug/l', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('pFoctanoate', 'ug/l', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Ba- Filtered', 'ug/l', 'Barium, Dissolved', 'Physical');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('IonicBal Dis', '%', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('K- Filtered', 'mg/l', 'Potassium, Dissolved', 'Physical');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Na- Filtered', 'mg/l', 'Sodium, Dissolved', 'Physical');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('SALinsitu', 'ppt', 'Salinity : In Situ', 'Physical');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('SO4dis', 'mg/l', 'Sulphate, Dissolved as SO4', 'Physical');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('StrontumFilt', 'ug/l', 'Strontium, Filtered', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('pH in-situ', 'phunits', 'pH : In Situ', 'Physical');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Colour Filt', 'hazen', 'Colour, Filtered', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('N Oxid Filt', 'mg/l', 'Nitrogen, Total Oxidised, Filtered as N', 'Nutrients');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('OrthophsFilt', 'mg/l', 'Orthophosphate, Filtered as P', 'Nutrients');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('NH3 filt N', 'mg/l', 'Ammoniacal Nitrogen, Filtered as N', 'Nutrients');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Sodium - Na', 'mg/l', 'Sodium', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Sulphate SO4', 'mg/l', 'Sulphate as SO4', 'Physical');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('12-DCA', 'ug/l', '1,2-Dichloroethane', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Chloroform', 'ug/l', 'Chloroform :- {Trichloromethane}', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('DDT (OP'''')', 'ug/l', 'DDT -op', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('DDT Derived', 'ug/l', 'DDT : Sum of components', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('PCBs', 'ug/l', 'PCB : Total', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('PClBenzene', 'ug/l', 'Pentachlorobenzene', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Cr Hex Filt', 'ug/l', 'Chromium Hexavalent, Dissolved :- {Cr VI}', 'Metals');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('DiClBenzPhWW', 'ug/l', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('HCH Alpha', 'ug/l', 'HCH -alpha', 'Physical');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('HCH Beta', 'ug/l', 'HCH -beta', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('HCH Gamma', 'ug/l', 'HCH -gamma :- {Lindane}', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('HEXACHLORO 1', 'ug/l', 'Hexachlorobutadiene', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Heptachlor', 'ug/l', 'Heptachlor', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Irgarol 1051', 'ug/l', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Terbutryne', 'ug/l', 'Terbutryn', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('c-Hept Epox', 'ug/l', 'cis-Heptachlor epoxide', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('t-Hept Epox', 'ug/l', 'trans-Heptachlor epoxide', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Cypermethrin', 'ug/l', 'Cypermethrin', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Glyphosate', 'ug/l', 'Glyphosate', 'Physical');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Flutriafol', 'ug/l', 'Flutriafol', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('B-[a]-pyrWW', 'ug/l', 'Benzo(a)Pyrene : Wet Wt', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Fluoranth WW', 'ug/l', 'Fluoranthene : Wet Wt', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Hg - wet wt', 'ug/l', 'Mercury : Wet Wt', 'Metals');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('TurbidityNTU', 'ntu', 'Turbidity', 'Physical');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('HBCDD', 'ug/l', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Imazalil', 'ug/l', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('ColfmF Conf', 'no/100ml', 'Coliforms, Faecal : Confirmed', 'Microbiological');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('ColformsPre', 'no/100ml', 'Coliforms, Total : Presumptive : MF', 'Microbiological');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('F Coli Pre', 'no/100ml', 'Coliforms, Faecal : Presumptive : MF', 'Microbiological');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('StrepF PMF', 'no/100ml', 'Streptococci : Faecal : Presumptive : MF', 'Organic Pollutants');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Tot Coli CMF', 'no/100ml', 'Coliforms, Total : Confirmed : MF', 'Microbiological');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Bact All CN', 'lgn/0.1l', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('BactHumanCN', 'lgn/0.1l', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('BactRumnt CN', 'lgn/0.1l', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('StrepF C-MF', 'no/100ml', 'Streptococci : Faecal : Confirmed : MF', 'Organic Pollutants');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('HumanMito CN', 'lgn/0.1l', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Ag - wet wt', 'ug/l', 'Silver : Wet Wt', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Aldrin WWt', 'ug/l', 'Aldrin : Wet Wt', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('AnthracenWW', 'ug/l', 'Anthracene : Wet Wt', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('As WET WT', 'ug/l', 'Arsenic : Wet Wt', 'Metals');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('B-[a]-antWW', 'ug/l', 'Benzo(a)Anthracene : Wet Wt', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('BenzGHIper W', 'ug/l', 'Benzo(g,h,i)Perylene : Wet Wt', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('ChryseneWW', 'ug/l', 'Chrysene : Wet Wt', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Cr - wet wt', 'ug/l', 'Chromium : Wet Wt', 'Metals');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Cu - wet wt', 'ug/l', 'Copper : Wet Wt', 'Metals');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('DDE (PP'''')WWt', 'ug/l', 'DDE -pp : Wet Wt', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('DDT (OP'''')WWt', 'ug/l', 'DDT -op : Wet Wt', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('DDT(PP'''')WWt', 'ug/l', 'DDT -pp : Wet Wt', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Dieldrin WWt', 'ug/l', 'Dieldrin : Wet Wt', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Endrin WWt', 'ug/l', 'Endrin : Wet Wt', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('HCH Beta WWt', 'ug/l', 'HCH -beta : Wet Wt', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('HCHAlpha WWt', 'ug/l', 'HCH -alpha : Wet Wt', 'Physical');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('HCHDelta WWt', 'ug/l', 'HCH -delta : Wet Wt', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('HCHGamma WWt', 'ug/l', 'HCH -gamma : Wet Wt :- {Lindane}', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('HexachlrbnzW', 'ug/l', 'Hexachlorobenzene : Wet Wt', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Ind123pyrWWt', 'ug/l', 'Indeno(1,2,3-cd)pyrene : Wet Wt', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Isodrin WWt', 'ug/l', 'Isodrin : Wet Wt', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Lipid tot ww', '%', 'Lipids : Total : Wet Wt', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('NaphthalnWW', 'ug/l', 'Naphthalene : Wet Wt', 'Physical');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Ni - wet wt', 'ug/l', 'Nickel : Wet Wt', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('PCB 101 WWt', 'ug/l', 'PCB - 101 : Wet Wt', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('PCB 138 WWt', 'ug/l', 'PCB - 138 : Wet Wt', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('PCB 153 WWt', 'ug/l', 'PCB - 153 : Wet Wt', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('PCB 180 WWt', 'ug/l', 'PCB - 180 : Wet Wt', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('PCB 28 WWt', 'ug/l', 'PCB - 028 : Wet Wt', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('PCB 52 WWt', 'ug/l', 'PCB - 052 : Wet Wt', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('PhennthrnWW', 'ug/l', 'Phenanthrene : Wet Wt', 'Physical');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Pyrene WW', 'ug/l', 'Pyrene : Wet Wt', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Se - wet wt', 'ug/l', 'Selenium : Wet Wt', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Solids @105C', '%', 'Residual mass: after drying at 105 C', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('TBTCationWWT', 'ug/l', 'Tributyl Tin : Wet Wt as Cation', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('TDE (PP'''')WWt', 'ug/l', 'TDE -pp : Wet Wt', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Zn - wet wt', 'ug/l', 'Zinc : Wet Wt', 'Metals');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('NumOrganisms', 'no.', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('SzRnLenMax', 'unitless', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('SzRnLenMin', 'unitless', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Wet Wt', 'g', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('DtrgtAnc&Nnc', 'mg/l', 'Detergents : Anionic + non-ionic', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('PHENOL Grp 3', 'ug/l', 'Phenols : Total (7 Compounds) : Group 3', 'Physical');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Solid quanty', 'coded', 'Appearance of solid : Quantity', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Flumethrin', 'ug/l', 'Flumethrin', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('P Digested', 'ug/l', 'Phosphorus, Digested', 'Nutrients');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('PBDE 100 DW', 'ug/l', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('PBDE 153 DW', 'ug/l', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('PBDE 154 DW', 'ug/l', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('PBDE 28 DW', 'ug/l', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('PBDE 47 DW', 'ug/l', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('PBDE 99 DW', 'ug/l', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Dry Matter %', '%', 'Dry Matter : %', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('HCH Epsilon', 'ug/l', 'HCH -epsilon', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('PCB 105 DW', 'ug/l', 'PCB - 105 : Dry Wt', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('PCB 118 DW', 'ug/l', 'PCB - 118 : Dry Wt', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('PCB 126 DW', 'ug/l', 'PCB - 126 : Dry Wt', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('PCB 156 DW', 'ug/l', 'PCB - 156 : Dry Wt', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('PCB 157 DW', 'ug/l', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('PCB 169 DW', 'ug/l', 'PCB - 169 : Dry Wt', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('PCB 77 DW', 'ug/l', 'PCB - 077 : Dry Wt', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Hg - Dry Wt', 'mg/kg', 'Mercury : Dry Wt', 'Metals');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('PCB 105 WWt', 'ug/l', 'PCB - 105 : Wet Wt', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('PCB 156 WWt', 'ug/l', 'PCB - 156 : Wet Wt', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Endrin', 'ug/l', 'Endrin', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Tot Drins(4)', 'ug/l', 'Drins : Total (Aldrin, Dieldrin, Endrin, Isodrin)', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Tot HCHs ABG', 'ug/l', 'HCH : Total (Alpha, Beta, Gamma)', 'Physical');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Barium - Ba', 'ug/l', 'Barium', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Strontium-Sr', 'ug/l', 'Strontium', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Chlorophyl-A', 'ug/l', 'Chlorophyll a', 'Physical');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('CHLOR A', 'ug/l', 'Chlorophyll : Methanol Extract', 'Physical');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Sld Filt@105', 'mg/l', 'Solids, Dissolved at 105 C', 'Physical');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('1,3 -DICHLOR', 'ug/l', 'cis-1,3-Dichloropropylene :- {cis-1,3-Dichloropropene}', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Fluoride Dis', 'mg/l', 'Fluoride, Dissolved', 'Physical');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Phenols Mono', 'mg/l', 'Phenols : Monohydric as Phenol', 'Physical');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Thiocyanate', 'mg/l', 'Thiocyanate as CNS', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Titanium -Ti', 'ug/l', 'Titanium', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('TitaniumFilt', 'ug/l', 'Titanium, Filtered', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('3,4 DICHLORO', 'ug/l', '3,4-Dichloroaniline :- {3,4-Chlorobenzamine}', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('S CrReduce', 'mg/l', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Sulphide - S', 'mg/l', 'Sulphide as S', 'Physical');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Water Depth', 'm', 'Water Depth', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('AzinphsEthyl', 'ug/l', 'Azinphos-ethyl', 'Physical');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Chlorfenvphs', 'ug/l', 'Chlorfenvinphos', 'Physical');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Desmetryne', 'ug/l', 'Desmetryn', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Fenthion', 'ug/l', 'Fenthion', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Parathion', 'ug/l', 'Parathion-ethyl :- {Parathion}', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('ParathionMyl', 'ug/l', 'Parathion-methyl', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Prometryn', 'ug/l', 'Prometryn', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Propazine', 'ug/l', 'Propazine', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Propetamphos', 'ug/l', 'Propetamphos', 'Physical');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Acetate', 'mg/l', 'Acetate', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('2Phenoxyprop', 'ug/l', '2-Phenoxypropionic acid :- {PPA}', 'Physical');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('4-CAA', 'ug/l', '4-Chlorophenoxyacetic acid', 'Physical');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('4Phenoxbutyr', 'ug/l', '4-Phenoxybutyric acid :- {PBA}', 'Physical');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Bromoxynil', 'ug/l', 'Bromoxynil', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Carbophenthn', 'ug/l', 'Carbophenothion', 'Physical');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('DNBP', 'ug/l', 'Dinoseb :- {2-Methyl-n-propyl-4,6-dinitrophenol} :- {DNBP}', 'Physical');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('DNOC', 'ug/l', 'DNOC :- {4,6-dinitro-o-cresol}', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Fenoprop', 'ug/l', 'Fenoprop', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('MCPB', 'ug/l', 'MCPB :- {4-Chloro-2-methylphenoxybutyric acid}', 'Physical');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Permthrn c+t', 'ug/l', 'Permethrin (cis- and trans-)', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('PhenoxytcAcd', 'ug/l', 'Phenoxyacetic acid :- {PAA}', 'Physical');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Chloroprophm', 'ug/l', 'Chlorpropham', 'Physical');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Dichlobenil', 'ug/l', 'Dichlobenil', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Methoxychlor', 'ug/l', 'Methoxychlor', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('PCB 149', 'ug/l', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('PCB Con 31', 'ug/l', 'PCB - 031', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('TRIALLATE', 'ug/l', 'Tri-allate', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Vinclozolin', 'ug/l', 'Vinclozolin', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Dtrgt NncSyn', 'mg/l', 'Detergents, Non-ionic', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('ApColU AB400', 'abs/m', 'Absorbance at 400 nm, Unfiltered :- {Apparent Colour}', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('TRI CLET P', 'ug/l', 'Tris-Chloroethyl phosphate', 'Physical');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('TRI CLPR P', 'ug/l', 'Tris-Chloropropyl phosphate', 'Physical');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Colour', 'hazen', 'Colour', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Coumaphos', 'ug/l', 'Coumaphos', 'Physical');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('IonicBalance', '%', 'Ionic Balance', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Alk-Gran', 'mg/l', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Fluoride - F', 'mg/l', 'Fluoride', 'Other Chemicals');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Vol Filtered', 'ml', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('U - Filtered', 'ug/l', 'Uranium, Dissolved', 'Physical');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('PBDE 138', 'ug/l', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('PBDE 66', 'ug/l', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('17alpha EE2', 'ng/l', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('17beta E2', 'ng/l', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Diclofenac', 'ug/l', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Erythromycin', 'ug/l', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Fluoxetine', 'ug/l', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Ibuprofen', 'ug/l', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('OestroneE1', 'ng/l', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Oxytetracycl', 'ug/l', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Propranolol', 'ug/l', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('OptDens@400F', 'abs/cm', 'Optical Density at 400 nm, Filtered', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('OptDens@450F', 'abs/cm', 'Optical Density at 450 nm, Filtered', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('OptDens@500F', 'abs/cm', 'Optical Density at 500 nm, Filtered', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('OptDens@550F', 'abs/cm', 'Optical Density at 550 nm, Filtered', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('OptDens@600F', 'abs/cm', 'Optical Density at 600 nm, Filtered', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('OptDens@700F', 'abs/cm', 'Optical Density at 700 nm, Filtered', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Molybdenm-Mo', 'ug/l', 'Molybdenum', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Bicarb HCO3', 'mg/l', 'Bicarbonate as HCO3', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('OptDens@410F', 'abs/cm', 'Optical Density at 410 nm, Filtered', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('OptDens@420F', 'abs/cm', 'Optical Density at 420 nm, Filtered', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('OptDens@430F', 'abs/cm', 'Optical Density at 430 nm, Filtered', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('OptDens@440F', 'abs/cm', 'Optical Density at 440 nm, Filtered', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('OptDens@460F', 'abs/cm', 'Optical Density at 460 nm, Filtered', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('OptDens@470F', 'abs/cm', 'Optical Density at 470 nm, Filtered', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('OptDens@480F', 'abs/cm', 'Optical Density at 480 nm, Filtered', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('OptDens@490F', 'abs/cm', 'Optical Density at 490 nm, Filtered', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('OptDens@520F', 'abs/cm', 'Optical Density at 520 nm, Filtered', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('OptDens@530F', 'abs/cm', 'Optical Density at 530 nm, Filtered', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('OptDens@540F', 'abs/cm', 'Optical Density at 540 nm, Filtered', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('OptDens@570F', 'abs/cm', 'Optical Density at 570 nm, Filtered', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('OptDens@580F', 'abs/cm', 'Optical Density at 580 nm, Filtered', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('OptDens@610F', 'abs/cm', 'Optical Density at 610 nm, Filtered', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('OptDens@620F', 'abs/cm', 'Optical Density at 620 nm, Filtered', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('OptDens@630F', 'abs/cm', 'Optical Density at 630 nm, Filtered', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('OptDens@640F', 'abs/cm', 'Optical Density at 640 nm, Filtered', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('OptDens@660F', 'abs/cm', 'Optical Density at 660 nm, Filtered', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('OptDens@670F', 'abs/cm', 'Optical Density at 670 nm, Filtered', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('OptDens@680F', 'abs/cm', 'Optical Density at 680 nm, Filtered', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('OptDens@690F', 'abs/cm', 'Optical Density at 690 nm, Filtered', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('PFdecncAcid', 'ug/l', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('PFheptncAcid', 'ug/l', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('PFhexncAcid', 'ug/l', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('PFnonncAcid', 'ug/l', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('PFoctncAcid', 'ug/l', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('PFpentncAcid', 'ug/l', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('PFundencAcid', 'ug/l', '', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('IRON -LOOSE', 'ug/l', 'Iron, Loosely bound : Total', 'Metals');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('ClostS-R MF', 'no/100ml', 'Clostridium : Sulphite reducing : MF : Wet Wt', 'Physical');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Liver WWt', 'g', 'Weight of Liver : Wet Wt', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Iron -Loose', 'mg/kg', 'Iron, Loosely bound : Dry Wt', 'Metals');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('MoistCont105', '%', 'Moisture Content, Air dried 105 C', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('C - Organic', 'mg/l', 'Carbon, Organic, Total as C :- {TOC}', 'Organic Pollutants');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('O Diss% Satn', '%', 'Oxygen, Dissolved, % Saturation : (Laboratory)', 'Physical');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('O Dissolved', 'mg/l', 'Oxygen, Dissolved : (Laboratory) as O2', 'Physical');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Oil,Grse,Fat', 'mg/l', 'Oils, Grease and Fats', '');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Turbidity', 'ftu', 'Turbidity', 'Physical');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('pH Inst unit', 'phunits', 'pH : Instrumental', 'Physical');
+INSERT INTO parameter (name, unit, description, parameter_group) VALUES ('Sld VSus@500', 'mg/l', 'Solids, Volatile at 500 C', '');
 
 
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (1, 'River', 'Upper Fox Drain Catchment ds of Sherburn STW', 1, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (2, 'River', 'East Row Beck from Source to North Sea', 2, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (3, 'River', 'Endon Bk', 3, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (4, 'River', 'Glaisdale Beck catchment (trib of Esk)', 2, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (5, 'River', 'Blackfoss Bk lower Catch (trib of Pocklington Bk)', 4, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (6, 'River', 'Mobberley Bk', 3, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (7, 'River', 'Wharfe from Tadcaster Weir to River Ouse', 1, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (8, 'River', 'Trent from Soar to The Beck', 5, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (9, 'River', 'Trent from Carlton-on-Trent to Laughton Drain', 5, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (10, 'River', 'Trent Bifurcation Pingley Dyke to Winthorpe', 5, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (11, 'River', 'Trent from Source to Ford Green Brook', 6, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (12, 'River', 'Adlingfleet Drain Upper Catchment (trib of Trent)', 5, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (13, 'River', 'Paupers Drain Catchment (trib of Trent)', 5, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (14, 'River', 'S Lev Engine Drain Catchment (trib of Trent)', 7, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (15, 'River', 'Northorpe Beck from Source to River Eau', 5, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (16, 'River', 'Laughton Drain Catchment (trib of Trent)', 5, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (17, 'River', 'Idle from Maun/Poulter to Tiln', 7, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (18, 'River', 'Anston Brook from Source to Ryton', 7, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (19, 'River', 'Hodsock Bk (to Oldcoates Dyke)', 7, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (20, 'River', 'Ryton from Chesterfield Canal to Anston Brook', 7, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (21, 'Lake', 'Clumber Lake', 7, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (22, 'Lake', 'Thoresby Lake', 7, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (23, 'River', 'Sookholme Brook Catchment (trib of Meden)', 7, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (24, 'River', 'Vicar Water from Source to Maun', 7, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (25, 'Lake', 'Malham Tarn', 8, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (26, 'River', 'Wheatley Beck Catchment (trib of Trent)', 5, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (27, 'River', 'Catchwater Drain Catchnemt (trib of Trent)', 5, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (28, 'River', 'Sewer Drain Catchment (trib of Trent)', 5, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (29, 'River', 'North Beck Catchment (trib of Trent)', 5, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (30, 'River', 'Fledborough Beck Catchment (trib of Trent)', 5, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (31, 'River', 'Goosemoor Dyke from Source to Moorhouse Beck', 5, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (32, 'River', 'Moorhouse Beck (Trib of Goosemoor Dyke)', 5, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (33, 'River', 'Devon from Cotham to Trent', 5, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (34, 'River', 'Car Dyke', 5, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (35, 'River', 'Smite from Dalby Brook to Stroom Dyke', 5, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (36, 'River', 'Smite from Source to Dalby Brook', 5, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (37, 'River', 'The Grimmer from Source to Rundle Beck', 5, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (38, 'River', 'Rundle Beck Catchment (trib of Whipling)', 5, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (39, 'River', 'Pingley/Rundell Dyke Catch Upper (trib of Trent)', 5, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (40, 'River', 'Greet Catchment (trib of Trent)', 5, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (41, 'River', 'Hallhaughton Dumble Catchment (trib of Greet)', 5, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (42, 'River', 'Cocker Beck Catchment (trib of Trent)', 5, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (43, 'River', 'Polser Brook from Source to Cotgrave Brook', 5, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (44, 'River', 'Leen from Day Brook to Trent', 5, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (45, 'River', 'Day Brook Catchment (trib of Leen)', 5, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (46, 'River', 'Gilt Brook Catchment (trib of Erewash)', 5, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (47, 'River', 'Bailey Brook Catchment (trib of Erewash)', 5, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (48, 'River', 'Nethergreen Brook Catchment (trib of Erewash)', 5, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (49, 'River', 'Soar from Rothley Brook to Long Whatton Brook', 9, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (50, 'River', 'Soar from Soar Brook to Thurlaston Brook', 9, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (51, 'River', 'Soar Brook from Source to Soar', 9, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (52, 'River', 'Soar from Source to Soar Brook', 9, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (53, 'River', 'Soar from Long Whatton Brook to Trent', 9, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (54, 'River', 'Long Whatton Brook Catchment (trib of Soar)', 9, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (55, 'River', 'Black Brook from Grace Dieu Brook to Soar', 9, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (56, 'River', 'Walton Brook Catchment (trib of Soar)', 9, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (57, 'River', 'Thurlaston Brook Catchment (trib of Soar)', 9, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (58, 'River', 'Austen Dyke Catchment (trib of Wreake)', 9, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (59, 'River', 'Freeby Brook Catchment (trib of Eye)', 9, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (60, 'River', 'Newton Beck from Source to Staithes Beck', 2, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (61, 'River', 'Evington Brook from Source to Willow Brook', 9, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (62, 'River', 'Lubbesthorpe Brook Catchment (trib of Soar)', 9, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (63, 'River', 'Countesthorpe Brook from Source to Sence', 9, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (64, 'River', 'Sleddale Beck from Source to River Esk', 2, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (65, 'River', 'Stonegate Beck catchment (trib of Esk)', 2, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (66, 'River', 'Wheeldale Gill from Source to Murk Esk', 2, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (67, 'TransitionalWater', 'ESK (E)', 10, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (68, 'CoastalWater', 'Yorkshire North', 10, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (69, 'River', 'Stream Dyke Hornsea Mere to N Sea', 11, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (70, 'River', 'Eller beck from Source to Murk Esk', 2, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (71, 'River', 'Great Fryup Beck Catchment (trib of Esk)', 2, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (72, 'River', 'Little Beck/May Beck catchment (trib of Esk)', 2, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (73, 'River', 'Danby Beck catchment (trib of Esk)', 2, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (74, 'River', 'Rigg Mill Bk/Long Mill Bk catch (trib of Esk)', 2, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (75, 'River', 'Hayburn Beck/Thorny Beck catch (drains to N Sea)', 2, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (76, 'River', 'Sandsend Beck/Mickley Bk from Source to North Sea', 2, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (77, 'River', 'Lownorth Beck from Source to River Derwent', 4, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (78, 'River', 'Baysdale Beck from Source to River Esk', 2, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (79, 'River', 'Burniston Beck/Sea Cut/Scalby Beck Catch to N Sea', 4, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (80, 'River', 'Don from Mill Dyke to River Ouse', 12, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (81, 'River', 'Alne Beck from Source to River Kyle', 13, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (82, 'River', 'Holmes Dike catchment (trib of Ouse)', 1, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (83, 'River', 'Fox Dike/Carr Dike from Source to Selby Dam', 1, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (84, 'River', 'Sands/Keyingham/Roos Dr from Source to Humber', 11, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (85, 'River', 'New Parks Beck from Source to Huby Burn', 13, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (86, 'River', 'Oldfleet/Wyton/Sproatley Drain from Source to Humber', 11, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (87, 'River', 'The Syke from Source to River Foss', 13, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (88, 'River', 'Kyle from Source to Alne Beck', 13, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (89, 'River', 'Ure from Widdale Beck to Duerley Beck', 13, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (90, 'River', 'Linton on Ouse Airefield catch (trib of Kyle)', 13, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (91, 'Lake', 'Semer Water', 13, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (92, 'River', 'Ouse from River Nidd to Stillingfleet Beck', 13, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (93, 'River', 'Burn from Source to Leighton Beck', 13, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (94, 'River', 'Farlington Beck from Source to River Foss', 13, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (95, 'River', 'Tang Hall Bk/Old Foss Bk catch, trib of River Foss', 13, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (96, 'River', 'Bishopdale Bk from Source to R Ure', 13, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (97, 'River', 'Burton Pidsea Drain Lower Catchment', 11, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (98, 'River', 'Humbleton Beck Catchment', 11, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (99, 'River', 'Ottringham Drain from Ottringham Grange to Humber', 11, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (100, 'River', 'Fosse drain / Skeffling Drain', 11, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (101, 'River', 'Hurns Gutterfrom Source to River Ouse', 13, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (102, 'River', 'Ouse from Source to River Ure', 13, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (103, 'River', 'Huby Burn from Source to New Parks Beck', 13, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (104, 'River', 'Skell from Source to River Laver', 13, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (105, 'River', 'Ure from River Tutt to River Swale', 13, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (106, 'River', 'Birdforth/Green''s Bks Catch (trib of Swale)', 13, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (107, 'River', 'Laver from Source to Carlexmoor Beck', 13, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (108, 'River', 'Kex Beck and the Laver', 13, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (109, 'River', 'Walden Beck from Source to Bishopdale Beck', 13, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (110, 'River', 'Snaizeholme Beck from Source to Widdale Beck', 13, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (111, 'River', 'Widdale Beck from Source to Snaizeholme Beck', 13, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (112, 'River', 'Duerley Beck from Source to River Ure', 13, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (113, 'River', 'Ure from Source to Widdale Beck', 13, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (114, 'River', 'Leighton Beck from Source to River Burn', 13, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (115, 'River', 'Fleet Drain', 11, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (116, 'River', 'Holgate Beck to Ouse', 13, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (117, 'River', 'Stillingfleet Beck Source to Ouse', 1, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (118, 'River', 'Ure from River Skell to River Tutt', 13, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (119, 'River', 'Mill Dike from Source to Bishop Dike', 1, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (120, 'River', 'Holderness Drain Source to Foredyke Stream', 11, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (121, 'River', 'Burton Brook from Source to Sence', 9, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (122, 'River', 'Whetstone Brook Catchment (trib of River Soar)', 9, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (123, 'River', 'Ella Dyke', 11, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (124, 'River', 'Beverley and Barmston Drain', 11, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (125, 'River', 'Foredyke Stream Lower to Holderness Dr', 11, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (126, 'River', 'Lambwath Stream from Source to Foredyke Stream', 11, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (127, 'Canal', 'Leven Canal', 14, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (128, 'River', 'Nafferton Beck from Source to  to Driffield Canal', 11, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (129, 'River', 'Middleton on the Wolds and Watton Beck', 11, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (130, 'River', 'Foredyke Stream Upper', 11, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (131, 'River', 'Bryan Mills Beck Source to Bryan Mills Farm', 11, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (132, 'River', 'Catchwater Drain', 11, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (133, 'River', 'Skerne Beck', 11, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (134, 'River', 'High Hunsley to Arram Area', 11, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (135, 'River', 'Loxley from Source to Strines Dyke', 12, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (136, 'River', 'Barlow Brook from Source to River Drone', 12, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (137, 'River', 'Bentley Brook from Source to River Dearne', 12, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (138, 'River', 'Bramwith Drain from Source to River Don', 12, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (139, 'River', 'Hoyle Mill Stream from Source to River Went', 12, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (140, 'River', 'Cawthorne Dyke from Source to River Dearne', 12, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (141, 'Canal', 'Chesterfield Canal (River Rother)', 14, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (142, 'River', 'Strines Dyke from Source to River Loxley', 12, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (143, 'River', 'Ea Beck from the Skell to River Don', 12, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (144, 'River', 'Ea Beck from Frickley Beck to the Skell', 12, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (145, 'River', 'Went from Source to Hoyle Mill Stream', 12, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (146, 'River', 'Went from Blowell Drain to the River Don', 12, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (147, 'River', 'Holme Brook/Linacre Beck', 12, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (148, 'River', 'Hooton Brook from Source to River Don', 12, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (149, 'River', 'Womersley Beck from Source to Blowell Drain', 12, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (150, 'River', 'The Moss from Source to River Rother', 12, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (151, 'River', 'Spital/Calow/Muster Brook', 12, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (152, 'River', 'New Fleet Drain from source to R Went', 12, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (153, 'River', 'Pigeon Bridge Brook from Source to River Rother', 12, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (154, 'River', 'Pools Brook from Source to Doe Lea', 12, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (155, 'River', 'Redleadmill Brook', 12, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (156, 'River', 'Rivelin from Source to River Loxley', 12, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (157, 'River', 'Dearne from Cawthorne Dyke to Lundwood STW', 12, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (158, 'River', 'Dearne Darfield STW to River Don', 12, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (159, 'River', 'Dearne from Lundwood to River Dove', 12, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (160, 'River', 'Doe Lea from Source to Hawke Brook', 12, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (161, 'River', 'Don from River Rother to River Dearne', 12, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (162, 'River', 'Don from River Don Works to River Rother', 12, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (163, 'River', 'Drone/Whitting from Source to River Rother', 12, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (164, 'River', 'Rother, Doe Lea to Don', 12, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (165, 'Canal', 'Sheffield and South Yorkshire Navigation (Rotherham Cut)', 14, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (166, 'River', 'Ulley Brook from Source to River Rother', 12, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (167, 'River', 'Bridgehouse Beck from Source to River Worth', 8, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (168, 'River', 'The Fleet from Source to River Aire', 8, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (169, 'River', 'Milshaw Beck from Source to Low/Wortley/Pudsey Bks', 8, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (170, 'River', 'Carlton Beck from Source to River Aire', 8, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (171, 'River', 'Gordale Beck from Source to Malham Beck', 8, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (172, 'River', 'Glusburn beck from source to Lothersdale Beck', 8, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (173, 'River', 'Aire from Otterburn Beck to Eshton Beck', 8, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (174, 'River', 'Aire (R Worth to Gill Beck)', 8, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (175, 'River', 'Aire (Eshton Beck to R Worth)', 8, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (176, 'River', 'Aire from Malham Tarn to Malham Beck', 8, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (177, 'River', 'Worth from Bridgehouse Beck to R Aire', 8, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (178, 'River', 'Gill Beck (Baildon) from Source to River Aire', 8, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (179, 'River', 'Gill Beck Guisley from Source to River Aire', 8, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (180, 'River', 'Eller Beck from Source to Haw Beck', 8, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (181, 'River', 'Choke Churl Bk from Source to River Calder', 8, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (182, 'River', 'Colden Water from Source to River Calder', 8, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (183, 'River', 'Cragg Brook from Source to River Calder', 8, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (184, 'River', 'Calder from River Colne to River Chald', 8, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (185, 'River', 'Calder from River Chald to River Aire', 8, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (186, 'River', 'Hebble Brook from Source to River Calder', 8, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (187, 'River', 'Black Brook from Source to River Calder', 8, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (188, 'River', 'Calder from Ryburn Confluence  to River Colne', 8, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (189, 'River', 'Calder from Colden Water to Ryburn Confluence', 8, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (190, 'River', 'Colne from River Holme to River Calder', 8, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (191, 'River', 'Colne from Wessenden Brook to R Holme', 8, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (192, 'River', 'Holme from New Mill Dike to R Colne', 8, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (193, 'River', 'Ryburn from Source to Booth Dean Clough', 8, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (194, 'River', 'Spen Beck from Source to River Calder', 8, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (195, 'River', 'Booth Dean Clough from Source to River Ryburn', 8, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (196, 'River', 'Alcomden Water - Walshaw Dean Resrs to Widdop', 8, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (197, 'River', 'Fleet Dike catch (trib of Ouse)', 4, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (198, 'River', 'Hodge Beck from Source to River Dove', 4, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (199, 'River', 'Derwent from Elvington Beck to River Ouse', 4, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (200, 'River', 'Derwent from River Rye to Kirkham', 4, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (201, 'River', 'Bonfield Gill from Source to River Riccal', 4, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (202, 'River', 'Bogmire Gill from Source to River Riccal', 4, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (203, 'River', 'Pickering Beck from Source to Costa Beck', 4, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (204, 'River', 'Bishop Wilton Beck Catch (trib of Blackfoss Beck)', 4, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (205, 'River', 'Gowthorpe Beck Catch (trib of Blackfoss Beck)', 4, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (206, 'River', 'Menethorpe Beck catch (trib of Derwent)', 4, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (207, 'River', 'Cram Beck catch (trib of Derwent)', 4, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (208, 'River', 'Spittle/Bulmer/Ings Becks catch (trib of Derwent)', 4, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (209, 'River', 'Scampston Beck catchment (trib of Derwent)', 4, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (210, 'River', 'Sherburn Beck catchment (trib of Derwent)', 4, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (211, 'River', 'Brompton Beck catchment (trib of Derwent)', 4, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (212, 'River', 'Ruston Beck catchment (trib of Derwent)', 4, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (213, 'River', 'Lowdales Beck Catchment (trib of Derwent)', 4, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (214, 'River', 'Derwent from Source to Black Beck', 4, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (215, 'River', 'Walmouth Beck from Source to River Riccal', 4, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (216, 'River', 'Wath Beck from Souce to Holbeck', 4, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (217, 'River', 'Rye from Holbeck to River Seven', 4, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (218, 'River', 'Holbeck from Source to Wath Beck', 4, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (219, 'River', 'White Beck catchment (trib of Rye)', 4, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (220, 'River', 'Spring Wood Catchment (Trib of Rye)', 4, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (221, 'River', 'The Syme form Source to Thornton/Dalby/Staindale', 4, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (222, 'River', 'Borough Beck', 4, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (223, 'River', 'Levisham Beck from Source to Pickering Beck', 4, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (224, 'River', 'Catter Beck/Hutton Beck from source to River Seven', 4, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (225, 'River', 'Pickering Beck from Source to Levisham Beck', 4, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (226, 'River', 'Rye from Source to River Seph', 4, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (227, 'River', 'Hartoft Beck from Source to River Seven', 4, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (228, 'River', 'Settrington Beck catch (trib of Derwent)', 4, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (229, 'River', 'Sledhill Gill', 4, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (230, 'River', 'Raisdale Beck from Source to River Seph', 4, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (231, 'River', 'Seven from Hartoft Beck to Little Beck', 4, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (232, 'River', 'Seven from source to Hartoft Beck', 4, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (233, 'River', 'Ledge Beck from Source to River Seph', 4, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (234, 'River', 'Seph from Ledge Beck to River Rye', 4, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (235, 'River', 'Troutsdale Beck from Source to River Derwent', 4, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (236, 'River', 'Black/Crosscliff/Grain Bk from Source to R Derwent', 4, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (237, 'River', 'Little Beck from Source to River Seven', 4, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (238, 'River', 'Seph from Source to Ledge Beck', 4, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (239, 'River', 'Derwent from Kirkham to Elvington Beck', 4, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (240, 'Lake', 'Church Wilne Reservoir', 5, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (241, 'River', 'Derwent from Bottle Brook to Trent', 15, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (242, 'River', 'Wharfe from Collingham Beck to Tadcaster Weir', 1, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (243, 'River', 'Wharfe from Park Gill Bk to Barben Beck/River Dibb', 1, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (244, 'River', 'Hebden Beck Catchment (trib of Wharfe)', 1, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (245, 'River', 'Oughtershaw Beck from Source to River Wharfe', 1, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (246, 'River', 'The Fleet/The Foss from Source to R Wharfe', 1, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (247, 'River', 'Dorts Dike  Catchment (trib of Wharfe)', 1, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (248, 'River', 'Fir Beck/Blands Beck Catchment (trib of Wharfe)', 1, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (249, 'River', 'Wharfe from R Washburn to Collingham Beck', 1, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (250, 'River', 'Skirfare from Heselden Beck to Cowside Beck', 1, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (251, 'River', 'Skirfare from Source to Heselden Beck', 1, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (252, 'River', 'Green Field Beck from Source to River Wharfe', 1, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (253, 'River', 'Derwent from Source to Westend', 15, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (254, 'Lake', 'Gouthwaite Reservoir', 13, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (255, 'River', 'Crimple Beck from Source to Park Beck', 13, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (256, 'River', 'Ashfoldside Beck to River Nidd', 13, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (257, 'River', 'Park Beck Catch (trib of Crimple Beck)', 13, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (258, 'River', 'Thornton Beck Catch (Trib of Nidd)', 13, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (259, 'River', 'Fell Beck/Far Beck Catch (Trib of Nidd)', 13, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (260, 'River', 'Gundrifs Beck (trib of Nidd)', 13, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (261, 'River', 'Swale from Bedale Beck to River Wiske', 13, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (262, 'River', 'Wiske from Source to The Stell', 13, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (263, 'River', 'Chaddesden Brook Catchment (trib of Derwent)', 15, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (264, 'River', 'Colburn Beck/Risedale Bk from Source to R Swale', 13, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (265, 'River', 'The Stell from Source to River Wiske', 13, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (266, 'River', 'Broad Beck from Source to Cod Beck', 13, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (267, 'River', 'Gunnerside Gill from Source to River Swale', 13, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (268, 'River', 'Barney Bk/Hard Level Gill from Source to R Swale', 13, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (269, 'River', 'Otterington Beck catchment (trib of Wiske)', 13, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (270, 'River', 'Stonesdale Bk from Source to River Swale', 13, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (271, 'River', 'Ings Goit from Source to Burneston Beck', 13, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (272, 'River', 'Paradise Beck catchment (trib of Cod Beck)', 13, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (273, 'River', 'Sike Stell catch (trib of Wiske)', 13, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (274, 'River', 'Old Stell Catchment (trib of Bedale Beck)', 13, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (275, 'River', 'Healam Beck from Burniston Bk to River Swale', 13, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (276, 'River', 'Spital Beck from Source to Cod Beck', 13, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (277, 'River', 'Willow/Isle/Sutton Bks Catchment (Trib of Cod Bk)', 13, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (278, 'River', 'Brompton Bk from Source to Newton Bk', 13, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (279, 'River', 'Scurf Beck from Source to Bedale Beck', 13, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (280, 'River', 'Gill Beck/Black Beck from Source to River Swale', 13, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (281, 'River', 'Sand Beck from Source to River Swale', 13, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (282, 'River', 'Great Sleddale Beck from Source to River Swale', 13, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (283, 'River', 'Swale from Whitsundale Bk  to Stonesdale Bk', 13, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (284, 'River', 'Birkdale Beck from Souce to River Swale', 13, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (285, 'River', 'Whitsundale Beck from Source to River Swale', 13, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (286, 'River', 'Scorton Beck from Source to River Swale', 13, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (287, 'River', 'Bedale/Newton/Burton Bk from Source to Brompton Bk', 13, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (288, 'River', 'Cod Beck from Source to Broad Beck', 13, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (289, 'River', 'Swale from Wiske to River Ure', 13, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (290, 'River', 'Markeaton Brook from Source to Mackworth Brook', 15, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (291, 'Lake', 'Kedleston Hall Lower Lake', 15, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (292, 'River', 'Mackworth Brook Catchment (trib of Markeaton Brook)', 15, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (293, 'River', 'Blackbrook Catchment (trib of Derwent)', 15, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (294, 'River', 'Amber from Alfreton Brook to Derwent', 15, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (295, 'Lake', 'Carsington Water', 3, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (296, 'River', 'Blackleach Brook from Source to Bar Brook', 15, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (297, 'River', 'Highlow Brook Catchment (trib of Derwent)', 15, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (298, 'River', 'Hood Brook Catchment (Trib of Derwent)', 15, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (299, 'River', 'Noe from Peakshole Water to Derwent', 15, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (300, 'River', 'Highshore Clough Catchment (trib of Derwent)', 15, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (301, 'Lake', 'Ladybower Reservoir', 15, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (302, 'River', 'Ashop from Alport to Derwent', 15, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (303, 'River', 'Repton Brook Catchment (trib of Trent)', 5, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (304, 'River', 'Ramsley Brook from Source to Carr-New Brook', 5, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (305, 'River', 'Cuttle Brook Catchment (trib of Trent)', 5, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (306, 'Lake', 'Foremark Reservoir', 5, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (307, 'River', 'Twyford Brook Catchment (trib of Trent)', 5, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (308, 'River', 'Radbourne Brook Catchment (trib of Trent)', 5, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (309, 'River', 'Tean from Source to Cheadle Catchment', 3, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (310, 'River', 'Alders Bk', 3, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (311, 'River', 'Combes Brook Catch (trib of R Churnet)', 3, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (312, 'River', 'Leek Brook from Source to River Churnet', 3, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (313, 'River', 'Stanton/Wootton/Ellastone Catch (trib of Dove)', 3, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (314, 'River', 'Hamps from Source to R Manifold', 3, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (315, 'River', 'Darklands Brook Catchment (trib of Trent)', 16, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (316, 'River', 'Mease from Hooborough Brook to Trent', 16, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (317, 'River', 'Gilwiskaw Brook from Source to River Mease', 16, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (318, 'River', 'Tame (Oldbury Arm) - source to conf R Tame (Wton Arm)', 16, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (319, 'River', 'Anker from River Sence to River Tame', 16, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (320, 'River', 'Sketchley Brook from Source to River Anker', 16, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (321, 'River', 'Footherley Brook from Source to Black-Bourne Brook', 16, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (322, 'River', 'Langley Bk - source to conf R Tame', 16, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (323, 'River', 'Dog Lane Brook from Source to R Tame', 16, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (324, 'Lake', 'Shustoke Reservoirs', 16, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (325, 'River', 'Didgeley Brook from Source to R Bourne', 16, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (326, 'River', 'Cole from Springfield to Hatchford-Kingshurst Brook', 16, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (327, 'River', 'Temple Balsall Brook from Source to R Blythe', 16, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (328, 'River', 'Cuttle Brook from Source to River Blythe', 16, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (329, 'Lake', 'Bracebridge Pool', 16, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (330, 'River', 'Rea from Bourn Brook to River Tame', 16, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (331, 'Lake', 'Edgbaston Pool', 16, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (332, 'River', 'Pyford Brook Catchment (trib of Trent)', 6, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (333, 'Lake', 'Stowe Pool', 6, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (334, 'River', 'Shropshire Bk', 6, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (335, 'River', 'Rising Brook', 6, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (336, 'River', 'Sow - Doxey Bk to R Penk', 6, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (337, 'River', 'Sow from Source to Brockton Brook', 6, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (338, 'Lake', 'Cop Mere', 6, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (339, 'River', 'Penk -  Saredon Bk to Whiston Bk', 6, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (340, 'River', 'Whiston Bk', 6, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (341, 'River', 'Doxey Bk - source to R Sow', 6, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (342, 'River', 'Meece Brook from Source to Chatcull Brook', 6, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (343, 'River', 'Chatcull Brook from Source to Meece Brook', 6, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (344, 'River', 'Brockton Brook from Source to R Sow', 6, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (345, 'River', 'Causeley Brook from Source to River Trent', 6, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (346, 'River', 'Ford Green Brook from Source to R Trent', 6, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (347, 'Canal', 'Grantham Canal, lower section', 14, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (348, 'Canal', 'Worcester and Birmingham Canal, Gas St Basin to Kings Norton Junction', 14, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (349, 'Canal', 'Staffordshire and Worcester Canal, summit to Trent and Mersey Canal', 14, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (350, 'Canal', 'Hatherton Canal', 14, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (351, 'Canal', 'Trent and Mersey Canal, summit to Alrewas', 14, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (352, 'Canal', 'Caldon Canal, canal section 3', 14, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (353, 'River', 'Barrow Beck', 17, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (354, 'River', 'Black Dyke Catchment (trib of Louth Canal)', 17, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (355, 'River', 'Black Dyke (trib of Ancholme)', 17, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (356, 'TransitionalWater', 'HUMBER LOWER', 10, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (357, 'River', 'Hibaldstow area Catchment (trib of Ancholme)', 17, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (358, 'River', 'Kettleby Beck', 17, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (359, 'River', 'Kingerby Beck Catchment (Trib of Ancholme)', 17, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (360, 'River', 'Lud', 17, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (361, 'River', 'Louth Canal', 17, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (362, 'River', 'North Willingham Area Catchment (trib of Rase)', 17, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (363, 'River', 'New Dike Catchment (trib of Louth Canal)', 17, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (364, 'River', 'North Beck Drain', 17, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (365, 'River', 'Poulton Drain Catchment (trib of Louth Canal)', 17, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (366, 'TransitionalWater', 'HUMBER MIDDLE', 10, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (367, 'River', 'Rase from source to Market Rasen', 17, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (368, 'River', 'Seven from Little Beck to Catter Beck', 4, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (369, 'River', 'Seven Towns North Eau', 17, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (370, 'River', 'Thoresway Beck (trib of Waithe Beck)', 17, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (371, 'River', 'Thornton and Owersby Catchwater', 17, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (372, 'River', 'Welton Le Wold to Louth Catch (trib of Lud)', 17, 'Lorem');
-INSERT INTO water_body (id, type, name, catchment_id, description) VALUES (373, 'River', 'Waithe Beck upper catchment', 17, 'Lorem');
+INSERT INTO catchment (name, river_basin_id, country, description) VALUES ('Wharfe and Ouse Lower', 1, 'United Kingdom', 'Lorem');
+INSERT INTO catchment (name, river_basin_id, country, description) VALUES ('Esk and Coast', 1, 'United Kingdom', 'Lorem');
+INSERT INTO catchment (name, river_basin_id, country, description) VALUES ('Dove', 1, 'United Kingdom', 'Lorem');
+INSERT INTO catchment (name, river_basin_id, country, description) VALUES ('Derwent Humber', 1, 'United Kingdom', 'Lorem');
+INSERT INTO catchment (name, river_basin_id, country, description) VALUES ('Trent Lower and Erewash', 1, 'United Kingdom', 'Lorem');
+INSERT INTO catchment (name, river_basin_id, country, description) VALUES ('Trent Valley Staffordshire', 1, 'United Kingdom', 'Lorem');
+INSERT INTO catchment (name, river_basin_id, country, description) VALUES ('Idle and Torne', 1, 'United Kingdom', 'Lorem');
+INSERT INTO catchment (name, river_basin_id, country, description) VALUES ('Aire and Calder', 1, 'United Kingdom', 'Lorem');
+INSERT INTO catchment (name, river_basin_id, country, description) VALUES ('Soar', 1, 'United Kingdom', 'Lorem');
+INSERT INTO catchment (name, river_basin_id, country, description) VALUES ( 'Humber TraC', 1, 'United Kingdom', 'Lorem');
+INSERT INTO catchment (name, river_basin_id, country, description) VALUES ( 'Hull and East Riding', 1, 'United Kingdom', 'Lorem');
+INSERT INTO catchment (name, river_basin_id, country, description) VALUES ( 'Don and Rother', 1, 'United Kingdom', 'Lorem');
+INSERT INTO catchment (name, river_basin_id, country, description) VALUES ( 'Swale Ure Nidd and Ouse Upper', 1, 'United Kingdom', 'Lorem');
+INSERT INTO catchment (name, river_basin_id, country, description) VALUES ( 'Humber AWB', 1, 'United Kingdom', 'Lorem');
+INSERT INTO catchment (name, river_basin_id, country, description) VALUES ( 'Derwent Derbyshire', 1, 'United Kingdom', 'Lorem');
+INSERT INTO catchment (name, river_basin_id, country, description) VALUES ( 'Tame Anker and Mease', 1, 'United Kingdom', 'Lorem');
+INSERT INTO catchment (name, river_basin_id, country, description) VALUES ( 'Louth Grimsby and Ancholme', 1, 'United Kingdom', 'Lorem');
 
 
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 1, 53.792630019011796, -1.1823732576298436, 1, '1161', 'active', 'Lorem', 'England', 6);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 2, 54.50017497801003, -0.6718140870136629, 2, '139', 'active', 'Lorem', 'England', 7);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 3, 53.08025421103804, -2.102200438243874, 3, '158679', 'active', 'Lorem', 'England', 8);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 4, 54.438286155905324, -0.794483674699154, 4, '161', 'active', 'Lorem', 'England', 9);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 5, 53.93140522899077, -0.8935864202306223, 5, '201391', 'active', 'Lorem', 'England', 10);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 6, 52.993587577719985, -1.9789653410095833, 6, '202097', 'active', 'Lorem', 'England', 11);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 7, 53.86327799147504, -1.2273141614005023, 7, '202674', 'active', 'Lorem', 'England', 12);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('ANY FISH - NOT INCLUDING FLATFISH - WHOLE ANIMAL', 8, 53.140254597272886, -0.7936781396568373, 8, 'RIVER TRENT AT CROMWELL LOCK', 'active', 'Lorem', 'England', 13);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 9, 53.266069059705615, -0.7697513683747061, 9, 'RIVER TRENT D/S NEWTON WTW', 'active', 'Lorem', 'England', 14);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 10, 53.097552326102594, -0.8249662076171328, 10, 'RIVER TRENT AT A616 SOUTH MUSKHAM', 'active', 'Lorem', 'England', 15);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 11, 53.04896175786806, -2.1464014540248275, 11, 'NON-TIDAL R TRENT - MILTON MILLRISE RD', 'active', 'Lorem', 'England', 16);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 11, 53.066961620640086, -2.1506861181573953, 12, 'NON-TIDAL R TRENT - NORTON GREEN', 'active', 'Lorem', 'England', 17);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 12, 53.68756012821881, -0.7221016755031049, 13, 'ADINGFLEET DRAIN - AT ADINGFLEET', 'active', 'Lorem', 'England', 18);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 13, 53.62016627314458, -0.7846124121346728, 14, 'PAUPERS DRAIN AT LEAM HOUSE EASTOFT(GQA)', 'active', 'Lorem', 'England', 19);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 14, 53.526758676049354, -0.8838040780544982, 15, 'SOUTH LEVEL ENGINE DRAIN AT TUNNEL PITS', 'active', 'Lorem', 'England', 20);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 15, 53.473153007777576, -0.6545707305917161, 16, 'NORTHORPE BECK AT SCOTTON ROAD', 'active', 'Lorem', 'England', 21);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 16, 53.46759098132499, -0.7380550694156359, 17, 'LAUGHTON HIGHLAND DRAIN AT LAUGHTON', 'active', 'Lorem', 'England', 22);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 14, 53.49026178293457, -0.9368527482235088, 18, 'MISSION BANK DRAIN AT B1396', 'active', 'Lorem', 'England', 23);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 14, 53.507178659510124, -0.8990802000311643, 19, 'SOUTH IDLE DRAIN, AT BULL HASSOCKS PS', 'active', 'Lorem', 'England', 24);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 14, 53.50653990706466, -0.8990213499629794, 20, 'FOLLY DRAIN, AT GREEN HOLME BANK FM', 'active', 'Lorem', 'England', 25);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 14, 53.48877613999891, -0.9056908556270432, 21, 'SOUTH IDLE DRAIN, DS CADMANS DRAIN', 'active', 'Lorem', 'England', 26);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 14, 53.50133194877064, -0.9323545811518352, 22, 'MISSON BANK DRAIN, AT NINESCORES FM', 'active', 'Lorem', 'England', 27);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 14, 53.50660656081506, -0.8994267390875718, 23, 'SOUTH IDLE DR, DS SOUTH THORN BANK DR', 'active', 'Lorem', 'England', 28);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 14, 53.499268444040545, -0.9020137171420162, 24, 'SOUTH IDLE DRAIN, DS SNELL DRAIN', 'active', 'Lorem', 'England', 29);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 14, 53.50877423871082, -0.9182949060389058, 25, 'THATCH CARR BANK DRAIN, US OF PS', 'active', 'Lorem', 'England', 30);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 14, 53.50195076013626, -0.9004518551761834, 26, 'FOLLY DRAIN, AT COVE RD BRIDGE', 'active', 'Lorem', 'England', 31);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 9, 53.42112626921758, -0.76471247815758, 27, 'RAVENSFLEET P/S CATCHMENT', 'active', 'Lorem', 'England', 32);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('ANY FISH - NOT INCLUDING FLATFISH - WHOLE ANIMAL', 17, 53.27915722298486, -0.9391835073979674, 28, 'RIVER IDLE (MAUN) - AT GAMSTON', 'active', 'Lorem', 'England', 33);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 18, 53.33721730723514, -1.1903511523941939, 29, 'ANSTON BROOK/RIVER RYTON - LINDRICK DALE', 'active', 'Lorem', 'England', 34);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 18, 53.350806757642566, -1.2198395214273403, 30, 'ANSTON BROOK/RIVER RYTON - CHURCH BRIDGE', 'active', 'Lorem', 'England', 35);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 18, 53.36886462118827, -1.2535658248513124, 31, 'ANSTON BROOK NR TODWICK', 'active', 'Lorem', 'England', 36);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 19, 53.37546517026133, -1.0847065988013835, 32, 'OWLANDS WOOD DYKE AT BLYTHE', 'active', 'Lorem', 'England', 37);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 19, 53.37260377074647, -1.1226449826720282, 33, 'LANGOLDS LAKE BROOK - A60 AT COSTHORPE', 'active', 'Lorem', 'England', 38);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 20, 53.33447082422987, -1.1962597344646215, 34, 'RIVER RYTON AT ANSTON GRANGE FOOTBRIDGE', 'active', 'Lorem', 'England', 39);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 18, 53.36348167848272, -1.2338840998164367, 35, 'CRAMFIT BROOK AT CRAMFIT BRIDGE', 'active', 'Lorem', 'England', 40);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 18, 53.367445688876444, -1.2269148072144287, 36, 'CRAMFIT BROOK D/S DINNINGTON STW', 'active', 'Lorem', 'England', 41);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('POND / LAKE / RESERVOIR WATER', 21, 53.2710575558578, -1.04565452852773, 37, 'CLUMBER LAKE AT HARDWICK', 'active', 'Lorem', 'England', 42);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('POND / LAKE / RESERVOIR WATER', 22, 53.22758431210391, -1.0499460678813421, 38, 'THORESBY LAKE AT THE SUMMER HOUSE', 'active', 'Lorem', 'England', 43);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 23, 53.19613073192304, -1.1834298401409944, 39, 'SHIRE BROOK AT SOOKHOLME', 'active', 'Lorem', 'England', 44);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 23, 53.19714496758879, -1.18715285644858, 40, 'SHIRE BROOK AT CONF WITH SOOKHOLME BROOK', 'active', 'Lorem', 'England', 45);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 23, 53.19996764810007, -1.200467762739614, 41, 'SHIRE BROOK D/S SHIREBROOK STW', 'active', 'Lorem', 'England', 46);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 24, 53.15905323631937, -1.1145882148139938, 42, 'VICAR WATER NEAR CLIPSTONE INLET BTM', 'active', 'Lorem', 'England', 47);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('POND / LAKE / RESERVOIR WATER', 25, 54.0920654253824, -2.162994224765542, 43, 'MALHAM TARN', 'active', 'Lorem', 'England', 48);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 26, 53.36987822800208, -0.8169945239183908, 44, 'WHEATLEY BECK AT WEST BURTON MILL', 'active', 'Lorem', 'England', 49);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('FINAL SEWAGE EFFLUENT', 27, 53.351873600476324, -0.8053235062484659, 45, 'CATCHWATER DRAIN,STURTON-LE-STEEPLE', 'active', 'Lorem', 'England', 50);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 28, 53.292467917390454, -0.7453189700712095, 46, 'SEWER DR/SALLIE BANK DRAIN - AT TORKSEY', 'active', 'Lorem', 'England', 51);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 29, 53.275010878713, -0.7959190219940688, 47, 'LANEHAM BECK CATCHMENT - LANEHAM', 'active', 'Lorem', 'England', 52);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 30, 53.24532350154848, -0.8025965564140984, 48, 'FLEDBOROUGH BECK U/S CONFLUENCE', 'active', 'Lorem', 'England', 53);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 31, 53.20618724574535, -0.8448617974010031, 49, 'GOOSEMOOR DYKE AT WESTON AT CONFLUENCE', 'active', 'Lorem', 'England', 54);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 32, 53.20352732342212, -0.8486762194652436, 50, 'WESTON BROOK (MOORHOUSE BECK)', 'active', 'Lorem', 'England', 55);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('ANY FISH - NOT INCLUDING FLATFISH - WHOLE ANIMAL', 33, 53.070328708234825, -0.8237216538807004, 51, 'RIVER DEVON B6166 ROAD BRIDGE', 'active', 'Lorem', 'England', 56);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 34, 52.97287614224833, -0.9119368223352903, 52, 'CAR DYKE AT CAR DYKE BRIDGE', 'active', 'Lorem', 'England', 57);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 35, 52.89240892030557, -0.9641640042749927, 53, 'RIVER SMITE AT COLSTON BASSETT', 'active', 'Lorem', 'England', 58);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 36, 52.850730169867845, -0.9516562902667806, 54, 'RIVER SMITE AT HICKLING', 'active', 'Lorem', 'England', 59);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 37, 52.91545877546846, -0.8752296827091313, 55, 'RIVER WHIPLING (THE GRIMMER) - GRANBY', 'active', 'Lorem', 'England', 60);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 38, 52.91487908002024, -0.8747687950039448, 56, 'RUNDLE BECK AT GRANBY', 'active', 'Lorem', 'England', 61);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 39, 53.07917170583399, -0.86698245112963, 57, 'PINGLEY CAR DYKE AT STAYTHORPE', 'active', 'Lorem', 'England', 62);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 40, 53.082857511465484, -0.9463118787607989, 58, 'RIVER GREET AT SOUTHWELL MILL', 'active', 'Lorem', 'England', 63);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 41, 53.06411534953079, -0.9035509998048554, 59, 'HALLOUGHTON DUMBLE AT ROLLESTON', 'active', 'Lorem', 'England', 64);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 42, 52.98668528062982, -0.9959644885190676, 60, 'COCKER BECK AT TRENT CONFLUENCE', 'active', 'Lorem', 'England', 65);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 43, 52.90889585971169, -1.081034024681786, 61, 'POLSER BROOK D/S TOLLERTON', 'active', 'Lorem', 'England', 66);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 43, 52.89545005296611, -1.080232737281032, 62, 'POLSER BROOK AT  HOE HILL BR, NORMANTON', 'active', 'Lorem', 'England', 67);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 44, 52.93916025752765, -1.16223351810391, 63, 'RIVER LEEN', 'active', 'Lorem', 'England', 68);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 44, 52.96576496942241, -1.1823399424404348, 64, 'RIVER LEEN AT BOBBERS MILL', 'active', 'Lorem', 'England', 69);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 45, 52.98241759045611, -1.1777806103972315, 65, 'DAY BROOK AT BASFORD', 'active', 'Lorem', 'England', 70);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 46, 52.99654934238852, -1.2910923464325985, 66, 'GILT BROOK AT CONFLUENCE', 'active', 'Lorem', 'England', 71);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 46, 52.997112479103286, -1.2890568537121894, 67, 'GILT BROOK U/S NEWTHORPE STW', 'active', 'Lorem', 'England', 72);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 47, 53.014093746503505, -1.3277555320160217, 68, 'BAILEY BROOK AT MILNHAY ROAD', 'active', 'Lorem', 'England', 73);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 48, 53.021617978427834, -1.3230473238653466, 69, 'NETHERGREEN BROOK AT CONFLUENCE', 'active', 'Lorem', 'England', 74);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 48, 53.02274185920218, -1.3074803932018737, 70, 'NETHERGREEN BROOK AT EASTWOOD', 'active', 'Lorem', 'England', 75);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 49, 52.727248207782196, -1.1240046109248039, 71, 'RIVER SOAR AT SILEBY MILL', 'active', 'Lorem', 'England', 76);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 50, 52.55863140527934, -1.2469474398512437, 72, 'RIVER SOAR AT CROFT', 'active', 'Lorem', 'England', 77);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 50, 52.53223143368686, -1.258986142889552, 73, 'RIVER SOAR D/S STONEY BRIDGE', 'active', 'Lorem', 'England', 78);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 50, 52.53223143368686, -1.258986142889552, 74, 'RIVER SOAR D/S STONEY BRIDGE', 'active', 'Lorem', 'England', 79);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 51, 52.52160156448714, -1.2907193896806586, 75, 'RIVER SOAR AT SHARNBROOK (GQA)', 'active', 'Lorem', 'England', 80);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 52, 52.514720038373596, -1.2796162337053674, 76, 'RIVER SOAR AT CLAYBROOKE', 'active', 'Lorem', 'England', 81);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 53, 52.839585773547604, -1.2675781570794695, 77, 'BLACKPOOL BROOK AT KEGWORTH', 'active', 'Lorem', 'England', 82);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 54, 52.80161029419734, -1.2612295685390622, 78, 'LONG WHATTON BROOK AT THE STINTS', 'active', 'Lorem', 'England', 83);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 54, 52.810245733165544, -1.2901608386002847, 79, 'LONG WHATTON BK U/S LONG WHATTON STW', 'active', 'Lorem', 'England', 84);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 54, 52.809335212454535, -1.3095947333162987, 80, 'WESTMEADOW BROOK AT LONG WHATTON', 'active', 'Lorem', 'England', 85);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 54, 52.78624763098499, -1.340904133679601, 81, 'WESTMEADOW BROOK AT MILL LANE', 'active', 'Lorem', 'England', 86);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 55, 52.78421273830746, -1.2338573548286544, 82, 'BLACK BROOK AT DISHLEY', 'active', 'Lorem', 'England', 87);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 56, 52.773632418810514, -1.1658696036375997, 83, 'WALTON BROOK AT BURTON BANDALLS', 'active', 'Lorem', 'England', 88);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 56, 52.7739059857453, -1.1387223951680894, 84, 'WALTON BROOK D/S BURTON ON THE WOLDS STW', 'active', 'Lorem', 'England', 89);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 57, 52.5685995908854, -1.2711062388454621, 85, '47526', 'active', 'Lorem', 'England', 90);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 58, 52.7551444370739, -0.989438609662268, 86, 'AUSTEN DYKE - FRISBY', 'active', 'Lorem', 'England', 91);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 59, 52.76632134126619, -0.8022829373846323, 87, 'FREEBY BROOK CONF RIVER EYE', 'active', 'Lorem', 'England', 92);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 60, 54.55067282472519, -0.8005885967318077, 88, '485', 'active', 'Lorem', 'England', 93);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 61, 52.63578048695146, -1.1043455499698165, 89, 'EVINGTON BROOK SPINNEY HILL PARK', 'active', 'Lorem', 'England', 94);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 62, 52.60640548272459, -1.1859859756894038, 90, 'LUBBERSTHORPE BROOK AT WATERGATE LANE', 'active', 'Lorem', 'England', 95);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 63, 52.56850999761695, -1.1250436422481864, 91, 'COUNTESTHORPE BK RIVER SENCE CONFLUENCE', 'active', 'Lorem', 'England', 96);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 63, 52.55691444023177, -1.1252740340200411, 92, 'COUNTESTHORPE BROOK AT COUNTESTHORPE', 'active', 'Lorem', 'England', 97);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 64, 54.48188285391031, -0.9767081274774235, 93, 'COMMONDALE BECK D/S OF STW', 'active', 'Lorem', 'England', 98);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 65, 54.449732284866485, -0.7985893594955834, 94, 'STONEGATE BECK AT EGTON BANKS', 'active', 'Lorem', 'England', 99);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 66, 54.38174890270415, -0.7681781004487072, 95, 'WHEELDALE GILL AT WHEELDALE MOOR', 'active', 'Lorem', 'England', 100);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('ESTUARINE WATER', 67, 54.49132918213085, -0.6124141922423384, 96, 'ESK AT LOWER HARBOUR - WFD TRAC WATERS', 'active', 'Lorem', 'England', 101);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 60, 54.54995674699571, -0.7999757152117064, 97, 'DALE BECK AT STAITHES', 'active', 'Lorem', 'England', 102);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('MYTILUS EDULIS - MUSSEL - MUSCLE', 68, 54.21698191424325, -0.2721612522496498, 98, 'FILEY AT OLD QUAY ROCKS MUSSELS', 'active', 'Lorem', 'England', 103);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 69, 53.90939543928805, -0.1584537261817383, 99, 'STREAM DIKE OUTFALL AT HORNSEA BEACH', 'active', 'Lorem', 'England', 104);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('MYTILUS EDULIS - MUSSEL - WHOLE ANIMAL', 67, 54.49104613184991, -0.6104630477431614, 100, 'ESK AT EAST PIER MUSSELS', 'active', 'Lorem', 'England', 105);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 70, 54.40892394478627, -0.7356242834165694, 101, 'ELLER BECK AT BECK HOLE ROAD BRIDGE', 'active', 'Lorem', 'England', 106);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 4, 54.42692918244341, -0.8240117926543239, 102, 'GLAISDALE BECK AT NEW HOUSE FARM', 'active', 'Lorem', 'England', 107);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 71, 54.45205145398362, -0.8570238033169721, 103, 'GREAT FRYUP BECK AT FURNACE BRIDGE', 'active', 'Lorem', 'England', 108);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 72, 54.46049603818642, -0.661373837433623, 104, 'IBURNDALE BECK AT ECHO HILL', 'active', 'Lorem', 'England', 109);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 73, 54.46436643330832, -0.9330208637219221, 105, 'DANBY BECK AT CHURCH STREET BRIDGE', 'active', 'Lorem', 'England', 110);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 74, 54.468808378264995, -0.6157527821002561, 106, 'COCK MILL BECK NR RUSWARP', 'active', 'Lorem', 'England', 111);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 75, 54.36540727718888, -0.45877247680195055, 107, 'STAINTONDALE BECK AT WHITEHOUSE FARM', 'active', 'Lorem', 'England', 112);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 75, 54.364307398282996, -0.4698035310888366, 108, 'HAYBURN BECK AT HAYBURN BRIDGE', 'active', 'Lorem', 'England', 113);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 76, 54.50236336625301, -0.6763142687848461, 109, 'SANDSEND BECK NR STY MARYS HILL', 'active', 'Lorem', 'England', 114);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 77, 54.34726345279581, -0.5355156437089177, 110, 'LOWNORTH BECK @ MURK HEAD', 'active', 'Lorem', 'England', 115);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 78, 54.45791133878674, -0.994674578141534, 111, 'BAYSDALE BECK AT HOB HOLE WATH', 'active', 'Lorem', 'England', 116);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 64, 54.48107352341391, -0.9777160984302566, 112, 'SLEDDALE BECK AT DIVING DUCK', 'active', 'Lorem', 'England', 117);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 79, 54.30209464031778, -0.4231939011582149, 113, 'SCALBY BECK AT A165 BRIDGE - SCARBOROUGH', 'active', 'Lorem', 'England', 118);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 80, 53.67506162083276, -0.9899894772220268, 114, 'AIRE & CALDER NAV AT NEW BRIDGE', 'active', 'Lorem', 'England', 119);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 81, 54.101508953159815, -1.2314613334813154, 115, 'ALNE BECK AT LUND BRIDGE', 'active', 'Lorem', 'England', 120);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 82, 53.80340026138866, -1.0950071149329281, 116, 'BLACK FEN DRAIN AT BOGGART BRIDGE', 'active', 'Lorem', 'England', 121);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 83, 53.798778129800404, -1.1837112532737497, 117, 'FOX DIKE AT FOX BRIDGE', 'active', 'Lorem', 'England', 122);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 84, 53.71138959945669, -0.13585154049552345, 118, 'KEYINGHAM DRAIN AT A1033 KEYINGHAM', 'active', 'Lorem', 'England', 123);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 84, 53.68479418489275, -0.1553038393168876, 119, 'KEYINGHAM DRAIN AT SANDS BRIDGE', 'active', 'Lorem', 'England', 124);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 85, 54.04539897079148, -1.1248886120345676, 120, 'NEW PARKS BECK AT BULL LANE', 'active', 'Lorem', 'England', 125);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 86, 53.74474303292076, -0.2450324458714448, 121, 'OLDFLEET DRAIN AT HEDON ROAD', 'active', 'Lorem', 'England', 126);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 87, 54.045788775981165, -0.9941943125946365, 122, 'THE SIKE AT WOODLANDS FARM CATTLE GRID', 'active', 'Lorem', 'England', 127);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 88, 54.13337733865746, -1.2298014676706608, 123, 'KYLE AT RASKELF BRIDGE', 'active', 'Lorem', 'England', 128);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 89, 54.31029916846924, -2.1905543919935937, 124, 'URE U/S DUERLEY (GAYLE) BECK', 'active', 'Lorem', 'England', 129);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 90, 54.046596640365756, -1.2318161155156626, 125, 'SANDWATH BECK AT LINTON-ON-OUSE', 'active', 'Lorem', 'England', 130);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 91, 54.2850170287263, -2.122375923278144, 126, 'SEMERWATER OUTFLOW AT ROAD BRIDGE', 'active', 'Lorem', 'England', 131);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('ANY FISH - NOT INCLUDING FLATFISH - WHOLE ANIMAL', 92, 54.0112519021357, -1.1926247515555035, 127, 'OUSE AT BENINGBROUGH - EQSD BIOTA & WQ', 'active', 'Lorem', 'England', 132);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 93, 54.22458571649804, -1.7667130791466532, 128, 'BURN AT GOLLINGLITH FOOT', 'active', 'Lorem', 'England', 133);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 94, 54.099767430113175, -1.059487948354962, 129, 'FARLINGTON BECK AT FARLINGTON', 'active', 'Lorem', 'England', 134);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 86, 53.775914508457056, -0.2228658732117626, 130, 'WYTON DRAIN AT B1239', 'active', 'Lorem', 'England', 135);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 95, 53.96022433745254, -1.0678722814420947, 131, 'TANG HALL BECK AT FOSS ISLANDS FB', 'active', 'Lorem', 'England', 136);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 95, 53.96022433745254, -1.0678722814420947, 132, 'TANG HALL BECK AT FOSS ISLANDS FB', 'active', 'Lorem', 'England', 137);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 96, 54.28557139511328, -1.9786040400979024, 133, 'BISHOPDALE BECK AT ESHINGTON LANE BRIDGE', 'active', 'Lorem', 'England', 138);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 97, 53.764389399695226, -0.11564752092004137, 134, 'BURTON PIDSEA DRAIN AT WEST BRIDGE', 'active', 'Lorem', 'England', 139);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 98, 53.763720830097924, -0.12978715298182372, 135, 'HUMBLETON BECK @ INGS BRIDGE ELSTRONWICK', 'active', 'Lorem', 'England', 140);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 99, 53.653323320063514, -0.12930336755700222, 136, 'OTTRINGHAM DRAIN AT SALTHAUGH CLOUGH', 'active', 'Lorem', 'England', 141);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 100, 53.64377063822064, 0.06992884131442953, 137, 'SKEFFLING DRAIN AT HUMBER LANE SKEFFLING', 'active', 'Lorem', 'England', 142);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 101, 53.99716594770434, -1.1404374570627502, 138, 'HURNS GUTTER AT STRIPE LANE SKELTON', 'active', 'Lorem', 'England', 143);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 102, 54.04417183894394, -1.3092575665423067, 139, 'OUSE GILL BECK AT LITTLE OUSEBURN BRIDGE', 'active', 'Lorem', 'England', 144);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 103, 54.05313854238559, -1.1694204304870863, 140, 'HUBY BURN AT HUNTING LODGE FARM', 'active', 'Lorem', 'England', 145);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 104, 54.12449555790381, -1.5438205348392864, 141, 'SKELL AT HELL WATH LANE', 'active', 'Lorem', 'England', 146);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 105, 54.100778513688525, -1.3860494285159275, 142, 'URE AT MILBY LOCK', 'active', 'Lorem', 'England', 147);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 106, 54.158625990563266, -1.3408929166285044, 143, 'CRAKEHILL BECK AT MOUNT BRIDGE', 'active', 'Lorem', 'England', 148);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 107, 54.14994369585465, -1.6827272525411572, 144, 'LAVER AT BELFORD LANE (U/S FORD)', 'active', 'Lorem', 'England', 149);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 108, 54.16420347679353, -1.605535278860793, 145, 'KEX BECK AT AZERLEY', 'active', 'Lorem', 'England', 150);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 109, 54.27926128822764, -1.9729400649077304, 146, 'WALDEN BECK AT BURTON BRIDGE', 'active', 'Lorem', 'England', 151);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 110, 54.29111391188547, -2.2572003350670022, 147, 'SNAIZEDALE BECK AT SNAIZEHOLME BRIDGE', 'active', 'Lorem', 'England', 152);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 111, 54.28643573708123, -2.2676779978623234, 148, 'WIDDALE BECK @ WIDDALE BRIDGE', 'active', 'Lorem', 'England', 153);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 112, 54.29888917620008, -2.199444127862395, 149, 'GAYLE BECK AT GAYLE', 'active', 'Lorem', 'England', 154);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 113, 54.31944965564166, -2.2354862353173757, 150, 'URE @ BIRK RIGG', 'active', 'Lorem', 'England', 155);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 114, 54.20898831756494, -1.7465932801381217, 151, 'LEIGHTON BECK AT BURGESS BANK BRIDGE', 'active', 'Lorem', 'England', 156);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 115, 53.72205748247913, -0.4287599369521678, 152, 'FLEET DRAIN AT ITLINGS LANE BRIDGE', 'active', 'Lorem', 'England', 157);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 116, 53.95481172492013, -1.1054966958394743, 153, 'HOLGATE BECK AT HOLGATE BRIDGE', 'active', 'Lorem', 'England', 158);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 117, 53.86108325117873, -1.0993594654873762, 154, 'STILLINGFLEET BECK AT STILLINGFLEET', 'active', 'Lorem', 'England', 159);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('ANY FISH - NOT INCLUDING FLATFISH - WHOLE ANIMAL', 118, 54.09632210033469, -1.4575381194211054, 155, 'URE AT WESTWICK', 'active', 'Lorem', 'England', 160);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 119, 53.77975247013445, -1.2474230281852259, 156, 'MILL DIKE AT SOUTH MILFORD', 'active', 'Lorem', 'England', 161);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 120, 53.83599882965576, -0.3261138467063044, 157, 'ARNOLD & RISTON DR AT LUMBERCOTE BRIDGE', 'active', 'Lorem', 'England', 162);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 121, 52.57064855586315, -1.0335787436421724, 158, 'BURTON (SENSE) BROOK AT GREAT GLEN', 'active', 'Lorem', 'England', 163);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 121, 52.57655387194481, -1.0052039613874084, 159, 'BURTON (SENSE) BROOK AT BURTON OVERY', 'active', 'Lorem', 'England', 164);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 122, 52.569290638482734, -1.1801503195771454, 160, 'WHETSTONE BROOK SOAR CONFLUENCE', 'active', 'Lorem', 'England', 165);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 123, 53.882973025826644, -0.41327276083793896, 161, 'ARRAM BECK AT ARRAM', 'active', 'Lorem', 'England', 166);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 124, 53.768104750488526, -0.3467785505710186, 162, 'BEVERLEY AND BARMSTON DRAIN AT CLOUGH RD', 'active', 'Lorem', 'England', 167);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 125, 53.804763584434646, -0.30889127283200646, 163, 'FOREDYKE STREAM AT GREAT CULVERT', 'active', 'Lorem', 'England', 168);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 126, 53.83566773846027, -0.2886202251363099, 164, 'LAMBWATH STREAM AT LAMBWATH BRIDGE', 'active', 'Lorem', 'England', 169);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 127, 53.88953192326534, -0.32701986096155367, 165, 'LEVEN CANAL AT SANDHOLME BRIDGE,LEVEN', 'active', 'Lorem', 'England', 170);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 128, 53.9951670607219, -0.3765798557522977, 166, 'NAFFERTON BECK AT WANSFORD', 'active', 'Lorem', 'England', 171);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 129, 53.927326664723985, -0.42159786088983087, 167, 'WATTON BECK AT BRIDGE HOUSE FARM', 'active', 'Lorem', 'England', 172);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 125, 53.83825568809695, -0.3171633761628425, 168, 'MEAUX & BENNINGHOLME ROAD BRIDGE', 'active', 'Lorem', 'England', 173);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 130, 53.88315682240833, -0.3127594487425582, 169, 'FOREDYKE STREAM AT LEVEN HOUSE', 'active', 'Lorem', 'England', 174);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 131, 53.90748231404987, -0.4431862483622116, 170, 'BRYAN MILLS BECK NEAR ACRES FARM', 'active', 'Lorem', 'England', 175);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 132, 53.89279834028726, -0.3061013071168373, 171, 'CATCHWATER DRAIN AT HORNSEA ROAD LEVEN', 'active', 'Lorem', 'England', 176);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 133, 53.971351278761034, -0.422116245518218, 172, 'SKERNE BECK AT SKERNE BRIDGE', 'active', 'Lorem', 'England', 177);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 123, 53.89192880593771, -0.4312554556503026, 173, 'ELLA DYKE AT ARRAM GREEN', 'active', 'Lorem', 'England', 178);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 134, 53.86201378552164, -0.480928939339872, 174, 'MOOR DYKE AT B1248 MEADFOOT', 'active', 'Lorem', 'England', 179);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 57, 52.57093136060429, -1.2415581485856897, 175, 'THURLASTON BROOK AT HUNCOTE', 'active', 'Lorem', 'England', 180);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 57, 52.57497304984606, -1.2710301327888296, 176, 'THURLASTON BROOK AT NORMANTON FORD', 'active', 'Lorem', 'England', 181);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 57, 52.60408213495708, -1.359704381942298, 177, 'THURLASTON BROOK - D/S NEWBOLD VERDON', 'active', 'Lorem', 'England', 182);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 135, 53.44223308945694, -1.6356384848667413, 178, 'AGDEN DYKE AT AGDEN BRIDGE', 'active', 'Lorem', 'England', 183);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 135, 53.4232623449833, -1.6057045750481718, 179, 'AGDEN DYKE AT SMITHY BRIDGE LOW BRADFIED', 'active', 'Lorem', 'England', 184);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 136, 53.269995748992095, -1.4429712730248399, 180, 'BARLOW BROOK BELOW SHEEPBRIDGE WORKS', 'active', 'Lorem', 'England', 185);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 136, 53.27511016568499, -1.4625350618512516, 181, 'BARLOW BRK U/S SHEEPBRIDGE IND ESTATE', 'active', 'Lorem', 'England', 186);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 137, 53.615060134607326, -1.593251363607044, 182, 'BENTLEY BROOK AT A636 ROAD BRIDGE', 'active', 'Lorem', 'England', 187);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 138, 53.59684003646221, -1.0648381818659256, 183, 'BRAMWITH DRAIN AT SOUTH BRAMWITH', 'active', 'Lorem', 'England', 188);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 139, 53.63736534184883, -1.3284827467167697, 184, 'HOYLE MILL STREAM A638', 'active', 'Lorem', 'England', 189);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 140, 53.576475306351576, -1.5274117724516316, 185, 'CAWTHORNE DIKE AT BARUGH LOW BRIDGE', 'active', 'Lorem', 'England', 190);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 141, 53.25216694994008, -1.421425482024793, 186, 'CHESTERFIELD CANAL AT LOCKOFORD LANE', 'active', 'Lorem', 'England', 191);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 140, 53.56707885868728, -1.5899661655330581, 187, 'DAKING BROOK U/S CANNON HALL LAKES', 'active', 'Lorem', 'England', 192);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 142, 53.422373596575675, -1.6060438222124, 188, 'DALE DIKE-LOW BRADFIELD (MILL LEE RD)', 'active', 'Lorem', 'England', 193);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 143, 53.575726558541135, -1.1659465010946188, 189, 'EA BECK AT BENTLEY MOOR LANE', 'active', 'Lorem', 'England', 194);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 144, 53.5881315107894, -1.234846340612681, 190, 'EA BECK AT HAMPOLE', 'active', 'Lorem', 'England', 195);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 144, 53.59016444921248, -1.2726542793821565, 191, 'EA BECK U/S SOUTH ELMSALL STW', 'active', 'Lorem', 'England', 196);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 145, 53.64705105074284, -1.332625400135925, 192, 'WENT AT A628 ACKWORTH', 'active', 'Lorem', 'England', 197);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 137, 53.62818240159796, -1.6502821018628084, 193, 'FLOCKTON BECK AT HAIGH LANE', 'active', 'Lorem', 'England', 198);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 146, 53.65969002305631, -0.9951843947714322, 194, 'WENT AT SYKEHOUSE', 'active', 'Lorem', 'England', 199);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 147, 53.2350759150675, -1.4375817331113647, 195, 'HOLME BROOK U/S HIPPER CONFLUENCE', 'active', 'Lorem', 'England', 200);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 148, 53.46714384177215, -1.288343770278138, 196, 'HOOTON BRK D/S OF CONF WITH SILVERWD BRK', 'active', 'Lorem', 'England', 201);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 149, 53.664715809257025, -1.1899800345398805, 197, 'WOMERSLEY BECK AT WOMERSLEY', 'active', 'Lorem', 'England', 202);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 150, 53.314325984224936, -1.3449073167255832, 198, 'THE MOSS 10M U/S ROTHER CONFLUENCE', 'active', 'Lorem', 'England', 203);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 151, 53.2057151847789, -1.3670291468841538, 199, 'MUSTER BROOK BELOW TEMPLE NORMANTON STW', 'active', 'Lorem', 'England', 204);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 152, 53.66117904783227, -1.0578754100591858, 200, 'POLLINGTON FLEET DRAIN - CROW CROFT LANE', 'active', 'Lorem', 'England', 205);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 153, 53.34915287160733, -1.3279094945833825, 201, 'PIGEON BRIDGE BROOK U/S CONF WITH ROTHER', 'active', 'Lorem', 'England', 206);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 154, 53.26509972151549, -1.3391820932757104, 202, 'POOLS BROOK AT CONFLUENCEWITH DOE LEA', 'active', 'Lorem', 'England', 207);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 155, 53.194983406091524, -1.416536860009188, 203, 'REDLEADMILL BROOK U/S TUPTON STW', 'active', 'Lorem', 'England', 208);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 156, 53.379090795544634, -1.5891846643626668, 204, 'RIVELIN U/S RIVELIN FILTER STATION', 'active', 'Lorem', 'England', 209);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 157, 53.55157730330417, -1.4397078864131285, 205, 'DEARNE AT GRANGE LANE BRIDGE', 'active', 'Lorem', 'England', 210);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 158, 53.50103031116855, -1.251414365983171, 206, 'DEARNE AT PASTURES BRIDGE', 'active', 'Lorem', 'England', 211);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 157, 53.56088936308382, -1.4733564459349042, 207, 'DEARNE AT STAR PAPER MILL', 'active', 'Lorem', 'England', 212);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 159, 53.55542873295029, -1.4182084273075717, 208, 'DEARNE D/S LUNDWOOD STW', 'active', 'Lorem', 'England', 213);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 160, 53.249261458025785, -1.3234344894029664, 209, 'DOE LEA AT GAUGING STN D/S MARKHAM COLL', 'active', 'Lorem', 'England', 214);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 161, 53.448361737949874, -1.3184262180371666, 210, 'DON AT BSC ALDWARKE THRYBERGH BAR MILL', 'active', 'Lorem', 'England', 215);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 162, 53.421519809679786, -1.377495219189322, 211, 'DON AT BESSEMER WAY', 'active', 'Lorem', 'England', 216);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 163, 53.27099942707722, -1.4423134346442616, 212, 'DRONE D/S BY-PASS AT SHEEPBRIDGE', 'active', 'Lorem', 'England', 217);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 156, 53.392993605317265, -1.5163759034898059, 213, 'RIVELIN AT HOLLINS LANE BRIDGE', 'active', 'Lorem', 'England', 218);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 164, 53.40244388164555, -1.3468492244774093, 214, 'ROTHER AT CANKLOW', 'active', 'Lorem', 'England', 219);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 146, 53.64927259727073, -1.0640259949148343, 215, 'WENT AT TOPHAM FERRY BRIDGE', 'active', 'Lorem', 'England', 220);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 163, 53.26438392508149, -1.4271968038530647, 216, 'WHITTING AT B6052 ROAD BRIDGE', 'active', 'Lorem', 'England', 221);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 165, 53.43566867835168, -1.3572240916832343, 217, 'SHEFFIELD & S YORKS NAV - GREASBROUGH RD', 'active', 'Lorem', 'England', 222);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 148, 53.462272378102305, -1.2823851699260813, 218, 'SILVERWOOD BRK ABOVE CONF HOOTON BROOK', 'active', 'Lorem', 'England', 223);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 151, 53.229030332530364, -1.4159244304062342, 219, 'SPITAL BROOK AT HADYHILL.', 'active', 'Lorem', 'England', 224);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 166, 53.39688857975606, -1.3337449520208131, 220, 'ULLEY BROOK D/S ULLEY RES', 'active', 'Lorem', 'England', 225);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 167, 53.83838845485253, -1.94650556718047, 221, 'BRIDGEHOUSE BECK ABOVE CONF WITH R.WORTH', 'active', 'Lorem', 'England', 226);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 167, 53.81685445855153, -1.9483095820813567, 222, 'BRIDGEHOUSE BECK ABOVE OXENHOPE SW FINAL', 'active', 'Lorem', 'England', 227);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 168, 53.75140637254163, -1.199188228880086, 223, 'MASPIN MOOR DRAIN AT ROE LANE BRIDGE', 'active', 'Lorem', 'England', 228);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 169, 53.74692722833971, -1.5655500838593936, 224, 'MILL SHAW BECK ABOVE DEWSBURY ROAD TIP', 'active', 'Lorem', 'England', 229);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 169, 53.76180332833561, -1.5732846819385953, 225, 'MILL SHAW BECK AT BEESTON', 'active', 'Lorem', 'England', 230);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 170, 53.84738688608578, -1.6302204965183427, 226, 'OIL MILL BECK AT HORSFORTH STN -POINT M', 'active', 'Lorem', 'England', 231);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 171, 54.05551224253157, -2.1501262930360543, 227, 'GOREDALE BECK AT BLACK HOLE BRIDGE', 'active', 'Lorem', 'England', 232);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 172, 53.89638827067678, -2.0197798376716403, 228, 'LUMB MILL BECK ABOVE MALSIS PREPATORY SC', 'active', 'Lorem', 'England', 233);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 168, 53.73168251531326, -1.1528146797401475, 229, 'THE FLEET AT MARSH LANE - WEST HADDLESEY', 'active', 'Lorem', 'England', 234);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 173, 53.98012451003048, -2.1268768612428888, 230, 'AIRE ABOVE GARGRAVE CANAL AQUEDUCT', 'active', 'Lorem', 'England', 235);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 174, 53.84866396424434, -1.7447418504277754, 231, 'AIRE AT BUCK BRIDGE', 'active', 'Lorem', 'England', 236);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 175, 53.917079542562554, -2.008584375988531, 232, 'AIRE AT CONONLEY', 'active', 'Lorem', 'England', 237);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 174, 53.85837764320186, -1.8504844941521095, 233, 'AIRE AT CROSSFLATTS', 'active', 'Lorem', 'England', 238);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 173, 53.98278719195472, -2.1060398638859863, 234, 'AIRE AT GARGRAVE', 'active', 'Lorem', 'England', 239);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 174, 53.84000582924701, -1.7897461950357807, 235, 'AIRE FOOTBRIDGE ABOVE SALT''''S WEIR', 'active', 'Lorem', 'England', 240);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 176, 54.09145399043706, -2.163205862663314, 236, 'AIRE AT MALHAM TARN', 'active', 'Lorem', 'England', 241);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 177, 53.87359159699712, -1.8897002835460597, 237, 'WORTH U/S AIRE CONFLUENCE - KEIGHLEY', 'active', 'Lorem', 'England', 242);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 178, 53.85533504617389, -1.7415238001243585, 238, 'GILL BECK (BAILDON) AT OTLEY ROAD BRIDGE', 'active', 'Lorem', 'England', 243);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 179, 53.85608562972693, -1.7119045344828656, 239, 'GUISELEY BECK AT KEEPERS HILL - ESHOLT', 'active', 'Lorem', 'England', 244);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 50, 52.554703826632135, -1.2372801788640884, 240, 'BROUGHTON ASTLEY BK AT CONF RIVER SOAR', 'active', 'Lorem', 'England', 245);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 180, 53.9778717164006, -2.0169688744529397, 241, 'ELLER BECK AT TARN MOOR BRIDGE', 'active', 'Lorem', 'England', 246);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 181, 53.71605095025237, -1.4036457522671097, 242, 'CHOKE CHURL BECK AT CHOKE CHURL BRIDGE', 'active', 'Lorem', 'England', 247);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 182, 53.741733271535985, -2.0242225226583233, 243, 'COLDEN WATER AT CALDER CONFLUENCE', 'active', 'Lorem', 'England', 248);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 183, 53.728621124420926, -1.9840645793306693, 244, 'CRAGG BROOK AT MYTHOLMROYD.', 'active', 'Lorem', 'England', 249);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 184, 53.6570791148836, -1.5773681328673637, 245, 'CALDER AT HORBURY BRIDGE', 'active', 'Lorem', 'England', 250);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 185, 53.72710617259371, -1.3805577712934016, 246, 'CALDER AT METHLEY BRIDGE', 'active', 'Lorem', 'England', 251);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 186, 53.70313073417747, -1.852002458103752, 247, 'HEBBLE BROOK AT MYRTLE COTTAGE', 'active', 'Lorem', 'England', 252);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 187, 53.68249885423855, -1.8638078465431744, 248, 'HOLYWELL BROOK AT GREETLAND', 'active', 'Lorem', 'England', 253);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 184, 53.67861054056201, -1.6367700753996848, 249, 'CALDER AT B6117 DEWSBURY', 'active', 'Lorem', 'England', 254);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 188, 53.69409195763527, -1.8546842232289114, 250, 'CALDER AT NORTH DENE B6112 ROAD BRIDGE', 'active', 'Lorem', 'England', 255);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 189, 53.70807019460908, -1.911961285890868, 251, 'CALDER AT A58 SOWERBY BRIDGE', 'active', 'Lorem', 'England', 256);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 190, 53.67746252516484, -1.7333164393315532, 252, 'COLNE AT COLNE BRIDGE - BRADLEY', 'active', 'Lorem', 'England', 257);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 191, 53.62738135386887, -1.854579118187245, 253, 'COLNE D/S PENNINE CHEMICALS - LINTHWAITE', 'active', 'Lorem', 'England', 258);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 192, 53.60450828180981, -1.7890101285869013, 254, 'HOLME AT HONLEY BRIDGE', 'active', 'Lorem', 'England', 259);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 193, 53.66555954050609, -1.9496566060301643, 255, 'RYBURN AT A672 SLITHEROE BRIDGE', 'active', 'Lorem', 'England', 260);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 194, 53.68058878760424, -1.6523014461210075, 256, 'SPEN BECK AT A644 ROAD BRIDGE', 'active', 'Lorem', 'England', 261);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 194, 53.73705153943854, -1.7204491705003981, 257, 'HUNSWORTH BECK BELOW SUGDEN BECK CONFL', 'active', 'Lorem', 'England', 262);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 194, 53.74688641112347, -1.733166845098866, 258, 'HUNSWORTH BK U/S NORTH BIERLEY WPC WKS', 'active', 'Lorem', 'England', 263);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 194, 53.7023906146164, -1.676493427786345, 259, 'SPEN BECK AT STATION LANE HECKMONDWIKE', 'active', 'Lorem', 'England', 264);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 194, 53.7369996891123, -1.721343940057436, 260, 'SUGDEN BECK AT A58 - CHAIN BAR J26', 'active', 'Lorem', 'England', 265);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 195, 53.66551422493399, -1.9487637539203357, 261, 'BOOTH DEAN CLOUGH ABOVE RYBURN CONF', 'active', 'Lorem', 'England', 266);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 196, 53.77924337909416, -2.0636694049232944, 262, 'ALCOMDEN WATER U/S HEBDEN WATER CONF', 'active', 'Lorem', 'England', 267);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 197, 53.78628367265618, -0.9306611927935066, 263, 'FLEET DYKE AT WRESSLE CLOUGH', 'active', 'Lorem', 'England', 268);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 198, 54.259707449912995, -0.9499580167692401, 264, 'HOWKELD SPRING U/S OF HOWKELD FISH HTCHY', 'active', 'Lorem', 'England', 269);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 199, 53.76250270150079, -0.9309614760689365, 265, 'DERWENT AT LOFTSOME BRIDGE', 'active', 'Lorem', 'England', 270);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 200, 54.09960567129206, -0.8316178948053099, 266, 'DERWENT AT LOW HUTTON', 'active', 'Lorem', 'England', 271);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 201, 54.3396417589479, -1.063513661928227, 267, 'BONFIELD GILL NEAR POCKLEY MOOR', 'active', 'Lorem', 'England', 272);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 198, 54.26122444305373, -0.9611572690748872, 268, 'HODGE BECK AT KIRKDALE FOOTBRIDGE', 'active', 'Lorem', 'England', 273);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 202, 54.30199442665781, -1.064797850142703, 269, 'COWHOUSE BECK U/S COWHOUSE BANK FARM', 'active', 'Lorem', 'England', 274);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 203, 54.209764229880285, -0.7935069289687682, 270, 'PICKERING BECK U/S CONF COSTA BECK', 'active', 'Lorem', 'England', 275);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 204, 53.96341629211786, -0.8067249923256282, 271, 'BISHOP WILTON BECK AT LOW BELTHORPE FARM', 'active', 'Lorem', 'England', 276);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 205, 53.97018063223574, -0.8282411737490365, 272, 'GOWTHORPE BECK AT FANGFOSS', 'active', 'Lorem', 'England', 277);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 206, 54.09951225720013, -0.8312534964213651, 273, 'MENETHORPE BECK U/S CONFLUENCE', 'active', 'Lorem', 'England', 278);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 207, 54.097175451243515, -0.8717966259917789, 274, 'CRAM BECK DOWNSTREAM A64 BRIDGE', 'active', 'Lorem', 'England', 279);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 208, 54.0522843399196, -0.8915718378124953, 275, 'BRAISTHWAITE BECK AT BRAISTHWAITE BRIDGE', 'active', 'Lorem', 'England', 280);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 209, 54.17371176603904, -0.6744319635766322, 276, 'SCAMPSTON BECK AT HOME WOODS', 'active', 'Lorem', 'England', 281);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 210, 54.19445467605812, -0.5757915070911512, 277, 'SHERBURN BECK AT EAST HESLERTON CARR', 'active', 'Lorem', 'England', 282);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 211, 54.207334343109615, -0.5628831541369232, 278, 'BROMPTON BECK U/S DERWENT CONFLUENCE', 'active', 'Lorem', 'England', 283);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 212, 54.20231365589389, -0.5400147526813777, 279, 'RUSTON BECK U/S DERWENT CONFLUENCE', 'active', 'Lorem', 'England', 284);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 213, 54.295461651339515, -0.5146272266912778, 280, 'LOWDALES BECK AT MILL FARM', 'active', 'Lorem', 'England', 285);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 214, 54.3061161734773, -0.5534057212403194, 281, 'DERWENT AT LANGDALE BRIDGE', 'active', 'Lorem', 'England', 286);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 215, 54.22185019343711, -0.950842074256746, 282, 'ELLERKER BECK NEAR TROWBRIDGE FARM', 'active', 'Lorem', 'England', 287);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 201, 54.309862662660684, -1.054951902887838, 283, 'BONFIELD GILL FORD ABOVE LUND FARM', 'active', 'Lorem', 'England', 288);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 216, 54.17589853983027, -0.9206132692195267, 284, 'WATH BECK AT TOTTEN BRIDGE', 'active', 'Lorem', 'England', 289);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 217, 54.188619462148075, -0.8805430352271306, 285, 'RYE AT BUTTERWICK BRIDGE', 'active', 'Lorem', 'England', 290);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 218, 54.18753494180283, -0.9759247539527246, 286, 'HOLBECK AT HOLBECK BRIDGE', 'active', 'Lorem', 'England', 291);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 219, 54.21161833124233, -1.01542669101318, 287, 'WHITE BECK AT LACK LANE', 'active', 'Lorem', 'England', 292);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 220, 54.25263010255868, -1.12528338375485, 288, 'GRASS KELD AT ASHBERRY FARM', 'active', 'Lorem', 'England', 293);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 221, 54.204916077670426, -0.7327062456082232, 289, 'THE SYME AT SUMMERTREE BRIDGE', 'active', 'Lorem', 'England', 294);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 203, 54.23979109243518, -0.7808780127935399, 290, 'PICKERING BECK AT MILL LANE', 'active', 'Lorem', 'England', 295);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 222, 54.248544917742755, -1.065853382421414, 291, 'BOROUGH BECK AT HELMSLEY', 'active', 'Lorem', 'England', 296);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 223, 54.29993403690985, -0.7181579218093856, 292, 'LEVISHAM BECK AT LEVISHAM MILL BRIDGE', 'active', 'Lorem', 'England', 297);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 224, 54.26371297492317, -0.8943088611213973, 293, 'CATTER BECK AT CATTER BRIDGE', 'active', 'Lorem', 'England', 298);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 225, 54.30831405279541, -0.7458557305704099, 294, 'PICKERING BECK BY LEVISHAM STATION', 'active', 'Lorem', 'England', 299);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 226, 54.30203706091133, -1.1794508767575476, 295, 'RYE AT HAWNBY CHURCH FOOTBRIDGE', 'active', 'Lorem', 'England', 300);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 227, 54.32293620953563, -0.8495329073056351, 296, 'HARTOFT BECK AT HARTOFT BRIDGE', 'active', 'Lorem', 'England', 301);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 228, 54.12550798427252, -0.7243093916476288, 297, 'SETTRINGTON BECK AT SETTRINGTON', 'active', 'Lorem', 'England', 302);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 229, 54.27345549784653, -1.1674413052402617, 298, 'SLEDHILL GILL AT CAYDALE MILL FORD', 'active', 'Lorem', 'England', 303);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 230, 54.38618074225143, -1.141249571033137, 299, 'RAISDALE BECK @ CHOP GATE HALL CAR PARK', 'active', 'Lorem', 'England', 304);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 231, 54.298765875711034, -0.8558768842032732, 300, 'SEVEN AT SEVEN BRIDGE LOWER ASKEW', 'active', 'Lorem', 'England', 305);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 232, 54.352688665859624, -0.8863378602593398, 301, 'NORTHDALE BECK AT ROSEDALE', 'active', 'Lorem', 'England', 306);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 233, 54.35765050893889, -1.1194086013750728, 302, 'LEDGE BECK @ LEDGE BECK BRIDGE', 'active', 'Lorem', 'England', 307);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 234, 54.30982659071518, -1.1365521047175506, 303, 'SEPH AT LASKILL HOUSE', 'active', 'Lorem', 'England', 308);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 235, 54.296880239159705, -0.5589843520912443, 304, 'TROUTSDALE BECK AT MOOR ROAD', 'active', 'Lorem', 'England', 309);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 236, 54.31071551894075, -0.5667559025294674, 305, 'BLACK BECK AT DARNCOMBE BRIDGE', 'active', 'Lorem', 'England', 310);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 237, 54.295739096777275, -0.8457122567552872, 306, 'CROPTON BECK AT CROPTON BRIDGE', 'active', 'Lorem', 'England', 311);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 238, 54.35631362600009, -1.123422495257774, 307, 'SEPH AT THE GRANGE BRIDGE', 'active', 'Lorem', 'England', 312);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('ANY FISH - NOT INCLUDING FLATFISH - WHOLE ANIMAL', 239, 53.99206806455994, -0.913548290623778, 308, 'EQSD BIOTA MONITORING - STAMFORD BRIDGE', 'active', 'Lorem', 'England', 313);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('POND / LAKE / RESERVOIR WATER', 240, 52.88745199461411, -1.321642915428252, 309, 'CHURCH WILNE RESERVOIR NR SAWLEY GRANGE', 'active', 'Lorem', 'England', 314);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 241, 52.89063196992413, -1.3436653529319258, 310, 'RIVER DERWENT AT DRAYCOTT FERRY', 'active', 'Lorem', 'England', 315);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 242, 53.8883659361239, -1.2634741018293683, 311, 'WHARFE ABOVE TADCASTER WEIR', 'active', 'Lorem', 'England', 316);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 243, 54.04643891942996, -1.9516482313701655, 312, 'WHARFE AT BURNSALL BRIDGE', 'active', 'Lorem', 'England', 317);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 243, 54.10344204388947, -2.0334606376767894, 313, 'WHARFE AT CONISTONE BRIDGE', 'active', 'Lorem', 'England', 318);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 244, 54.05755064744498, -1.96032750787341, 314, 'HEBDEN BECK AT MILL LANE BRIDGE', 'active', 'Lorem', 'England', 319);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 244, 54.061774011387115, -1.9581082105244796, 315, 'HEBDEN BECK ABOVE BROW WELL FISHERIES', 'active', 'Lorem', 'England', 320);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 245, 54.22815762952254, -2.2009119324160995, 316, 'OUGHTERSHAW BECK BELOW OUGHTERSHAW STW', 'active', 'Lorem', 'England', 321);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 246, 53.86801359873173, -1.1576378939011163, 317, 'THE FLEET AT HOLME GREEN', 'active', 'Lorem', 'England', 322);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 247, 53.854208727619955, -1.2272682117066815, 318, 'DORTS DIKE AT B1223 ULLESKELF', 'active', 'Lorem', 'England', 323);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 248, 54.02957244120751, -1.9100828323847932, 319, 'FIR BECK AT HAUGH BRIDGE', 'active', 'Lorem', 'England', 324);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 249, 53.91270427598688, -1.4100007925145022, 320, 'WHARFE AT LINTON BRIDGE', 'active', 'Lorem', 'England', 325);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 250, 54.14385957262042, -2.10756860274448, 321, 'SKIRFARE U/S COWSIDE BECK', 'active', 'Lorem', 'England', 326);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 251, 54.16983244499223, -2.1700246087629873, 322, 'SKIRFARE U/S HESELDEN BECK', 'active', 'Lorem', 'England', 327);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 252, 54.21749044830868, -2.194940774059689, 323, 'GREENFIELD BECK AT BECKERMONDS', 'active', 'Lorem', 'England', 328);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 244, 54.066709574538386, -1.962549562490838, 324, 'HEBDEN BECK U/S HEBDEN VILLAGE', 'active', 'Lorem', 'England', 329);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 253, 53.44982495450007, -1.7456272354750586, 325, 'RIVER DERWENT AT SLIPPERY STONES', 'active', 'Lorem', 'England', 330);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('POND / LAKE / RESERVOIR WATER', 254, 54.110383542164435, -1.785539984392072, 326, 'GOUTHWAITE RESERVOIR', 'active', 'Lorem', 'England', 331);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 255, 53.965864115510946, -1.527444093534701, 327, 'CRIMPLE BECK AT ALMSFORD BRIDGE', 'active', 'Lorem', 'England', 332);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 255, 53.97281264564986, -1.4694331457318588, 328, 'CRIMPLE BECK AT FOLLIFOOT BRIDGE', 'active', 'Lorem', 'England', 333);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 256, 54.093611371605135, -1.7747248435600378, 329, 'ASHFOLDSIDE BECK AT CORN CLOSE', 'active', 'Lorem', 'England', 334);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 257, 53.95958738041055, -1.4544064082398667, 330, 'PARK BECK AT SHAW BRIDGE - SPOFFORTH', 'active', 'Lorem', 'England', 335);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 257, 53.958878902199665, -1.4527697162725386, 331, 'TOAD HOLE BECK AT FOLLIFOOT LANE', 'active', 'Lorem', 'England', 336);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 258, 54.04926021214349, -1.5805670093123867, 332, 'THORNTON BECK AT SCARAH BRIDGE', 'active', 'Lorem', 'England', 337);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 259, 54.07089099452301, -1.7113699554110111, 333, 'FELL BECK AT B6165 D/S SMELTHOUSES', 'active', 'Lorem', 'England', 338);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 260, 54.006983429371026, -1.433783338957773, 334, 'THE RAMPART @ YORK ROAD', 'active', 'Lorem', 'England', 339);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 260, 53.98527239023347, -1.4119806247953943, 335, 'GUNDRIFS BECK AT RIBSTON PARK', 'active', 'Lorem', 'England', 340);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 261, 54.27009476851954, -1.4680527157059065, 336, 'SWALE AT MAUNBY', 'active', 'Lorem', 'England', 341);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 262, 54.42695926070259, -1.4624031321579964, 337, 'WISKE AT LITTLE SMEATON', 'active', 'Lorem', 'England', 342);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 263, 52.92869183577684, -1.4305929755427762, 338, 'CHADDESDEN BROOK AT CHADDESDEN PARK', 'active', 'Lorem', 'England', 343);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 264, 54.38679903102669, -1.6994136863611176, 339, 'COLBURN BECK AT COLBURN VILLAGE', 'active', 'Lorem', 'England', 344);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 262, 54.41290985527353, -1.3369646010824512, 340, 'TRENHOLME STELL NEAR EAST ROUNTON', 'active', 'Lorem', 'England', 345);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 265, 54.42384832669315, -1.531166820114964, 341, 'THE STELL AT EAST COWTON', 'active', 'Lorem', 'England', 346);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 266, 54.29150428956224, -1.3507733060374558, 342, 'BROAD BECK AT BORROWBY', 'active', 'Lorem', 'England', 347);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 267, 54.37935577411602, -2.076826053505374, 343, 'GUNNERSIDE BECK AT GUNNERSIDE', 'active', 'Lorem', 'England', 348);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 268, 54.3854899234599, -1.9804940128673802, 344, 'BARNEY BECK AT HELAUGH', 'active', 'Lorem', 'England', 349);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 269, 54.31033545422824, -1.4470773257328944, 345, 'OTTERINGTON BECK AT A167', 'active', 'Lorem', 'England', 350);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 270, 54.410186740372716, -2.174841817919091, 346, 'STONESDALE BECK ABOVE CURRACK FORCE', 'active', 'Lorem', 'England', 351);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 271, 54.226301567871715, -1.515520609318382, 347, 'INGS GOIT AT HALL FARM - KIRKLINGTON', 'active', 'Lorem', 'England', 352);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 272, 54.18938202857845, -1.3427487203873654, 348, 'PARADISE BECK AT PARADISE FARM', 'active', 'Lorem', 'England', 353);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 273, 54.25014827888938, -1.414776908901203, 349, 'SIKE STELL AT SIKE BRIDGE', 'active', 'Lorem', 'England', 354);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 274, 54.28245487981812, -1.5628457602579116, 350, 'OLD STELL AT FLOOD BRIDGE', 'active', 'Lorem', 'England', 355);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 275, 54.26290443251147, -1.4845259804301403, 351, 'HEALAM BECK AT SWAINBY LANE', 'active', 'Lorem', 'England', 356);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 276, 54.265027723762955, -1.3198072170770947, 352, 'SPITAL BECK AT SPITAL BRIDGE UPSALL LANE', 'active', 'Lorem', 'England', 357);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 277, 54.18602887407905, -1.3409477206182379, 353, 'WILLOW BECK AT WILLOW BRIDGE', 'active', 'Lorem', 'England', 358);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 278, 54.311766747597694, -1.662410918828145, 354, 'BROMPTON BECK AT PATRICK BRIDGE', 'active', 'Lorem', 'England', 359);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 279, 54.31045523904173, -1.5846663882171785, 355, 'SCURF BECK AT CRAKEHALL INGS', 'active', 'Lorem', 'England', 360);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 280, 54.374346313342606, -1.8512236476471846, 356, 'GILL BECK AT EDDY''''S BRIDGE', 'active', 'Lorem', 'England', 361);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 281, 54.39740646100529, -1.7231633232265846, 357, 'SAND BECK AT LONGWOOD BANK', 'active', 'Lorem', 'England', 362);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 282, 54.40287274809698, -2.223056624113075, 358, 'GREAT SLEDDALE BECK AT KELD CALF PASTURE', 'active', 'Lorem', 'England', 363);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 283, 54.408735869362154, -2.1775625588727276, 359, 'SWALE AT PARK BRIDGE (STONESDALE LANE)', 'active', 'Lorem', 'England', 364);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 284, 54.40331353145671, -2.2228279556407533, 360, 'BIRKDALE BECK AT STONE HOUSE FORD', 'active', 'Lorem', 'England', 365);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 285, 54.424757132943846, -2.212433264242833, 361, 'WHITSUNDALE BECK D/S HOODS BOTTOM BECK', 'active', 'Lorem', 'England', 366);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 286, 54.36417960540422, -1.5565310737126772, 362, 'KIPLIN BECK U/S CONFLUENCE OF SWALE', 'active', 'Lorem', 'England', 367);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 287, 54.30334567322536, -1.6688878182378395, 363, 'NEWTON BECK AT NEWTON BRIDGE', 'active', 'Lorem', 'England', 368);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 288, 54.304012142607526, -1.3621178400429665, 364, 'COD BECK AT CROSBY NEW BRIDGE', 'active', 'Lorem', 'England', 369);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 289, 54.153862078789956, -1.3507220860309876, 365, 'SWALE AT CRAKEHILL D/S TOPCLIFFE', 'active', 'Lorem', 'England', 370);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 290, 52.93968312767262, -1.5065440280265405, 366, 'MARKEATON BROOK AT MARKEATON', 'active', 'Lorem', 'England', 371);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('POND / LAKE / RESERVOIR WATER', 291, 52.96303936323471, -1.5360537168806279, 367, 'KEDLESTON PARK LAKE AT FOOTBRIDGE', 'active', 'Lorem', 'England', 372);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 292, 52.93751333037867, -1.5079077808787438, 368, 'MACKWORTH BROOK AT MARKEATON', 'active', 'Lorem', 'England', 373);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 292, 52.947654636435104, -1.570878817113692, 369, 'MACKWORTH BROOK AT KIRK LANGLEY', 'active', 'Lorem', 'England', 374);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 293, 53.02558498025305, -1.506460935352476, 370, 'BLACK BROOK AT BLACKBROOK', 'active', 'Lorem', 'England', 375);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('ANY FISH - NOT INCLUDING FLATFISH - WHOLE ANIMAL', 294, 53.09542487247999, -1.4324432163190577, 371, 'RIVER AMBER AT SOUTH WINGFIELD', 'active', 'Lorem', 'England', 376);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 42, 52.9890868112491, -0.9929293165015745, 372, '51466', 'active', 'Lorem', 'England', 377);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 42, 52.9890868112491, -0.9929293165015745, 373, '51466', 'active', 'Lorem', 'England', 378);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('POND / LAKE / RESERVOIR WATER', 295, 53.069818538910006, -1.6299031574049387, 374, 'CARSINGTON WATER NRMP', 'active', 'Lorem', 'England', 379);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 296, 53.24531635058378, -1.585415091878529, 375, 'HEATHY LEA BROOK AT ROBIN HOOD', 'active', 'Lorem', 'England', 380);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 297, 53.32024512372212, -1.6495408572309784, 376, 'HIGHLOW BROOK D/S LEADMILL TROUT FARM', 'active', 'Lorem', 'England', 381);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 298, 53.326349268787425, -1.659144790888027, 377, 'HOOD BROOK UPSTREAM DERWENT', 'active', 'Lorem', 'England', 382);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 299, 53.32657187438742, -1.7408188076276974, 378, 'BRADWELL BROOK AT SOURCE', 'active', 'Lorem', 'England', 383);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 300, 53.38266877651777, -1.6806900805107896, 379, 'LADYBOWER BRK AT CUTTHROAT BRIDGE WFD-O', 'active', 'Lorem', 'England', 384);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('POND / LAKE / RESERVOIR WATER', 301, 53.370938218419106, -1.69786623114179, 380, 'LADYBOWER RESERVOIR NRMP', 'active', 'Lorem', 'England', 385);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 302, 53.38757179348724, -1.7550639058336013, 381, 'RIVER ASHOP ABOVE LADYBOWER RESERVOIR', 'active', 'Lorem', 'England', 386);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 303, 52.80188341763055, -1.5401422424870719, 382, '53186', 'active', 'Lorem', 'England', 387);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 304, 52.83460978663389, -1.4180753787660239, 383, 'RAMSLEY BROOK AT KINGS NEWTON', 'active', 'Lorem', 'England', 388);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 304, 52.821015457381165, -1.3959972461061805, 384, 'RAMSLEY BK U/S WILSON STW', 'active', 'Lorem', 'England', 389);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 305, 52.87296643406674, -1.4575888970527942, 385, 'CUTTLE BROOK AT MOOR LANE BRIDGE', 'active', 'Lorem', 'England', 390);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 305, 52.88913656608915, -1.4813310719627122, 386, 'CUTTLE BROOK AT RECKITTS', 'active', 'Lorem', 'England', 391);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('POND / LAKE / RESERVOIR WATER', 306, 52.82897297815962, -1.5184839171307345, 387, 'MILTON BROOK - FOREMARK SAILING CLUB', 'active', 'Lorem', 'England', 392);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 307, 52.8560730023156, -1.5154077517179103, 388, 'TWYFORD BROOK AT TWYFORD', 'active', 'Lorem', 'England', 393);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 307, 52.862341573519444, -1.5295527646316232, 389, 'TWYFORD BROOK D/S FINDERN STW', 'active', 'Lorem', 'England', 394);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 303, 52.77846496350071, -1.5285278905622421, 390, 'REPTON BROOK U/S WOODVILLE STW', 'active', 'Lorem', 'England', 395);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 308, 52.90996472502705, -1.5972880638004476, 391, 'RADBOURNE BROOK AT DALBURY HOLLOW', 'active', 'Lorem', 'England', 396);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 309, 52.98304499812591, -2.006525572039915, 392, 'RIVER TEAN - BROOKHOUSES', 'active', 'Lorem', 'England', 397);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 6, 52.9742260866602, -1.9864503940067997, 393, 'CECILLY/MOBBERLEY BROOK - MOBBERLEY', 'active', 'Lorem', 'England', 398);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 310, 52.9330353951849, -1.8586208919919465, 394, 'ALDERS BROOK (WARILOW BROOK) - COMBRIDGE', 'active', 'Lorem', 'England', 399);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 311, 53.05847266735833, -2.0084164963121274, 395, 'COMBES BROOK - BASFORD', 'active', 'Lorem', 'England', 400);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 3, 53.07959185632339, -2.0584147817802685, 396, 'ENDON BROOK - WALL GRANGE ENDON', 'active', 'Lorem', 'England', 401);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 312, 53.082930201859, -2.0229175064023788, 397, 'LEEK BROOK', 'active', 'Lorem', 'England', 402);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 313, 52.982205106033334, -1.823756515052245, 398, 'MILL BROOK MILL LANE ELLASTONE', 'active', 'Lorem', 'England', 403);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 314, 53.04939367949083, -1.8769319417983394, 399, 'RIVER HAMPS - WATERHOUSES', 'active', 'Lorem', 'England', 404);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 314, 53.06026508386053, -1.911488365924504, 400, 'RIVER HAMPS - WINKHILL', 'active', 'Lorem', 'England', 405);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 315, 52.77812624541641, -1.6367515913236903, 401, 'DARKLANDS BROOK - DRAKELOW', 'active', 'Lorem', 'England', 406);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 315, 52.77012617738171, -1.6059886313333822, 402, 'DARKLANDS BROOK - D/S BC NADINS', 'active', 'Lorem', 'England', 407);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 315, 52.76435312585319, -1.60277983926712, 403, 'CASTLE GRESLEY BK - D/S COTON PARK STW', 'active', 'Lorem', 'England', 408);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 316, 52.72258889678888, -1.7161705228187523, 404, 'RIVER MEASE - CROXALL', 'active', 'Lorem', 'England', 409);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 316, 52.69966377968283, -1.6137252402110909, 405, 'RIVER MEASE - CLIFTON CAMPVILLE', 'active', 'Lorem', 'England', 410);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 316, 52.69598703844574, -1.5896391007500505, 406, 'CHILCOTE BROOK - MANOR FARM', 'active', 'Lorem', 'England', 411);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 316, 52.71931419123611, -1.5765401387286981, 407, 'OVERSEAL BROOK - NETHERSEAL', 'active', 'Lorem', 'England', 412);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 317, 52.70094055679532, -1.4775677542013166, 408, 'GILWISKAW BROOK - MEASHAM FIELDS FARM', 'active', 'Lorem', 'England', 413);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 317, 52.71349931818595, -1.471496758067447, 409, 'GILWISKAW BROOK - D/S PACKINGTON STW', 'active', 'Lorem', 'England', 414);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 317, 52.74051176850429, -1.4731386610486217, 410, 'GILWISKAW BROOK - ASHBY-DE-LA-ZOUCH', 'active', 'Lorem', 'England', 415);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 317, 52.7610922688811, -1.4758838401289565, 411, 'GILWISKAW BROOK - U/S ASHBY', 'active', 'Lorem', 'England', 416);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 318, 52.56406000162508, -1.99307680149442, 412, 'RIVER TAME - (OLDBURY) BESCOT', 'active', 'Lorem', 'England', 417);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 318, 52.53697811692442, -2.0320765669210097, 413, 'RIVER TAME - (OLDBURY) TIPTON EAGLE LANE', 'active', 'Lorem', 'England', 418);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 319, 52.6312731492505, -1.688112453937307, 414, 'RIVER ANKER - BOLE BRIDGE TAMWORTH', 'active', 'Lorem', 'England', 419);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 319, 52.6178973593108, -1.6149597743717494, 415, 'RIVER ANKER - POLESWORTH', 'active', 'Lorem', 'England', 420);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 319, 52.5919392104094, -1.5474455336108581, 416, 'RIVER ANKER - FIELDON BRIDGE', 'active', 'Lorem', 'England', 421);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('FINAL SEWAGE EFFLUENT', 319, 52.601893836706815, -1.577404807117898, 417, 'PENMIRE BROOK - 2KM DS GRENDON STW', 'active', 'Lorem', 'England', 422);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 319, 52.59451850858428, -1.5943636837849064, 418, 'PENMIRE BROOK D/S GRENDON STW', 'active', 'Lorem', 'England', 423);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 319, 52.59353940255394, -1.5998936964400672, 419, 'PENMIRE BROOK - A5 U/S GRENDON', 'active', 'Lorem', 'England', 424);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 319, 52.594136685809175, -1.6146948081262886, 420, 'PENMIRE BROOK - U/S DORDON', 'active', 'Lorem', 'England', 425);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 319, 52.57750230789236, -1.6027543588223352, 421, 'BADDESLEY BROOK - ROTHERMANS HILL', 'active', 'Lorem', 'England', 426);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 320, 52.52000165907764, -1.4251832969788365, 422, 'SKETCHLEY BROOK - NUNEATON FIELDS FARM', 'active', 'Lorem', 'England', 427);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 320, 52.52883629787615, -1.3975172752359855, 423, 'SKETCHLEY BROOK - A5 ROAD BRIDGE', 'active', 'Lorem', 'England', 428);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 320, 52.531656477929765, -1.3795676021880394, 424, 'SKETCHLEY BROOK - US HINCKLEY STW', 'active', 'Lorem', 'England', 429);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 321, 52.63233173627938, -1.8558038862188821, 425, 'FOOTHERLEY BROOK - FOOTHERLEY HALL', 'active', 'Lorem', 'England', 430);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 321, 52.614247017932236, -1.8659061578637686, 426, 'FOOTHERLEY BK -  US LITTLE ASTON STW', 'active', 'Lorem', 'England', 431);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 321, 52.614247017932236, -1.8659061578637686, 427, 'FOOTHERLEY BK -  US LITTLE ASTON STW', 'active', 'Lorem', 'England', 432);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 322, 52.58650275432833, -1.705330343137144, 428, 'LANGLEY BK  DS MIDDLETON POOL LANGLEY BK', 'active', 'Lorem', 'England', 433);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 322, 52.569544529659, -1.7645779988590662, 429, 'LANGLEY BK DS LANGLEY STW', 'active', 'Lorem', 'England', 434);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 323, 52.547245009261054, -1.6747560091135738, 430, 'DOG LANE BK - BRIDGE B4098', 'active', 'Lorem', 'England', 435);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('POND / LAKE / RESERVOIR WATER', 324, 52.516526371883366, -1.6683809836529873, 431, 'RIVER BOURNE - SHUSTOKE RESERVOIR', 'active', 'Lorem', 'England', 436);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 325, 52.49591541950381, -1.5970098942727116, 432, 'DIDGELEY BROOK AT R BOURNE CONFLUENCE', 'active', 'Lorem', 'England', 437);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 325, 52.49599687986862, -1.5971711746212005, 433, 'RIVER BOURNE - FILLONGLEY LODGE', 'active', 'Lorem', 'England', 438);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 326, 52.488547296592316, -1.7442299123592728, 434, 'RIVER COLE - COOKS LANE', 'active', 'Lorem', 'England', 439);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 326, 52.48901824773955, -1.8137114376308607, 435, 'RIVER COLE - STECHFORD BRIDGE', 'active', 'Lorem', 'England', 440);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 326, 52.46371302301988, -1.8392966638400292, 436, 'R COLE - HAYBARNES BRIDGE A45', 'active', 'Lorem', 'England', 441);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 326, 52.453322620191, -1.8548881957037715, 437, 'RIVER COLE - WARWICK RD, GREET', 'active', 'Lorem', 'England', 442);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 326, 52.44309303296823, -1.8557747392952735, 438, 'RIVER COLE - STRATFORD RD', 'active', 'Lorem', 'England', 443);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 327, 52.38287851216784, -1.698309867304778, 439, 'TEMPLE BALSALL BROOK - AT B4101 BRIDGE', 'active', 'Lorem', 'England', 444);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 328, 52.381673470855404, -1.7017118098283044, 440, 'CUTTLE BK/HERON BROOK - TEMPLE BALSALL', 'active', 'Lorem', 'England', 445);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('POND / LAKE / RESERVOIR WATER', 329, 52.579171664043365, -1.8533805346388494, 441, 'BRACEBRIDGE POOL SUTTON PARK', 'active', 'Lorem', 'England', 446);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 330, 52.484295155139144, -1.8723107447080949, 442, 'RIVER REA - ERSKINE STREET', 'active', 'Lorem', 'England', 447);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 330, 52.45330027057205, -1.9035220433960545, 443, 'RIVER REA - CANNON HILL PARK', 'active', 'Lorem', 'England', 448);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('POND / LAKE / RESERVOIR WATER', 331, 52.45340345175214, -1.9214008125423838, 444, 'EDGBASTON POOL, BIRMINGHAM', 'active', 'Lorem', 'England', 449);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 318, 52.53713993334924, -2.0320766937122534, 445, 'TIPTON BK - CONFLUENCE WITH R.TAME', 'active', 'Lorem', 'England', 450);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 318, 52.532799138751315, -2.0531688230541905, 446, '10M D/S OPEN CULVERT TRIPLEX FOUNDRY', 'active', 'Lorem', 'England', 451);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 332, 52.73600883730326, -1.7558789289110885, 447, 'PYFORD/CURBOROUGH BROOK - ALREWAS', 'active', 'Lorem', 'England', 452);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 332, 52.71608683326352, -1.8094601480307544, 448, 'PYFORD/CURBOROUGH BROOK', 'active', 'Lorem', 'England', 453);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('POND / LAKE / RESERVOIR WATER', 333, 52.688964682575566, -1.8208655145359356, 449, 'STOWE POOL ST CHADS ROAD', 'active', 'Lorem', 'England', 454);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 334, 52.742364833196305, -1.8705067296362037, 450, 'SHROPSHIRE BROOK - HANDACRE', 'active', 'Lorem', 'England', 455);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 335, 52.75995865802069, -1.9399531891322317, 451, 'RISING BK - INLET HAGLEY POOL-RUGELEY', 'active', 'Lorem', 'England', 456);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('ANY FISH - NOT INCLUDING FLATFISH - WHOLE ANIMAL', 336, 52.80720207223568, -2.1230800475938687, 452, 'RIVER SOW - BROAD EYE BRIDGE', 'active', 'Lorem', 'England', 457);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 337, 52.86492027030183, -2.2707615512884263, 453, 'RIVER SOW - PERSHALL', 'active', 'Lorem', 'England', 458);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('POND / LAKE / RESERVOIR WATER', 338, 52.862974145553, -2.291529588304352, 454, 'COP MERE LAKE WFD', 'active', 'Lorem', 'England', 459);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 339, 52.72157173516283, -2.127871375807755, 455, 'R PENK - PENKRIDGE-CUTTLESTONE BRIDGE', 'active', 'Lorem', 'England', 460);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 340, 52.72719420658879, -2.147522555166711, 456, 'WHISTON/LONGNOR BROOK - WHISTON MILL', 'active', 'Lorem', 'England', 461);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 341, 52.811348299532035, -2.1520518519852674, 457, 'DOXEY/PRESFORD/CLANFORD BK - DOXEY', 'active', 'Lorem', 'England', 462);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 341, 52.82387213211456, -2.1768640673605937, 458, 'GAMESELY BROOK SEIGH FORD', 'active', 'Lorem', 'England', 463);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 341, 52.80615252178342, -2.1836452652491936, 459, 'BUTTERBANK BROOK GORSTY LANE', 'active', 'Lorem', 'England', 464);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 342, 52.91812261408805, -2.261411778512572, 460, 'MEECE BROOK - CRANBERRY', 'active', 'Lorem', 'England', 465);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 343, 52.8980553321976, -2.266791005587696, 461, 'CHATCULL BROOK BROWNS BRIDGE ROCK LANE', 'active', 'Lorem', 'England', 466);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 344, 52.87856870788009, -2.2657202920671686, 462, 'BROCKTON BROOK - BROCKTON BANK', 'active', 'Lorem', 'England', 467);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 345, 53.01923084711057, -2.1496094286334704, 463, 'CAUSELEY BROOK - BUCKNALL', 'active', 'Lorem', 'England', 468);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 345, 53.023947257249404, -2.111176055881109, 464, 'CAUSELEY BROOK REAR ASH HALL DOWNSTREAM', 'active', 'Lorem', 'England', 469);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 345, 53.02412703968198, -2.111176516305184, 465, 'CAUSELEY BROOK REAR ASH HALL DISCHARGE', 'active', 'Lorem', 'England', 470);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 345, 53.02421748688873, -2.1105803941771604, 466, 'CAUSELEY BROOK REAR ASH HALL UPSTREAM', 'active', 'Lorem', 'England', 471);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 346, 53.048010387741655, -2.152380032041567, 467, 'FORD GREEN BROOK - MILTON', 'active', 'Lorem', 'England', 472);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 346, 53.089031893655104, -2.1812978656430406, 468, 'FORD GREEN BROOK - BRINDLEY FORD', 'active', 'Lorem', 'England', 473);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 346, 53.05484069730085, -2.173112681980458, 469, 'OLD COLLIERY BK U/S ROAD BRIDGE', 'active', 'Lorem', 'England', 474);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 346, 53.05326099152376, -2.177596963416027, 470, 'OLD COLLIERY BK - D/S OF CULVERT', 'active', 'Lorem', 'England', 475);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('CANAL WATER', 347, 52.92498535112151, -1.0961040021149149, 471, 'TOLLERTON BRIDGE - GRANTHAM CANAL', 'active', 'Lorem', 'England', 476);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 328, 52.37363252506826, -1.722330268595813, 472, 'GRAND UNION CANAL  HERONFIELD BK', 'active', 'Lorem', 'England', 477);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('CANAL WATER', 318, 52.51375156275378, -2.0161594513594094, 473, 'BHAM CANAL BHAM LEVEL, D/S HMIP HEPWORTH', 'active', 'Lorem', 'England', 478);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('CANAL WATER', 348, 52.420922503414914, -1.9215751446863947, 474, 'WORCESTER & BHAM C, PERSHORED RD LIFFORD', 'active', 'Lorem', 'England', 479);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('CANAL WATER', 348, 52.47275180977751, -1.9112971759105248, 475, 'WORCESTER & BHAM C - BATH ROW BRIDGE', 'active', 'Lorem', 'England', 480);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('CANAL WATER', 349, 52.740526399466965, -2.094452121983839, 476, 'PARK GATE TEDDESLEY', 'active', 'Lorem', 'England', 481);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('CANAL WATER', 349, 52.79276953714166, -2.0385094722317665, 477, 'TIXALL BRIDGE', 'active', 'Lorem', 'England', 482);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('CANAL WATER', 350, 52.679591806483494, -2.073906965896648, 478, 'HATHERTON BRANCH 4X', 'active', 'Lorem', 'England', 483);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('CANAL WATER', 351, 52.72492585716725, -1.789432990167345, 479, 'TRENT & MERSEY CANAL - FRADLEY JUNCTION', 'active', 'Lorem', 'England', 484);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('CANAL WATER', 351, 52.789162399398414, -1.9951625927213048, 480, 'TRENT & MERSEY CANAL - LITTLE HAYWOOD', 'active', 'Lorem', 'England', 485);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('CANAL WATER', 351, 52.96623331138305, -2.1797103617197293, 481, 'TRENT & MERSEY CANAL - HEM HEATH', 'active', 'Lorem', 'England', 486);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('CANAL WATER', 352, 53.06601134972046, -2.028952295049048, 482, 'CALDON CANAL - CHEDDLETON', 'active', 'Lorem', 'England', 487);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 353, 53.68862402919393, -0.38979834688314513, 483, 'BARROW BECK', 'active', 'Lorem', 'England', 488);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 354, 53.41405840522635, 0.030607176650694467, 484, 'BLACK DYKE CATCHMENT TRIB LOUTH CANAL', 'active', 'Lorem', 'England', 489);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 355, 53.4482505146372, -0.5031501349604562, 485, 'BLACK DYKE', 'active', 'Lorem', 'England', 490);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 316, 52.709051487945146, -1.5826043754369408, 486, 'RIVER MEASE D/S NETHERSEAL STW', 'active', 'Lorem', 'England', 491);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 316, 52.6974317174665, -1.6241176923806355, 487, 'RIVER MEASE D/S CLIFTON CAMPVILLE STW', 'active', 'Lorem', 'England', 492);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 316, 52.70389860770515, -1.6907032975900262, 488, 'R MEASE D/S EDINGALE STW', 'active', 'Lorem', 'England', 493);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 316, 52.72949274665377, -1.5696742314023666, 489, 'OVERSEAL BK D/S OVERSEAL STW', 'active', 'Lorem', 'England', 494);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('ESTUARINE WATER', 356, 53.64484481551607, -0.14656243589435652, 490, 'CLEAN SITE - TI02 MONITORING POINT, 1985', 'active', 'Lorem', 'England', 495);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('ESTUARINE WATER', 356, 53.62387110325176, -0.0033574048746349084, 491, 'R.HUMBER CONTROL SITE 29 (SUNK ISLAND)', 'active', 'Lorem', 'England', 496);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 357, 53.51928148951658, -0.5145546721670988, 492, 'HIBALDSTOW AREA CATCHMENT', 'active', 'Lorem', 'England', 497);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('MYTILUS EDULIS - MUSSEL - WHOLE ANIMAL', 356, 53.56781030262307, -0.03695743056715887, 493, 'R.HUMBER CLEETHORPES TOWN - MID SHORE', 'active', 'Lorem', 'England', 498);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('ESTUARY SEDIMENT - SUB TIDAL - <63UM FRACTION', 356, 53.69399046776341, -0.2310285151968425, 494, 'R.HUMBER COMMITTEE SITE 7702', 'active', 'Lorem', 'England', 499);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('PLATICTHYS FLESUS - FLOUNDER - MUSCLE', 356, 53.58317987377636, -0.04228812101191401, 495, 'HEC SITE N33 (CSEMP GRIMSBY ROADS)', 'active', 'Lorem', 'England', 500);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 358, 53.53785912717762, -0.4913449057870297, 496, 'KETTLEBY BECK POOL END', 'active', 'Lorem', 'England', 501);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 359, 53.42149440586555, -0.37686591471634723, 497, 'KINGERBY BECK CATCHMENT', 'active', 'Lorem', 'England', 502);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 359, 53.424783664838756, -0.4278812998240932, 498, 'KINGERBY BECK', 'active', 'Lorem', 'England', 503);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 360, 53.361148581647896, -0.022839810464551996, 499, 'LUD - GB104029061955', 'active', 'Lorem', 'England', 504);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 361, 53.373412348870126, 0.01314529442455677, 500, 'R.LUD RIVER HEAD', 'active', 'Lorem', 'England', 505);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 362, 53.38735949253667, -0.32917292046498986, 501, 'MARKET RASEN PASTURE LANE BRIDGE', 'active', 'Lorem', 'England', 506);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 363, 53.47257499150955, 0.0173658707320809, 502, 'NEW DIKE CATCHMENT TRIB LOUTH CANAL', 'active', 'Lorem', 'England', 507);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 364, 53.651692775642914, -0.2498062386482464, 503, 'N KILLINGHOLME DRN.U/S S.KILL.STW', 'active', 'Lorem', 'England', 508);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 364, 53.653345521620345, -0.24603051727371897, 504, 'N KILLINGHOLME MAIN DRN.D/S KILLING''''M SW', 'active', 'Lorem', 'England', 509);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 365, 53.42885979402071, 0.014468418071580379, 505, 'POULTON DRAIN CATCHMENT TRIB LOUTH CANAL', 'active', 'Lorem', 'England', 510);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('ESTUARINE WATER', 356, 53.64239726075329, -0.20243186778422032, 506, 'R.HUMBER INT.TERMINAL WEST (HIGH TIDE)', 'active', 'Lorem', 'England', 511);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('ESTUARINE WATER', 366, 53.7086091485615, -0.3660511208540504, 507, 'R.HUMBER NEW HOLLAND LOW SLACK', 'active', 'Lorem', 'England', 512);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 367, 53.388133115239896, -0.3176841162783127, 508, 'WOODLANDS', 'active', 'Lorem', 'England', 513);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 368, 54.26774600949282, -0.8602518730416886, 509, 'SEVEN U/S SINNINGTON', 'active', 'Lorem', 'England', 514);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('ESTUARINE WATER', 356, 53.61966003503493, -0.1532144077226685, 510, 'SCM-TI02 MONITORING POINT 1988', 'active', 'Lorem', 'England', 515);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 369, 53.48401035064703, 0.10033815419808853, 511, 'SEVEN TOWNS NORTH EAU - GB104029062140', 'active', 'Lorem', 'England', 516);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 364, 53.636461830663336, -0.23003166498227068, 512, 'S KILL.DRN.ROSPER ROAD', 'active', 'Lorem', 'England', 517);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 370, 53.46743470838397, -0.2078723061589994, 513, 'THORESWAY BECK (TRIB OF WAITHE BECK)', 'active', 'Lorem', 'England', 518);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 371, 53.44921409946289, -0.4039397605885887, 514, 'THORNTON AND OWESBY', 'active', 'Lorem', 'England', 519);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('ESTUARINE WATER', 356, 53.60819491046351, -0.09335671591590632, 515, 'TIOXIDE-TIO2 MONITORING 1988', 'active', 'Lorem', 'England', 520);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 372, 53.36414339518883, -0.03597246840761175, 516, 'WELTON LE WOLD TO LOUTH CATCH', 'active', 'Lorem', 'England', 521);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 355, 53.45252615649503, -0.4928796474350918, 517, 'WADDINGHAM BLACK DYKE GAUGING STATION', 'active', 'Lorem', 'England', 522);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 373, 53.4613259938178, -0.1819639905193193, 518, 'WAITHE BECK THORGANBY BRIDGE', 'active', 'Lorem', 'England', 523);
-INSERT INTO station (station_type, water_body_id, lat, long, id, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 373, 53.41687493276657, -0.21198405561863046, 519, 'WAITHE BECK', 'active', 'Lorem', 'England', 524);
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Upper Fox Drain Catchment ds of Sherburn STW', 1, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'East Row Beck from Source to North Sea', 2, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Endon Bk', 3, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Glaisdale Beck catchment (trib of Esk)', 2, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Blackfoss Bk lower Catch (trib of Pocklington Bk)', 4, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Mobberley Bk', 3, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Wharfe from Tadcaster Weir to River Ouse', 1, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Trent from Soar to The Beck', 5, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Trent from Carlton-on-Trent to Laughton Drain', 5, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'Trent Bifurcation Pingley Dyke to Winthorpe', 5, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'Trent from Source to Ford Green Brook', 6, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'Adlingfleet Drain Upper Catchment (trib of Trent)', 5, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'Paupers Drain Catchment (trib of Trent)', 5, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'S Lev Engine Drain Catchment (trib of Trent)', 7, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'Northorpe Beck from Source to River Eau', 5, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'Laughton Drain Catchment (trib of Trent)', 5, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'Idle from Maun/Poulter to Tiln', 7, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'Anston Brook from Source to Ryton', 7, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'Hodsock Bk (to Oldcoates Dyke)', 7, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'Ryton from Chesterfield Canal to Anston Brook', 7, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'Lake', 'Clumber Lake', 7, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'Lake', 'Thoresby Lake', 7, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'Sookholme Brook Catchment (trib of Meden)', 7, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'Vicar Water from Source to Maun', 7, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'Lake', 'Malham Tarn', 8, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'Wheatley Beck Catchment (trib of Trent)', 5, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'Catchwater Drain Catchnemt (trib of Trent)', 5, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'Sewer Drain Catchment (trib of Trent)', 5, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'North Beck Catchment (trib of Trent)', 5, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'Fledborough Beck Catchment (trib of Trent)', 5, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'Goosemoor Dyke from Source to Moorhouse Beck', 5, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'Moorhouse Beck (Trib of Goosemoor Dyke)', 5, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'Devon from Cotham to Trent', 5, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'Car Dyke', 5, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'Smite from Dalby Brook to Stroom Dyke', 5, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'Smite from Source to Dalby Brook', 5, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'The Grimmer from Source to Rundle Beck', 5, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'Rundle Beck Catchment (trib of Whipling)', 5, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'Pingley/Rundell Dyke Catch Upper (trib of Trent)', 5, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'Greet Catchment (trib of Trent)', 5, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'Hallhaughton Dumble Catchment (trib of Greet)', 5, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'Cocker Beck Catchment (trib of Trent)', 5, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'Polser Brook from Source to Cotgrave Brook', 5, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'Leen from Day Brook to Trent', 5, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'Day Brook Catchment (trib of Leen)', 5, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'Gilt Brook Catchment (trib of Erewash)', 5, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'Bailey Brook Catchment (trib of Erewash)', 5, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'Nethergreen Brook Catchment (trib of Erewash)', 5, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'Soar from Rothley Brook to Long Whatton Brook', 9, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'Soar from Soar Brook to Thurlaston Brook', 9, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'Soar Brook from Source to Soar', 9, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'Soar from Source to Soar Brook', 9, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'Soar from Long Whatton Brook to Trent', 9, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'Long Whatton Brook Catchment (trib of Soar)', 9, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'Black Brook from Grace Dieu Brook to Soar', 9, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'Walton Brook Catchment (trib of Soar)', 9, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'Thurlaston Brook Catchment (trib of Soar)', 9, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'Austen Dyke Catchment (trib of Wreake)', 9, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'Freeby Brook Catchment (trib of Eye)', 9, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'Newton Beck from Source to Staithes Beck', 2, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'Evington Brook from Source to Willow Brook', 9, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'Lubbesthorpe Brook Catchment (trib of Soar)', 9, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'Countesthorpe Brook from Source to Sence', 9, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'Sleddale Beck from Source to River Esk', 2, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'Stonegate Beck catchment (trib of Esk)', 2, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'Wheeldale Gill from Source to Murk Esk', 2, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'TransitionalWater', 'ESK (E)', 10, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'CoastalWater', 'Yorkshire North', 10, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'Stream Dyke Hornsea Mere to N Sea', 11, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'Eller beck from Source to Murk Esk', 2, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'Great Fryup Beck Catchment (trib of Esk)', 2, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'Little Beck/May Beck catchment (trib of Esk)', 2, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'Danby Beck catchment (trib of Esk)', 2, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'Rigg Mill Bk/Long Mill Bk catch (trib of Esk)', 2, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'Hayburn Beck/Thorny Beck catch (drains to N Sea)', 2, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'Sandsend Beck/Mickley Bk from Source to North Sea', 2, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'Lownorth Beck from Source to River Derwent', 4, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'Baysdale Beck from Source to River Esk', 2, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'Burniston Beck/Sea Cut/Scalby Beck Catch to N Sea', 4, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'Don from Mill Dyke to River Ouse', 12, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'Alne Beck from Source to River Kyle', 13, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'Holmes Dike catchment (trib of Ouse)', 1, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'Fox Dike/Carr Dike from Source to Selby Dam', 1, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'Sands/Keyingham/Roos Dr from Source to Humber', 11, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'New Parks Beck from Source to Huby Burn', 13, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'Oldfleet/Wyton/Sproatley Drain from Source to Humber', 11, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'The Syke from Source to River Foss', 13, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'Kyle from Source to Alne Beck', 13, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'Ure from Widdale Beck to Duerley Beck', 13, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'Linton on Ouse Airefield catch (trib of Kyle)', 13, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'Lake', 'Semer Water', 13, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'Ouse from River Nidd to Stillingfleet Beck', 13, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'Burn from Source to Leighton Beck', 13, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'Farlington Beck from Source to River Foss', 13, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'Tang Hall Bk/Old Foss Bk catch, trib of River Foss', 13, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'Bishopdale Bk from Source to R Ure', 13, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'Burton Pidsea Drain Lower Catchment', 11, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'Humbleton Beck Catchment', 11, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ( 'River', 'Ottringham Drain from Ottringham Grange to Humber', 11, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Fosse drain / Skeffling Drain', 11, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Hurns Gutterfrom Source to River Ouse', 13, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Ouse from Source to River Ure', 13, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Huby Burn from Source to New Parks Beck', 13, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Skell from Source to River Laver', 13, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Ure from River Tutt to River Swale', 13, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Birdforth/Green''s Bks Catch (trib of Swale)', 13, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Laver from Source to Carlexmoor Beck', 13, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Kex Beck and the Laver', 13, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Walden Beck from Source to Bishopdale Beck', 13, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Snaizeholme Beck from Source to Widdale Beck', 13, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Widdale Beck from Source to Snaizeholme Beck', 13, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Duerley Beck from Source to River Ure', 13, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Ure from Source to Widdale Beck', 13, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Leighton Beck from Source to River Burn', 13, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Fleet Drain', 11, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Holgate Beck to Ouse', 13, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Stillingfleet Beck Source to Ouse', 1, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Ure from River Skell to River Tutt', 13, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Mill Dike from Source to Bishop Dike', 1, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Holderness Drain Source to Foredyke Stream', 11, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Burton Brook from Source to Sence', 9, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Whetstone Brook Catchment (trib of River Soar)', 9, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Ella Dyke', 11, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Beverley and Barmston Drain', 11, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Foredyke Stream Lower to Holderness Dr', 11, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Lambwath Stream from Source to Foredyke Stream', 11, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('Canal', 'Leven Canal', 14, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Nafferton Beck from Source to  to Driffield Canal', 11, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Middleton on the Wolds and Watton Beck', 11, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Foredyke Stream Upper', 11, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Bryan Mills Beck Source to Bryan Mills Farm', 11, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Catchwater Drain', 11, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Skerne Beck', 11, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'High Hunsley to Arram Area', 11, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Loxley from Source to Strines Dyke', 12, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Barlow Brook from Source to River Drone', 12, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Bentley Brook from Source to River Dearne', 12, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Bramwith Drain from Source to River Don', 12, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Hoyle Mill Stream from Source to River Went', 12, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Cawthorne Dyke from Source to River Dearne', 12, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('Canal', 'Chesterfield Canal (River Rother)', 14, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Strines Dyke from Source to River Loxley', 12, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Ea Beck from the Skell to River Don', 12, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Ea Beck from Frickley Beck to the Skell', 12, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Went from Source to Hoyle Mill Stream', 12, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Went from Blowell Drain to the River Don', 12, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Holme Brook/Linacre Beck', 12, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Hooton Brook from Source to River Don', 12, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Womersley Beck from Source to Blowell Drain', 12, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'The Moss from Source to River Rother', 12, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Spital/Calow/Muster Brook', 12, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'New Fleet Drain from source to R Went', 12, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Pigeon Bridge Brook from Source to River Rother', 12, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Pools Brook from Source to Doe Lea', 12, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Redleadmill Brook', 12, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Rivelin from Source to River Loxley', 12, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Dearne from Cawthorne Dyke to Lundwood STW', 12, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Dearne Darfield STW to River Don', 12, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Dearne from Lundwood to River Dove', 12, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Doe Lea from Source to Hawke Brook', 12, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Don from River Rother to River Dearne', 12, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Don from River Don Works to River Rother', 12, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Drone/Whitting from Source to River Rother', 12, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Rother, Doe Lea to Don', 12, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('Canal', 'Sheffield and South Yorkshire Navigation (Rotherham Cut)', 14, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Ulley Brook from Source to River Rother', 12, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Bridgehouse Beck from Source to River Worth', 8, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'The Fleet from Source to River Aire', 8, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Milshaw Beck from Source to Low/Wortley/Pudsey Bks', 8, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Carlton Beck from Source to River Aire', 8, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Gordale Beck from Source to Malham Beck', 8, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Glusburn beck from source to Lothersdale Beck', 8, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Aire from Otterburn Beck to Eshton Beck', 8, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Aire (R Worth to Gill Beck)', 8, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Aire (Eshton Beck to R Worth)', 8, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Aire from Malham Tarn to Malham Beck', 8, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Worth from Bridgehouse Beck to R Aire', 8, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Gill Beck (Baildon) from Source to River Aire', 8, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Gill Beck Guisley from Source to River Aire', 8, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Eller Beck from Source to Haw Beck', 8, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Choke Churl Bk from Source to River Calder', 8, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Colden Water from Source to River Calder', 8, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Cragg Brook from Source to River Calder', 8, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Calder from River Colne to River Chald', 8, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Calder from River Chald to River Aire', 8, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Hebble Brook from Source to River Calder', 8, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Black Brook from Source to River Calder', 8, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Calder from Ryburn Confluence  to River Colne', 8, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Calder from Colden Water to Ryburn Confluence', 8, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Colne from River Holme to River Calder', 8, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Colne from Wessenden Brook to R Holme', 8, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Holme from New Mill Dike to R Colne', 8, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Ryburn from Source to Booth Dean Clough', 8, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Spen Beck from Source to River Calder', 8, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Booth Dean Clough from Source to River Ryburn', 8, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Alcomden Water - Walshaw Dean Resrs to Widdop', 8, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Fleet Dike catch (trib of Ouse)', 4, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Hodge Beck from Source to River Dove', 4, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Derwent from Elvington Beck to River Ouse', 4, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Derwent from River Rye to Kirkham', 4, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Bonfield Gill from Source to River Riccal', 4, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Bogmire Gill from Source to River Riccal', 4, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Pickering Beck from Source to Costa Beck', 4, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Bishop Wilton Beck Catch (trib of Blackfoss Beck)', 4, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Gowthorpe Beck Catch (trib of Blackfoss Beck)', 4, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Menethorpe Beck catch (trib of Derwent)', 4, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Cram Beck catch (trib of Derwent)', 4, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Spittle/Bulmer/Ings Becks catch (trib of Derwent)', 4, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Scampston Beck catchment (trib of Derwent)', 4, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Sherburn Beck catchment (trib of Derwent)', 4, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Brompton Beck catchment (trib of Derwent)', 4, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Ruston Beck catchment (trib of Derwent)', 4, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Lowdales Beck Catchment (trib of Derwent)', 4, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Derwent from Source to Black Beck', 4, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Walmouth Beck from Source to River Riccal', 4, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Wath Beck from Souce to Holbeck', 4, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Rye from Holbeck to River Seven', 4, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Holbeck from Source to Wath Beck', 4, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'White Beck catchment (trib of Rye)', 4, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Spring Wood Catchment (Trib of Rye)', 4, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'The Syme form Source to Thornton/Dalby/Staindale', 4, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Borough Beck', 4, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Levisham Beck from Source to Pickering Beck', 4, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Catter Beck/Hutton Beck from source to River Seven', 4, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Pickering Beck from Source to Levisham Beck', 4, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Rye from Source to River Seph', 4, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Hartoft Beck from Source to River Seven', 4, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Settrington Beck catch (trib of Derwent)', 4, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Sledhill Gill', 4, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Raisdale Beck from Source to River Seph', 4, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Seven from Hartoft Beck to Little Beck', 4, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Seven from source to Hartoft Beck', 4, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Ledge Beck from Source to River Seph', 4, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Seph from Ledge Beck to River Rye', 4, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Troutsdale Beck from Source to River Derwent', 4, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Black/Crosscliff/Grain Bk from Source to R Derwent', 4, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Little Beck from Source to River Seven', 4, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Seph from Source to Ledge Beck', 4, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Derwent from Kirkham to Elvington Beck', 4, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('Lake', 'Church Wilne Reservoir', 5, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Derwent from Bottle Brook to Trent', 15, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Wharfe from Collingham Beck to Tadcaster Weir', 1, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Wharfe from Park Gill Bk to Barben Beck/River Dibb', 1, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Hebden Beck Catchment (trib of Wharfe)', 1, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Oughtershaw Beck from Source to River Wharfe', 1, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'The Fleet/The Foss from Source to R Wharfe', 1, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Dorts Dike  Catchment (trib of Wharfe)', 1, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Fir Beck/Blands Beck Catchment (trib of Wharfe)', 1, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Wharfe from R Washburn to Collingham Beck', 1, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Skirfare from Heselden Beck to Cowside Beck', 1, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Skirfare from Source to Heselden Beck', 1, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Green Field Beck from Source to River Wharfe', 1, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Derwent from Source to Westend', 15, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('Lake', 'Gouthwaite Reservoir', 13, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Crimple Beck from Source to Park Beck', 13, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Ashfoldside Beck to River Nidd', 13, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Park Beck Catch (trib of Crimple Beck)', 13, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Thornton Beck Catch (Trib of Nidd)', 13, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Fell Beck/Far Beck Catch (Trib of Nidd)', 13, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Gundrifs Beck (trib of Nidd)', 13, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Swale from Bedale Beck to River Wiske', 13, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Wiske from Source to The Stell', 13, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Chaddesden Brook Catchment (trib of Derwent)', 15, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Colburn Beck/Risedale Bk from Source to R Swale', 13, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'The Stell from Source to River Wiske', 13, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Broad Beck from Source to Cod Beck', 13, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Gunnerside Gill from Source to River Swale', 13, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Barney Bk/Hard Level Gill from Source to R Swale', 13, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Otterington Beck catchment (trib of Wiske)', 13, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Stonesdale Bk from Source to River Swale', 13, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Ings Goit from Source to Burneston Beck', 13, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Paradise Beck catchment (trib of Cod Beck)', 13, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Sike Stell catch (trib of Wiske)', 13, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Old Stell Catchment (trib of Bedale Beck)', 13, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Healam Beck from Burniston Bk to River Swale', 13, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Spital Beck from Source to Cod Beck', 13, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Willow/Isle/Sutton Bks Catchment (Trib of Cod Bk)', 13, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Brompton Bk from Source to Newton Bk', 13, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Scurf Beck from Source to Bedale Beck', 13, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Gill Beck/Black Beck from Source to River Swale', 13, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Sand Beck from Source to River Swale', 13, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Great Sleddale Beck from Source to River Swale', 13, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Swale from Whitsundale Bk  to Stonesdale Bk', 13, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Birkdale Beck from Souce to River Swale', 13, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Whitsundale Beck from Source to River Swale', 13, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Scorton Beck from Source to River Swale', 13, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Bedale/Newton/Burton Bk from Source to Brompton Bk', 13, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Cod Beck from Source to Broad Beck', 13, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Swale from Wiske to River Ure', 13, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Markeaton Brook from Source to Mackworth Brook', 15, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('Lake', 'Kedleston Hall Lower Lake', 15, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Mackworth Brook Catchment (trib of Markeaton Brook)', 15, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Blackbrook Catchment (trib of Derwent)', 15, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Amber from Alfreton Brook to Derwent', 15, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('Lake', 'Carsington Water', 3, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Blackleach Brook from Source to Bar Brook', 15, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Highlow Brook Catchment (trib of Derwent)', 15, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Hood Brook Catchment (Trib of Derwent)', 15, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Noe from Peakshole Water to Derwent', 15, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Highshore Clough Catchment (trib of Derwent)', 15, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('Lake', 'Ladybower Reservoir', 15, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Ashop from Alport to Derwent', 15, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Repton Brook Catchment (trib of Trent)', 5, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Ramsley Brook from Source to Carr-New Brook', 5, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Cuttle Brook Catchment (trib of Trent)', 5, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('Lake', 'Foremark Reservoir', 5, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Twyford Brook Catchment (trib of Trent)', 5, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Radbourne Brook Catchment (trib of Trent)', 5, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Tean from Source to Cheadle Catchment', 3, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Alders Bk', 3, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Combes Brook Catch (trib of R Churnet)', 3, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Leek Brook from Source to River Churnet', 3, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Stanton/Wootton/Ellastone Catch (trib of Dove)', 3, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Hamps from Source to R Manifold', 3, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Darklands Brook Catchment (trib of Trent)', 16, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Mease from Hooborough Brook to Trent', 16, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Gilwiskaw Brook from Source to River Mease', 16, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Tame (Oldbury Arm) - source to conf R Tame (Wton Arm)', 16, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Anker from River Sence to River Tame', 16, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Sketchley Brook from Source to River Anker', 16, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Footherley Brook from Source to Black-Bourne Brook', 16, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Langley Bk - source to conf R Tame', 16, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Dog Lane Brook from Source to R Tame', 16, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('Lake', 'Shustoke Reservoirs', 16, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Didgeley Brook from Source to R Bourne', 16, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Cole from Springfield to Hatchford-Kingshurst Brook', 16, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Temple Balsall Brook from Source to R Blythe', 16, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Cuttle Brook from Source to River Blythe', 16, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('Lake', 'Bracebridge Pool', 16, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Rea from Bourn Brook to River Tame', 16, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('Lake', 'Edgbaston Pool', 16, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Pyford Brook Catchment (trib of Trent)', 6, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('Lake', 'Stowe Pool', 6, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Shropshire Bk', 6, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Rising Brook', 6, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Sow - Doxey Bk to R Penk', 6, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Sow from Source to Brockton Brook', 6, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('Lake', 'Cop Mere', 6, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Penk -  Saredon Bk to Whiston Bk', 6, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Whiston Bk', 6, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Doxey Bk - source to R Sow', 6, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Meece Brook from Source to Chatcull Brook', 6, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Chatcull Brook from Source to Meece Brook', 6, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Brockton Brook from Source to R Sow', 6, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Causeley Brook from Source to River Trent', 6, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Ford Green Brook from Source to R Trent', 6, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('Canal', 'Grantham Canal, lower section', 14, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('Canal', 'Worcester and Birmingham Canal, Gas St Basin to Kings Norton Junction', 14, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('Canal', 'Staffordshire and Worcester Canal, summit to Trent and Mersey Canal', 14, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('Canal', 'Hatherton Canal', 14, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('Canal', 'Trent and Mersey Canal, summit to Alrewas', 14, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('Canal', 'Caldon Canal, canal section 3', 14, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Barrow Beck', 17, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Black Dyke Catchment (trib of Louth Canal)', 17, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Black Dyke (trib of Ancholme)', 17, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('TransitionalWater', 'HUMBER LOWER', 10, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Hibaldstow area Catchment (trib of Ancholme)', 17, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Kettleby Beck', 17, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Kingerby Beck Catchment (Trib of Ancholme)', 17, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Lud', 17, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Louth Canal', 17, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'North Willingham Area Catchment (trib of Rase)', 17, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'New Dike Catchment (trib of Louth Canal)', 17, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'North Beck Drain', 17, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Poulton Drain Catchment (trib of Louth Canal)', 17, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('TransitionalWater', 'HUMBER MIDDLE', 10, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Rase from source to Market Rasen', 17, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Seven from Little Beck to Catter Beck', 4, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Seven Towns North Eau', 17, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Thoresway Beck (trib of Waithe Beck)', 17, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Thornton and Owersby Catchwater', 17, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Welton Le Wold to Louth Catch (trib of Lud)', 17, 'Lorem');
+INSERT INTO water_body ( type, name, catchment_id, description) VALUES ('River', 'Waithe Beck upper catchment', 17, 'Lorem');
 
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 1, 53.792630019011796, -1.1823732576298436, '1161', 'active', 'Lorem', 'United Kingdom', 6);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 2, 54.50017497801003, -0.6718140870136629, '139', 'active', 'Lorem', 'United Kingdom', 7);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 3, 53.08025421103804, -2.102200438243874, '158679', 'active', 'Lorem', 'United Kingdom', 8);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 4, 54.438286155905324, -0.794483674699154, '161', 'active', 'Lorem', 'United Kingdom', 9);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 5, 53.93140522899077, -0.8935864202306223, '201391', 'active', 'Lorem', 'United Kingdom', 10);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 6, 52.993587577719985, -1.9789653410095833, '202097', 'active', 'Lorem', 'United Kingdom', 11);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 7, 53.86327799147504, -1.2273141614005023, '202674', 'active', 'Lorem', 'United Kingdom', 12);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('ANY FISH - NOT INCLUDING FLATFISH - WHOLE ANIMAL', 8, 53.140254597272886, -0.7936781396568373, 'RIVER TRENT AT CROMWELL LOCK', 'active', 'Lorem', 'United Kingdom', 13);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 9, 53.266069059705615, -0.7697513683747061, 'RIVER TRENT D/S NEWTON WTW', 'active', 'Lorem', 'United Kingdom', 14);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 10, 53.097552326102594, -0.8249662076171328, 'RIVER TRENT AT A616 SOUTH MUSKHAM', 'active', 'Lorem', 'United Kingdom', 15);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 11, 53.04896175786806, -2.1464014540248275, 'NON-TIDAL R TRENT - MILTON MILLRISE RD', 'active', 'Lorem', 'United Kingdom', 16);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 11, 53.066961620640086, -2.1506861181573953, 'NON-TIDAL R TRENT - NORTON GREEN', 'active', 'Lorem', 'United Kingdom', 17);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 12, 53.68756012821881, -0.7221016755031049, 'ADINGFLEET DRAIN - AT ADINGFLEET', 'active', 'Lorem', 'United Kingdom', 18);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 13, 53.62016627314458, -0.7846124121346728, 'PAUPERS DRAIN AT LEAM HOUSE EASTOFT(GQA)', 'active', 'Lorem', 'United Kingdom', 19);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 14, 53.526758676049354, -0.8838040780544982, 'SOUTH LEVEL ENGINE DRAIN AT TUNNEL PITS', 'active', 'Lorem', 'United Kingdom', 20);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 15, 53.473153007777576, -0.6545707305917161, 'NORTHORPE BECK AT SCOTTON ROAD', 'active', 'Lorem', 'United Kingdom', 21);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 16, 53.46759098132499, -0.7380550694156359, 'LAUGHTON HIGHLAND DRAIN AT LAUGHTON', 'active', 'Lorem', 'United Kingdom', 22);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 14, 53.49026178293457, -0.9368527482235088, 'MISSION BANK DRAIN AT B1396', 'active', 'Lorem', 'United Kingdom', 23);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 14, 53.507178659510124, -0.8990802000311643, 'SOUTH IDLE DRAIN, AT BULL HASSOCKS PS', 'active', 'Lorem', 'United Kingdom', 24);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 14, 53.50653990706466, -0.8990213499629794, 'FOLLY DRAIN, AT GREEN HOLME BANK FM', 'active', 'Lorem', 'United Kingdom', 25);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 14, 53.48877613999891, -0.9056908556270432, 'SOUTH IDLE DRAIN, DS CADMANS DRAIN', 'active', 'Lorem', 'United Kingdom', 26);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 14, 53.50133194877064, -0.9323545811518352, 'MISSON BANK DRAIN, AT NINESCORES FM', 'active', 'Lorem', 'United Kingdom', 27);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 14, 53.50660656081506, -0.8994267390875718, 'SOUTH IDLE DR, DS SOUTH THORN BANK DR', 'active', 'Lorem', 'United Kingdom', 28);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 14, 53.499268444040545, -0.9020137171420162, 'SOUTH IDLE DRAIN, DS SNELL DRAIN', 'active', 'Lorem', 'United Kingdom', 29);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 14, 53.50877423871082, -0.9182949060389058, 'THATCH CARR BANK DRAIN, US OF PS', 'active', 'Lorem', 'United Kingdom', 30);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 14, 53.50195076013626, -0.9004518551761834, 'FOLLY DRAIN, AT COVE RD BRIDGE', 'active', 'Lorem', 'United Kingdom', 31);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 9, 53.42112626921758, -0.76471247815758, 'RAVENSFLEET P/S CATCHMENT', 'active', 'Lorem', 'United Kingdom', 32);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('ANY FISH - NOT INCLUDING FLATFISH - WHOLE ANIMAL', 17, 53.27915722298486, -0.9391835073979674, 'RIVER IDLE (MAUN) - AT GAMSTON', 'active', 'Lorem', 'United Kingdom', 33);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 18, 53.33721730723514, -1.1903511523941939, 'ANSTON BROOK/RIVER RYTON - LINDRICK DALE', 'active', 'Lorem', 'United Kingdom', 34);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 18, 53.350806757642566, -1.2198395214273403, 'ANSTON BROOK/RIVER RYTON - CHURCH BRIDGE', 'active', 'Lorem', 'United Kingdom', 35);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 18, 53.36886462118827, -1.2535658248513124, 'ANSTON BROOK NR TODWICK', 'active', 'Lorem', 'United Kingdom', 36);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 19, 53.37546517026133, -1.0847065988013835, 'OWLANDS WOOD DYKE AT BLYTHE', 'active', 'Lorem', 'United Kingdom', 37);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 19, 53.37260377074647, -1.1226449826720282, 'LANGOLDS LAKE BROOK - A60 AT COSTHORPE', 'active', 'Lorem', 'United Kingdom', 38);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 20, 53.33447082422987, -1.1962597344646215, 'RIVER RYTON AT ANSTON GRANGE FOOTBRIDGE', 'active', 'Lorem', 'United Kingdom', 39);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 18, 53.36348167848272, -1.2338840998164367, 'CRAMFIT BROOK AT CRAMFIT BRIDGE', 'active', 'Lorem', 'United Kingdom', 40);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 18, 53.367445688876444, -1.2269148072144287, 'CRAMFIT BROOK D/S DINNINGTON STW', 'active', 'Lorem', 'United Kingdom', 41);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('POND / LAKE / RESERVOIR WATER', 21, 53.2710575558578, -1.04565452852773, 'CLUMBER LAKE AT HARDWICK', 'active', 'Lorem', 'United Kingdom', 42);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('POND / LAKE / RESERVOIR WATER', 22, 53.22758431210391, -1.0499460678813421, 'THORESBY LAKE AT THE SUMMER HOUSE', 'active', 'Lorem', 'United Kingdom', 43);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 23, 53.19613073192304, -1.1834298401409944, 'SHIRE BROOK AT SOOKHOLME', 'active', 'Lorem', 'United Kingdom', 44);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 23, 53.19714496758879, -1.18715285644858, 'SHIRE BROOK AT CONF WITH SOOKHOLME BROOK', 'active', 'Lorem', 'United Kingdom', 45);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 23, 53.19996764810007, -1.200467762739614, 'SHIRE BROOK D/S SHIREBROOK STW', 'active', 'Lorem', 'United Kingdom', 46);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 24, 53.15905323631937, -1.1145882148139938, 'VICAR WATER NEAR CLIPSTONE INLET BTM', 'active', 'Lorem', 'United Kingdom', 47);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('POND / LAKE / RESERVOIR WATER', 25, 54.0920654253824, -2.162994224765542, 'MALHAM TARN', 'active', 'Lorem', 'United Kingdom', 48);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 26, 53.36987822800208, -0.8169945239183908, 'WHEATLEY BECK AT WEST BURTON MILL', 'active', 'Lorem', 'United Kingdom', 49);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('FINAL SEWAGE EFFLUENT', 27, 53.351873600476324, -0.8053235062484659, 'CATCHWATER DRAIN,STURTON-LE-STEEPLE', 'active', 'Lorem', 'United Kingdom', 50);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 28, 53.292467917390454, -0.7453189700712095, 'SEWER DR/SALLIE BANK DRAIN - AT TORKSEY', 'active', 'Lorem', 'United Kingdom', 51);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 29, 53.275010878713, -0.7959190219940688, 'LANEHAM BECK CATCHMENT - LANEHAM', 'active', 'Lorem', 'United Kingdom', 52);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 30, 53.24532350154848, -0.8025965564140984, 'FLEDBOROUGH BECK U/S CONFLUENCE', 'active', 'Lorem', 'United Kingdom', 53);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 31, 53.20618724574535, -0.8448617974010031, 'GOOSEMOOR DYKE AT WESTON AT CONFLUENCE', 'active', 'Lorem', 'United Kingdom', 54);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 32, 53.20352732342212, -0.8486762194652436, 'WESTON BROOK (MOORHOUSE BECK)', 'active', 'Lorem', 'United Kingdom', 55);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('ANY FISH - NOT INCLUDING FLATFISH - WHOLE ANIMAL', 33, 53.070328708234825, -0.8237216538807004, 'RIVER DEVON B6166 ROAD BRIDGE', 'active', 'Lorem', 'United Kingdom', 56);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 34, 52.97287614224833, -0.9119368223352903, 'CAR DYKE AT CAR DYKE BRIDGE', 'active', 'Lorem', 'United Kingdom', 57);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 35, 52.89240892030557, -0.9641640042749927, 'RIVER SMITE AT COLSTON BASSETT', 'active', 'Lorem', 'United Kingdom', 58);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 36, 52.850730169867845, -0.9516562902667806, 'RIVER SMITE AT HICKLING', 'active', 'Lorem', 'United Kingdom', 59);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 37, 52.91545877546846, -0.8752296827091313, 'RIVER WHIPLING (THE GRIMMER) - GRANBY', 'active', 'Lorem', 'United Kingdom', 60);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 38, 52.91487908002024, -0.8747687950039448, 'RUNDLE BECK AT GRANBY', 'active', 'Lorem', 'United Kingdom', 61);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 39, 53.07917170583399, -0.86698245112963, 'PINGLEY CAR DYKE AT STAYTHORPE', 'active', 'Lorem', 'United Kingdom', 62);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 40, 53.082857511465484, -0.9463118787607989, 'RIVER GREET AT SOUTHWELL MILL', 'active', 'Lorem', 'United Kingdom', 63);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 41, 53.06411534953079, -0.9035509998048554, 'HALLOUGHTON DUMBLE AT ROLLESTON', 'active', 'Lorem', 'United Kingdom', 64);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 42, 52.98668528062982, -0.9959644885190676, 'COCKER BECK AT TRENT CONFLUENCE', 'active', 'Lorem', 'United Kingdom', 65);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 43, 52.90889585971169, -1.081034024681786, 'POLSER BROOK D/S TOLLERTON', 'active', 'Lorem', 'United Kingdom', 66);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 43, 52.89545005296611, -1.080232737281032, 'POLSER BROOK AT  HOE HILL BR, NORMANTON', 'active', 'Lorem', 'United Kingdom', 67);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 44, 52.93916025752765, -1.16223351810391, 'RIVER LEEN', 'active', 'Lorem', 'United Kingdom', 68);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 44, 52.96576496942241, -1.1823399424404348, 'RIVER LEEN AT BOBBERS MILL', 'active', 'Lorem', 'United Kingdom', 69);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 45, 52.98241759045611, -1.1777806103972315, 'DAY BROOK AT BASFORD', 'active', 'Lorem', 'United Kingdom', 70);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 46, 52.99654934238852, -1.2910923464325985, 'GILT BROOK AT CONFLUENCE', 'active', 'Lorem', 'United Kingdom', 71);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 46, 52.997112479103286, -1.2890568537121894, 'GILT BROOK U/S NEWTHORPE STW', 'active', 'Lorem', 'United Kingdom', 72);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 47, 53.014093746503505, -1.3277555320160217, 'BAILEY BROOK AT MILNHAY ROAD', 'active', 'Lorem', 'United Kingdom', 73);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 48, 53.021617978427834, -1.3230473238653466, 'NETHERGREEN BROOK AT CONFLUENCE', 'active', 'Lorem', 'United Kingdom', 74);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 48, 53.02274185920218, -1.3074803932018737, 'NETHERGREEN BROOK AT EASTWOOD', 'active', 'Lorem', 'United Kingdom', 75);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 49, 52.727248207782196, -1.1240046109248039, 'RIVER SOAR AT SILEBY MILL', 'active', 'Lorem', 'United Kingdom', 76);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 50, 52.55863140527934, -1.2469474398512437, 'RIVER SOAR AT CROFT', 'active', 'Lorem', 'United Kingdom', 77);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 50, 52.53223143368686, -1.258986142889552, 'RIVER SOAR D/S STONEY BRIDGE', 'active', 'Lorem', 'United Kingdom', 78);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 50, 52.53223143368686, -1.258986142889552, 'RIVER SOAR D/S STONEY BRIDGE', 'active', 'Lorem', 'United Kingdom', 79);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 51, 52.52160156448714, -1.2907193896806586, 'RIVER SOAR AT SHARNBROOK (GQA)', 'active', 'Lorem', 'United Kingdom', 80);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 52, 52.514720038373596, -1.2796162337053674, 'RIVER SOAR AT CLAYBROOKE', 'active', 'Lorem', 'United Kingdom', 81);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 53, 52.839585773547604, -1.2675781570794695, 'BLACKPOOL BROOK AT KEGWORTH', 'active', 'Lorem', 'United Kingdom', 82);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 54, 52.80161029419734, -1.2612295685390622, 'LONG WHATTON BROOK AT THE STINTS', 'active', 'Lorem', 'United Kingdom', 83);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 54, 52.810245733165544, -1.2901608386002847, 'LONG WHATTON BK U/S LONG WHATTON STW', 'active', 'Lorem', 'United Kingdom', 84);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 54, 52.809335212454535, -1.3095947333162987, 'WESTMEADOW BROOK AT LONG WHATTON', 'active', 'Lorem', 'United Kingdom', 85);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 54, 52.78624763098499, -1.340904133679601, 'WESTMEADOW BROOK AT MILL LANE', 'active', 'Lorem', 'United Kingdom', 86);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 55, 52.78421273830746, -1.2338573548286544, 'BLACK BROOK AT DISHLEY', 'active', 'Lorem', 'United Kingdom', 87);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 56, 52.773632418810514, -1.1658696036375997, 'WALTON BROOK AT BURTON BANDALLS', 'active', 'Lorem', 'United Kingdom', 88);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 56, 52.7739059857453, -1.1387223951680894, 'WALTON BROOK D/S BURTON ON THE WOLDS STW', 'active', 'Lorem', 'United Kingdom', 89);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 57, 52.5685995908854, -1.2711062388454621, '47526', 'active', 'Lorem', 'United Kingdom', 90);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 58, 52.7551444370739, -0.989438609662268, 'AUSTEN DYKE - FRISBY', 'active', 'Lorem', 'United Kingdom', 91);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 59, 52.76632134126619, -0.8022829373846323, 'FREEBY BROOK CONF RIVER EYE', 'active', 'Lorem', 'United Kingdom', 92);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 60, 54.55067282472519, -0.8005885967318077, '485', 'active', 'Lorem', 'United Kingdom', 93);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 61, 52.63578048695146, -1.1043455499698165, 'EVINGTON BROOK SPINNEY HILL PARK', 'active', 'Lorem', 'United Kingdom', 94);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 62, 52.60640548272459, -1.1859859756894038, 'LUBBERSTHORPE BROOK AT WATERGATE LANE', 'active', 'Lorem', 'United Kingdom', 95);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 63, 52.56850999761695, -1.1250436422481864, 'COUNTESTHORPE BK RIVER SENCE CONFLUENCE', 'active', 'Lorem', 'United Kingdom', 96);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 63, 52.55691444023177, -1.1252740340200411, 'COUNTESTHORPE BROOK AT COUNTESTHORPE', 'active', 'Lorem', 'United Kingdom', 97);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 64, 54.48188285391031, -0.9767081274774235, 'COMMONDALE BECK D/S OF STW', 'active', 'Lorem', 'United Kingdom', 98);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 65, 54.449732284866485, -0.7985893594955834, 'STONEGATE BECK AT EGTON BANKS', 'active', 'Lorem', 'United Kingdom', 99);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 66, 54.38174890270415, -0.7681781004487072, 'WHEELDALE GILL AT WHEELDALE MOOR', 'active', 'Lorem', 'United Kingdom', 100);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('ESTUARINE WATER', 67, 54.49132918213085, -0.6124141922423384, 'ESK AT LOWER HARBOUR - WFD TRAC WATERS', 'active', 'Lorem', 'United Kingdom', 101);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 60, 54.54995674699571, -0.7999757152117064, 'DALE BECK AT STAITHES', 'active', 'Lorem', 'United Kingdom', 102);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('MYTILUS EDULIS - MUSSEL - MUSCLE', 68, 54.21698191424325, -0.2721612522496498, 'FILEY AT OLD QUAY ROCKS MUSSELS', 'active', 'Lorem', 'United Kingdom', 103);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 69, 53.90939543928805, -0.1584537261817383, 'STREAM DIKE OUTFALL AT HORNSEA BEACH', 'active', 'Lorem', 'United Kingdom', 104);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('MYTILUS EDULIS - MUSSEL - WHOLE ANIMAL', 67, 54.49104613184991, -0.6104630477431614, 'ESK AT EAST PIER MUSSELS', 'active', 'Lorem', 'United Kingdom', 105);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 70, 54.40892394478627, -0.7356242834165694, 'ELLER BECK AT BECK HOLE ROAD BRIDGE', 'active', 'Lorem', 'United Kingdom', 106);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 4, 54.42692918244341, -0.8240117926543239, 'GLAISDALE BECK AT NEW HOUSE FARM', 'active', 'Lorem', 'United Kingdom', 107);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 71, 54.45205145398362, -0.8570238033169721, 'GREAT FRYUP BECK AT FURNACE BRIDGE', 'active', 'Lorem', 'United Kingdom', 108);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 72, 54.46049603818642, -0.661373837433623, 'IBURNDALE BECK AT ECHO HILL', 'active', 'Lorem', 'United Kingdom', 109);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 73, 54.46436643330832, -0.9330208637219221, 'DANBY BECK AT CHURCH STREET BRIDGE', 'active', 'Lorem', 'United Kingdom', 110);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 74, 54.468808378264995, -0.6157527821002561, 'COCK MILL BECK NR RUSWARP', 'active', 'Lorem', 'United Kingdom', 111);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 75, 54.36540727718888, -0.45877247680195055, 'STAINTONDALE BECK AT WHITEHOUSE FARM', 'active', 'Lorem', 'United Kingdom', 112);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 75, 54.364307398282996, -0.4698035310888366, 'HAYBURN BECK AT HAYBURN BRIDGE', 'active', 'Lorem', 'United Kingdom', 113);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 76, 54.50236336625301, -0.6763142687848461, 'SANDSEND BECK NR STY MARYS HILL', 'active', 'Lorem', 'United Kingdom', 114);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 77, 54.34726345279581, -0.5355156437089177, 'LOWNORTH BECK @ MURK HEAD', 'active', 'Lorem', 'United Kingdom', 115);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 78, 54.45791133878674, -0.994674578141534, 'BAYSDALE BECK AT HOB HOLE WATH', 'active', 'Lorem', 'United Kingdom', 116);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 64, 54.48107352341391, -0.9777160984302566, 'SLEDDALE BECK AT DIVING DUCK', 'active', 'Lorem', 'United Kingdom', 117);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 79, 54.30209464031778, -0.4231939011582149, 'SCALBY BECK AT A165 BRIDGE - SCARBOROUGH', 'active', 'Lorem', 'United Kingdom', 118);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 80, 53.67506162083276, -0.9899894772220268, 'AIRE & CALDER NAV AT NEW BRIDGE', 'active', 'Lorem', 'United Kingdom', 119);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 81, 54.101508953159815, -1.2314613334813154, 'ALNE BECK AT LUND BRIDGE', 'active', 'Lorem', 'United Kingdom', 120);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 82, 53.80340026138866, -1.0950071149329281, 'BLACK FEN DRAIN AT BOGGART BRIDGE', 'active', 'Lorem', 'United Kingdom', 121);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 83, 53.798778129800404, -1.1837112532737497, 'FOX DIKE AT FOX BRIDGE', 'active', 'Lorem', 'United Kingdom', 122);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 84, 53.71138959945669, -0.13585154049552345, 'KEYINGHAM DRAIN AT A1033 KEYINGHAM', 'active', 'Lorem', 'United Kingdom', 123);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 84, 53.68479418489275, -0.1553038393168876, 'KEYINGHAM DRAIN AT SANDS BRIDGE', 'active', 'Lorem', 'United Kingdom', 124);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 85, 54.04539897079148, -1.1248886120345676, 'NEW PARKS BECK AT BULL LANE', 'active', 'Lorem', 'United Kingdom', 125);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 86, 53.74474303292076, -0.2450324458714448, 'OLDFLEET DRAIN AT HEDON ROAD', 'active', 'Lorem', 'United Kingdom', 126);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 87, 54.045788775981165, -0.9941943125946365, 'THE SIKE AT WOODLANDS FARM CATTLE GRID', 'active', 'Lorem', 'United Kingdom', 127);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 88, 54.13337733865746, -1.2298014676706608, 'KYLE AT RASKELF BRIDGE', 'active', 'Lorem', 'United Kingdom', 128);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 89, 54.31029916846924, -2.1905543919935937, 'URE U/S DUERLEY (GAYLE) BECK', 'active', 'Lorem', 'United Kingdom', 129);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 90, 54.046596640365756, -1.2318161155156626, 'SANDWATH BECK AT LINTON-ON-OUSE', 'active', 'Lorem', 'United Kingdom', 130);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 91, 54.2850170287263, -2.122375923278144, 'SEMERWATER OUTFLOW AT ROAD BRIDGE', 'active', 'Lorem', 'United Kingdom', 131);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('ANY FISH - NOT INCLUDING FLATFISH - WHOLE ANIMAL', 92, 54.0112519021357, -1.1926247515555035, 'OUSE AT BENINGBROUGH - EQSD BIOTA & WQ', 'active', 'Lorem', 'United Kingdom', 132);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 93, 54.22458571649804, -1.7667130791466532, 'BURN AT GOLLINGLITH FOOT', 'active', 'Lorem', 'United Kingdom', 133);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 94, 54.099767430113175, -1.059487948354962, 'FARLINGTON BECK AT FARLINGTON', 'active', 'Lorem', 'United Kingdom', 134);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 86, 53.775914508457056, -0.2228658732117626, 'WYTON DRAIN AT B1239', 'active', 'Lorem', 'United Kingdom', 135);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 95, 53.96022433745254, -1.0678722814420947, 'TANG HALL BECK AT FOSS ISLANDS FB', 'active', 'Lorem', 'United Kingdom', 136);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 95, 53.96022433745254, -1.0678722814420947, 'TANG HALL BECK AT FOSS ISLANDS FB', 'active', 'Lorem', 'United Kingdom', 137);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 96, 54.28557139511328, -1.9786040400979024, 'BISHOPDALE BECK AT ESHINGTON LANE BRIDGE', 'active', 'Lorem', 'United Kingdom', 138);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 97, 53.764389399695226, -0.11564752092004137, 'BURTON PIDSEA DRAIN AT WEST BRIDGE', 'active', 'Lorem', 'United Kingdom', 139);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 98, 53.763720830097924, -0.12978715298182372, 'HUMBLETON BECK @ INGS BRIDGE ELSTRONWICK', 'active', 'Lorem', 'United Kingdom', 140);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 99, 53.653323320063514, -0.12930336755700222, 'OTTRINGHAM DRAIN AT SALTHAUGH CLOUGH', 'active', 'Lorem', 'United Kingdom', 141);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 100, 53.64377063822064, 0.06992884131442953, 'SKEFFLING DRAIN AT HUMBER LANE SKEFFLING', 'active', 'Lorem', 'United Kingdom', 142);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 101, 53.99716594770434, -1.1404374570627502, 'HURNS GUTTER AT STRIPE LANE SKELTON', 'active', 'Lorem', 'United Kingdom', 143);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 102, 54.04417183894394, -1.3092575665423067, 'OUSE GILL BECK AT LITTLE OUSEBURN BRIDGE', 'active', 'Lorem', 'United Kingdom', 144);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 103, 54.05313854238559, -1.1694204304870863, 'HUBY BURN AT HUNTING LODGE FARM', 'active', 'Lorem', 'United Kingdom', 145);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 104, 54.12449555790381, -1.5438205348392864, 'SKELL AT HELL WATH LANE', 'active', 'Lorem', 'United Kingdom', 146);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 105, 54.100778513688525, -1.3860494285159275, 'URE AT MILBY LOCK', 'active', 'Lorem', 'United Kingdom', 147);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 106, 54.158625990563266, -1.3408929166285044, 'CRAKEHILL BECK AT MOUNT BRIDGE', 'active', 'Lorem', 'United Kingdom', 148);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 107, 54.14994369585465, -1.6827272525411572, 'LAVER AT BELFORD LANE (U/S FORD)', 'active', 'Lorem', 'United Kingdom', 149);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 108, 54.16420347679353, -1.605535278860793, 'KEX BECK AT AZERLEY', 'active', 'Lorem', 'United Kingdom', 150);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 109, 54.27926128822764, -1.9729400649077304, 'WALDEN BECK AT BURTON BRIDGE', 'active', 'Lorem', 'United Kingdom', 151);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 110, 54.29111391188547, -2.2572003350670022, 'SNAIZEDALE BECK AT SNAIZEHOLME BRIDGE', 'active', 'Lorem', 'United Kingdom', 152);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 111, 54.28643573708123, -2.2676779978623234, 'WIDDALE BECK @ WIDDALE BRIDGE', 'active', 'Lorem', 'United Kingdom', 153);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 112, 54.29888917620008, -2.199444127862395, 'GAYLE BECK AT GAYLE', 'active', 'Lorem', 'United Kingdom', 154);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 113, 54.31944965564166, -2.2354862353173757, 'URE @ BIRK RIGG', 'active', 'Lorem', 'United Kingdom', 155);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 114, 54.20898831756494, -1.7465932801381217, 'LEIGHTON BECK AT BURGESS BANK BRIDGE', 'active', 'Lorem', 'United Kingdom', 156);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 115, 53.72205748247913, -0.4287599369521678, 'FLEET DRAIN AT ITLINGS LANE BRIDGE', 'active', 'Lorem', 'United Kingdom', 157);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 116, 53.95481172492013, -1.1054966958394743, 'HOLGATE BECK AT HOLGATE BRIDGE', 'active', 'Lorem', 'United Kingdom', 158);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 117, 53.86108325117873, -1.0993594654873762, 'STILLINGFLEET BECK AT STILLINGFLEET', 'active', 'Lorem', 'United Kingdom', 159);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('ANY FISH - NOT INCLUDING FLATFISH - WHOLE ANIMAL', 118, 54.09632210033469, -1.4575381194211054, 'URE AT WESTWICK', 'active', 'Lorem', 'United Kingdom', 160);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 119, 53.77975247013445, -1.2474230281852259, 'MILL DIKE AT SOUTH MILFORD', 'active', 'Lorem', 'United Kingdom', 161);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 120, 53.83599882965576, -0.3261138467063044, 'ARNOLD & RISTON DR AT LUMBERCOTE BRIDGE', 'active', 'Lorem', 'United Kingdom', 162);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 121, 52.57064855586315, -1.0335787436421724, 'BURTON (SENSE) BROOK AT GREAT GLEN', 'active', 'Lorem', 'United Kingdom', 163);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 121, 52.57655387194481, -1.0052039613874084, 'BURTON (SENSE) BROOK AT BURTON OVERY', 'active', 'Lorem', 'United Kingdom', 164);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 122, 52.569290638482734, -1.1801503195771454, 'WHETSTONE BROOK SOAR CONFLUENCE', 'active', 'Lorem', 'United Kingdom', 165);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 123, 53.882973025826644, -0.41327276083793896, 'ARRAM BECK AT ARRAM', 'active', 'Lorem', 'United Kingdom', 166);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 124, 53.768104750488526, -0.3467785505710186, 'BEVERLEY AND BARMSTON DRAIN AT CLOUGH RD', 'active', 'Lorem', 'United Kingdom', 167);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 125, 53.804763584434646, -0.30889127283200646, 'FOREDYKE STREAM AT GREAT CULVERT', 'active', 'Lorem', 'United Kingdom', 168);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 126, 53.83566773846027, -0.2886202251363099, 'LAMBWATH STREAM AT LAMBWATH BRIDGE', 'active', 'Lorem', 'United Kingdom', 169);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 127, 53.88953192326534, -0.32701986096155367, 'LEVEN CANAL AT SANDHOLME BRIDGE,LEVEN', 'active', 'Lorem', 'United Kingdom', 170);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 128, 53.9951670607219, -0.3765798557522977, 'NAFFERTON BECK AT WANSFORD', 'active', 'Lorem', 'United Kingdom', 171);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 129, 53.927326664723985, -0.42159786088983087, 'WATTON BECK AT BRIDGE HOUSE FARM', 'active', 'Lorem', 'United Kingdom', 172);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 125, 53.83825568809695, -0.3171633761628425, 'MEAUX & BENNINGHOLME ROAD BRIDGE', 'active', 'Lorem', 'United Kingdom', 173);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 130, 53.88315682240833, -0.3127594487425582, 'FOREDYKE STREAM AT LEVEN HOUSE', 'active', 'Lorem', 'United Kingdom', 174);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 131, 53.90748231404987, -0.4431862483622116, 'BRYAN MILLS BECK NEAR ACRES FARM', 'active', 'Lorem', 'United Kingdom', 175);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 132, 53.89279834028726, -0.3061013071168373, 'CATCHWATER DRAIN AT HORNSEA ROAD LEVEN', 'active', 'Lorem', 'United Kingdom', 176);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 133, 53.971351278761034, -0.422116245518218, 'SKERNE BECK AT SKERNE BRIDGE', 'active', 'Lorem', 'United Kingdom', 177);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 123, 53.89192880593771, -0.4312554556503026, 'ELLA DYKE AT ARRAM GREEN', 'active', 'Lorem', 'United Kingdom', 178);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 134, 53.86201378552164, -0.480928939339872, 'MOOR DYKE AT B1248 MEADFOOT', 'active', 'Lorem', 'United Kingdom', 179);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 57, 52.57093136060429, -1.2415581485856897, 'THURLASTON BROOK AT HUNCOTE', 'active', 'Lorem', 'United Kingdom', 180);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 57, 52.57497304984606, -1.2710301327888296, 'THURLASTON BROOK AT NORMANTON FORD', 'active', 'Lorem', 'United Kingdom', 181);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 57, 52.60408213495708, -1.359704381942298, 'THURLASTON BROOK - D/S NEWBOLD VERDON', 'active', 'Lorem', 'United Kingdom', 182);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 135, 53.44223308945694, -1.6356384848667413, 'AGDEN DYKE AT AGDEN BRIDGE', 'active', 'Lorem', 'United Kingdom', 183);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 135, 53.4232623449833, -1.6057045750481718, 'AGDEN DYKE AT SMITHY BRIDGE LOW BRADFIED', 'active', 'Lorem', 'United Kingdom', 184);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 136, 53.269995748992095, -1.4429712730248399, 'BARLOW BROOK BELOW SHEEPBRIDGE WORKS', 'active', 'Lorem', 'United Kingdom', 185);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 136, 53.27511016568499, -1.4625350618512516, 'BARLOW BRK U/S SHEEPBRIDGE IND ESTATE', 'active', 'Lorem', 'United Kingdom', 186);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 137, 53.615060134607326, -1.593251363607044, 'BENTLEY BROOK AT A636 ROAD BRIDGE', 'active', 'Lorem', 'United Kingdom', 187);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 138, 53.59684003646221, -1.0648381818659256, 'BRAMWITH DRAIN AT SOUTH BRAMWITH', 'active', 'Lorem', 'United Kingdom', 188);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 139, 53.63736534184883, -1.3284827467167697, 'HOYLE MILL STREAM A638', 'active', 'Lorem', 'United Kingdom', 189);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 140, 53.576475306351576, -1.5274117724516316, 'CAWTHORNE DIKE AT BARUGH LOW BRIDGE', 'active', 'Lorem', 'United Kingdom', 190);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 141, 53.25216694994008, -1.421425482024793, 'CHESTERFIELD CANAL AT LOCKOFORD LANE', 'active', 'Lorem', 'United Kingdom', 191);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 140, 53.56707885868728, -1.5899661655330581, 'DAKING BROOK U/S CANNON HALL LAKES', 'active', 'Lorem', 'United Kingdom', 192);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 142, 53.422373596575675, -1.6060438222124, 'DALE DIKE-LOW BRADFIELD (MILL LEE RD)', 'active', 'Lorem', 'United Kingdom', 193);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 143, 53.575726558541135, -1.1659465010946188, 'EA BECK AT BENTLEY MOOR LANE', 'active', 'Lorem', 'United Kingdom', 194);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 144, 53.5881315107894, -1.234846340612681, 'EA BECK AT HAMPOLE', 'active', 'Lorem', 'United Kingdom', 195);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 144, 53.59016444921248, -1.2726542793821565, 'EA BECK U/S SOUTH ELMSALL STW', 'active', 'Lorem', 'United Kingdom', 196);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 145, 53.64705105074284, -1.332625400135925, 'WENT AT A628 ACKWORTH', 'active', 'Lorem', 'United Kingdom', 197);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 137, 53.62818240159796, -1.6502821018628084, 'FLOCKTON BECK AT HAIGH LANE', 'active', 'Lorem', 'United Kingdom', 198);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 146, 53.65969002305631, -0.9951843947714322, 'WENT AT SYKEHOUSE', 'active', 'Lorem', 'United Kingdom', 199);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 147, 53.2350759150675, -1.4375817331113647, 'HOLME BROOK U/S HIPPER CONFLUENCE', 'active', 'Lorem', 'United Kingdom', 200);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 148, 53.46714384177215, -1.288343770278138, 'HOOTON BRK D/S OF CONF WITH SILVERWD BRK', 'active', 'Lorem', 'United Kingdom', 201);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 149, 53.664715809257025, -1.1899800345398805, 'WOMERSLEY BECK AT WOMERSLEY', 'active', 'Lorem', 'United Kingdom', 202);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 150, 53.314325984224936, -1.3449073167255832, 'THE MOSS 10M U/S ROTHER CONFLUENCE', 'active', 'Lorem', 'United Kingdom', 203);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 151, 53.2057151847789, -1.3670291468841538, 'MUSTER BROOK BELOW TEMPLE NORMANTON STW', 'active', 'Lorem', 'United Kingdom', 204);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 152, 53.66117904783227, -1.0578754100591858, 'POLLINGTON FLEET DRAIN - CROW CROFT LANE', 'active', 'Lorem', 'United Kingdom', 205);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 153, 53.34915287160733, -1.3279094945833825, 'PIGEON BRIDGE BROOK U/S CONF WITH ROTHER', 'active', 'Lorem', 'United Kingdom', 206);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 154, 53.26509972151549, -1.3391820932757104, 'POOLS BROOK AT CONFLUENCEWITH DOE LEA', 'active', 'Lorem', 'United Kingdom', 207);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 155, 53.194983406091524, -1.416536860009188, 'REDLEADMILL BROOK U/S TUPTON STW', 'active', 'Lorem', 'United Kingdom', 208);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 156, 53.379090795544634, -1.5891846643626668, 'RIVELIN U/S RIVELIN FILTER STATION', 'active', 'Lorem', 'United Kingdom', 209);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 157, 53.55157730330417, -1.4397078864131285, 'DEARNE AT GRANGE LANE BRIDGE', 'active', 'Lorem', 'United Kingdom', 210);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 158, 53.50103031116855, -1.251414365983171, 'DEARNE AT PASTURES BRIDGE', 'active', 'Lorem', 'United Kingdom', 211);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 157, 53.56088936308382, -1.4733564459349042, 'DEARNE AT STAR PAPER MILL', 'active', 'Lorem', 'United Kingdom', 212);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 159, 53.55542873295029, -1.4182084273075717, 'DEARNE D/S LUNDWOOD STW', 'active', 'Lorem', 'United Kingdom', 213);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 160, 53.249261458025785, -1.3234344894029664, 'DOE LEA AT GAUGING STN D/S MARKHAM COLL', 'active', 'Lorem', 'United Kingdom', 214);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 161, 53.448361737949874, -1.3184262180371666, 'DON AT BSC ALDWARKE THRYBERGH BAR MILL', 'active', 'Lorem', 'United Kingdom', 215);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 162, 53.421519809679786, -1.377495219189322, 'DON AT BESSEMER WAY', 'active', 'Lorem', 'United Kingdom', 216);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 163, 53.27099942707722, -1.4423134346442616, 'DRONE D/S BY-PASS AT SHEEPBRIDGE', 'active', 'Lorem', 'United Kingdom', 217);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 156, 53.392993605317265, -1.5163759034898059, 'RIVELIN AT HOLLINS LANE BRIDGE', 'active', 'Lorem', 'United Kingdom', 218);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 164, 53.40244388164555, -1.3468492244774093, 'ROTHER AT CANKLOW', 'active', 'Lorem', 'United Kingdom', 219);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 146, 53.64927259727073, -1.0640259949148343, 'WENT AT TOPHAM FERRY BRIDGE', 'active', 'Lorem', 'United Kingdom', 220);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 163, 53.26438392508149, -1.4271968038530647, 'WHITTING AT B6052 ROAD BRIDGE', 'active', 'Lorem', 'United Kingdom', 221);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 165, 53.43566867835168, -1.3572240916832343, 'SHEFFIELD & S YORKS NAV - GREASBROUGH RD', 'active', 'Lorem', 'United Kingdom', 222);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 148, 53.462272378102305, -1.2823851699260813, 'SILVERWOOD BRK ABOVE CONF HOOTON BROOK', 'active', 'Lorem', 'United Kingdom', 223);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 151, 53.229030332530364, -1.4159244304062342, 'SPITAL BROOK AT HADYHILL.', 'active', 'Lorem', 'United Kingdom', 224);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 166, 53.39688857975606, -1.3337449520208131, 'ULLEY BROOK D/S ULLEY RES', 'active', 'Lorem', 'United Kingdom', 225);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 167, 53.83838845485253, -1.94650556718047, 'BRIDGEHOUSE BECK ABOVE CONF WITH R.WORTH', 'active', 'Lorem', 'United Kingdom', 226);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 167, 53.81685445855153, -1.9483095820813567, 'BRIDGEHOUSE BECK ABOVE OXENHOPE SW FINAL', 'active', 'Lorem', 'United Kingdom', 227);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 168, 53.75140637254163, -1.199188228880086, 'MASPIN MOOR DRAIN AT ROE LANE BRIDGE', 'active', 'Lorem', 'United Kingdom', 228);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 169, 53.74692722833971, -1.5655500838593936, 'MILL SHAW BECK ABOVE DEWSBURY ROAD TIP', 'active', 'Lorem', 'United Kingdom', 229);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 169, 53.76180332833561, -1.5732846819385953, 'MILL SHAW BECK AT BEESTON', 'active', 'Lorem', 'United Kingdom', 230);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 170, 53.84738688608578, -1.6302204965183427, 'OIL MILL BECK AT HORSFORTH STN -POINT M', 'active', 'Lorem', 'United Kingdom', 231);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 171, 54.05551224253157, -2.1501262930360543, 'GOREDALE BECK AT BLACK HOLE BRIDGE', 'active', 'Lorem', 'United Kingdom', 232);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 172, 53.89638827067678, -2.0197798376716403, 'LUMB MILL BECK ABOVE MALSIS PREPATORY SC', 'active', 'Lorem', 'United Kingdom', 233);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 168, 53.73168251531326, -1.1528146797401475, 'THE FLEET AT MARSH LANE - WEST HADDLESEY', 'active', 'Lorem', 'United Kingdom', 234);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 173, 53.98012451003048, -2.1268768612428888, 'AIRE ABOVE GARGRAVE CANAL AQUEDUCT', 'active', 'Lorem', 'United Kingdom', 235);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 174, 53.84866396424434, -1.7447418504277754, 'AIRE AT BUCK BRIDGE', 'active', 'Lorem', 'United Kingdom', 236);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 175, 53.917079542562554, -2.008584375988531, 'AIRE AT CONONLEY', 'active', 'Lorem', 'United Kingdom', 237);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 174, 53.85837764320186, -1.8504844941521095, 'AIRE AT CROSSFLATTS', 'active', 'Lorem', 'United Kingdom', 238);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 173, 53.98278719195472, -2.1060398638859863, 'AIRE AT GARGRAVE', 'active', 'Lorem', 'United Kingdom', 239);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 174, 53.84000582924701, -1.7897461950357807, 'AIRE FOOTBRIDGE ABOVE SALT''''S WEIR', 'active', 'Lorem', 'United Kingdom', 240);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 176, 54.09145399043706, -2.163205862663314, 'AIRE AT MALHAM TARN', 'active', 'Lorem', 'United Kingdom', 241);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 177, 53.87359159699712, -1.8897002835460597, 'WORTH U/S AIRE CONFLUENCE - KEIGHLEY', 'active', 'Lorem', 'United Kingdom', 242);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 178, 53.85533504617389, -1.7415238001243585, 'GILL BECK (BAILDON) AT OTLEY ROAD BRIDGE', 'active', 'Lorem', 'United Kingdom', 243);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 179, 53.85608562972693, -1.7119045344828656, 'GUISELEY BECK AT KEEPERS HILL - ESHOLT', 'active', 'Lorem', 'United Kingdom', 244);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 50, 52.554703826632135, -1.2372801788640884, 'BROUGHTON ASTLEY BK AT CONF RIVER SOAR', 'active', 'Lorem', 'United Kingdom', 245);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 180, 53.9778717164006, -2.0169688744529397, 'ELLER BECK AT TARN MOOR BRIDGE', 'active', 'Lorem', 'United Kingdom', 246);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 181, 53.71605095025237, -1.4036457522671097, 'CHOKE CHURL BECK AT CHOKE CHURL BRIDGE', 'active', 'Lorem', 'United Kingdom', 247);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 182, 53.741733271535985, -2.0242225226583233, 'COLDEN WATER AT CALDER CONFLUENCE', 'active', 'Lorem', 'United Kingdom', 248);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 183, 53.728621124420926, -1.9840645793306693, 'CRAGG BROOK AT MYTHOLMROYD.', 'active', 'Lorem', 'United Kingdom', 249);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 184, 53.6570791148836, -1.5773681328673637, 'CALDER AT HORBURY BRIDGE', 'active', 'Lorem', 'United Kingdom', 250);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 185, 53.72710617259371, -1.3805577712934016, 'CALDER AT METHLEY BRIDGE', 'active', 'Lorem', 'United Kingdom', 251);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 186, 53.70313073417747, -1.852002458103752, 'HEBBLE BROOK AT MYRTLE COTTAGE', 'active', 'Lorem', 'United Kingdom', 252);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 187, 53.68249885423855, -1.8638078465431744, 'HOLYWELL BROOK AT GREETLAND', 'active', 'Lorem', 'United Kingdom', 253);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 184, 53.67861054056201, -1.6367700753996848, 'CALDER AT B6117 DEWSBURY', 'active', 'Lorem', 'United Kingdom', 254);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 188, 53.69409195763527, -1.8546842232289114, 'CALDER AT NORTH DENE B6112 ROAD BRIDGE', 'active', 'Lorem', 'United Kingdom', 255);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 189, 53.70807019460908, -1.911961285890868, 'CALDER AT A58 SOWERBY BRIDGE', 'active', 'Lorem', 'United Kingdom', 256);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 190, 53.67746252516484, -1.7333164393315532, 'COLNE AT COLNE BRIDGE - BRADLEY', 'active', 'Lorem', 'United Kingdom', 257);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 191, 53.62738135386887, -1.854579118187245, 'COLNE D/S PENNINE CHEMICALS - LINTHWAITE', 'active', 'Lorem', 'United Kingdom', 258);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 192, 53.60450828180981, -1.7890101285869013, 'HOLME AT HONLEY BRIDGE', 'active', 'Lorem', 'United Kingdom', 259);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 193, 53.66555954050609, -1.9496566060301643, 'RYBURN AT A672 SLITHEROE BRIDGE', 'active', 'Lorem', 'United Kingdom', 260);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 194, 53.68058878760424, -1.6523014461210075, 'SPEN BECK AT A644 ROAD BRIDGE', 'active', 'Lorem', 'United Kingdom', 261);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 194, 53.73705153943854, -1.7204491705003981, 'HUNSWORTH BECK BELOW SUGDEN BECK CONFL', 'active', 'Lorem', 'United Kingdom', 262);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 194, 53.74688641112347, -1.733166845098866, 'HUNSWORTH BK U/S NORTH BIERLEY WPC WKS', 'active', 'Lorem', 'United Kingdom', 263);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 194, 53.7023906146164, -1.676493427786345, 'SPEN BECK AT STATION LANE HECKMONDWIKE', 'active', 'Lorem', 'United Kingdom', 264);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 194, 53.7369996891123, -1.721343940057436, 'SUGDEN BECK AT A58 - CHAIN BAR J26', 'active', 'Lorem', 'United Kingdom', 265);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 195, 53.66551422493399, -1.9487637539203357, 'BOOTH DEAN CLOUGH ABOVE RYBURN CONF', 'active', 'Lorem', 'United Kingdom', 266);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 196, 53.77924337909416, -2.0636694049232944, 'ALCOMDEN WATER U/S HEBDEN WATER CONF', 'active', 'Lorem', 'United Kingdom', 267);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 197, 53.78628367265618, -0.9306611927935066, 'FLEET DYKE AT WRESSLE CLOUGH', 'active', 'Lorem', 'United Kingdom', 268);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 198, 54.259707449912995, -0.9499580167692401, 'HOWKELD SPRING U/S OF HOWKELD FISH HTCHY', 'active', 'Lorem', 'United Kingdom', 269);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 199, 53.76250270150079, -0.9309614760689365, 'DERWENT AT LOFTSOME BRIDGE', 'active', 'Lorem', 'United Kingdom', 270);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 200, 54.09960567129206, -0.8316178948053099, 'DERWENT AT LOW HUTTON', 'active', 'Lorem', 'United Kingdom', 271);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 201, 54.3396417589479, -1.063513661928227, 'BONFIELD GILL NEAR POCKLEY MOOR', 'active', 'Lorem', 'United Kingdom', 272);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 198, 54.26122444305373, -0.9611572690748872, 'HODGE BECK AT KIRKDALE FOOTBRIDGE', 'active', 'Lorem', 'United Kingdom', 273);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 202, 54.30199442665781, -1.064797850142703, 'COWHOUSE BECK U/S COWHOUSE BANK FARM', 'active', 'Lorem', 'United Kingdom', 274);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 203, 54.209764229880285, -0.7935069289687682, 'PICKERING BECK U/S CONF COSTA BECK', 'active', 'Lorem', 'United Kingdom', 275);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 204, 53.96341629211786, -0.8067249923256282, 'BISHOP WILTON BECK AT LOW BELTHORPE FARM', 'active', 'Lorem', 'United Kingdom', 276);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 205, 53.97018063223574, -0.8282411737490365, 'GOWTHORPE BECK AT FANGFOSS', 'active', 'Lorem', 'United Kingdom', 277);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 206, 54.09951225720013, -0.8312534964213651, 'MENETHORPE BECK U/S CONFLUENCE', 'active', 'Lorem', 'United Kingdom', 278);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 207, 54.097175451243515, -0.8717966259917789, 'CRAM BECK DOWNSTREAM A64 BRIDGE', 'active', 'Lorem', 'United Kingdom', 279);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 208, 54.0522843399196, -0.8915718378124953, 'BRAISTHWAITE BECK AT BRAISTHWAITE BRIDGE', 'active', 'Lorem', 'United Kingdom', 280);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 209, 54.17371176603904, -0.6744319635766322, 'SCAMPSTON BECK AT HOME WOODS', 'active', 'Lorem', 'United Kingdom', 281);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 210, 54.19445467605812, -0.5757915070911512, 'SHERBURN BECK AT EAST HESLERTON CARR', 'active', 'Lorem', 'United Kingdom', 282);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 211, 54.207334343109615, -0.5628831541369232, 'BROMPTON BECK U/S DERWENT CONFLUENCE', 'active', 'Lorem', 'United Kingdom', 283);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 212, 54.20231365589389, -0.5400147526813777, 'RUSTON BECK U/S DERWENT CONFLUENCE', 'active', 'Lorem', 'United Kingdom', 284);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 213, 54.295461651339515, -0.5146272266912778, 'LOWDALES BECK AT MILL FARM', 'active', 'Lorem', 'United Kingdom', 285);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 214, 54.3061161734773, -0.5534057212403194, 'DERWENT AT LANGDALE BRIDGE', 'active', 'Lorem', 'United Kingdom', 286);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 215, 54.22185019343711, -0.950842074256746, 'ELLERKER BECK NEAR TROWBRIDGE FARM', 'active', 'Lorem', 'United Kingdom', 287);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 201, 54.309862662660684, -1.054951902887838, 'BONFIELD GILL FORD ABOVE LUND FARM', 'active', 'Lorem', 'United Kingdom', 288);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 216, 54.17589853983027, -0.9206132692195267, 'WATH BECK AT TOTTEN BRIDGE', 'active', 'Lorem', 'United Kingdom', 289);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 217, 54.188619462148075, -0.8805430352271306, 'RYE AT BUTTERWICK BRIDGE', 'active', 'Lorem', 'United Kingdom', 290);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 218, 54.18753494180283, -0.9759247539527246, 'HOLBECK AT HOLBECK BRIDGE', 'active', 'Lorem', 'United Kingdom', 291);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 219, 54.21161833124233, -1.01542669101318, 'WHITE BECK AT LACK LANE', 'active', 'Lorem', 'United Kingdom', 292);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 220, 54.25263010255868, -1.12528338375485, 'GRASS KELD AT ASHBERRY FARM', 'active', 'Lorem', 'United Kingdom', 293);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 221, 54.204916077670426, -0.7327062456082232, 'THE SYME AT SUMMERTREE BRIDGE', 'active', 'Lorem', 'United Kingdom', 294);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 203, 54.23979109243518, -0.7808780127935399, 'PICKERING BECK AT MILL LANE', 'active', 'Lorem', 'United Kingdom', 295);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 222, 54.248544917742755, -1.065853382421414, 'BOROUGH BECK AT HELMSLEY', 'active', 'Lorem', 'United Kingdom', 296);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 223, 54.29993403690985, -0.7181579218093856, 'LEVISHAM BECK AT LEVISHAM MILL BRIDGE', 'active', 'Lorem', 'United Kingdom', 297);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 224, 54.26371297492317, -0.8943088611213973, 'CATTER BECK AT CATTER BRIDGE', 'active', 'Lorem', 'United Kingdom', 298);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 225, 54.30831405279541, -0.7458557305704099, 'PICKERING BECK BY LEVISHAM STATION', 'active', 'Lorem', 'United Kingdom', 299);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 226, 54.30203706091133, -1.1794508767575476, 'RYE AT HAWNBY CHURCH FOOTBRIDGE', 'active', 'Lorem', 'United Kingdom', 300);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 227, 54.32293620953563, -0.8495329073056351, 'HARTOFT BECK AT HARTOFT BRIDGE', 'active', 'Lorem', 'United Kingdom', 301);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 228, 54.12550798427252, -0.7243093916476288, 'SETTRINGTON BECK AT SETTRINGTON', 'active', 'Lorem', 'United Kingdom', 302);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 229, 54.27345549784653, -1.1674413052402617, 'SLEDHILL GILL AT CAYDALE MILL FORD', 'active', 'Lorem', 'United Kingdom', 303);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 230, 54.38618074225143, -1.141249571033137, 'RAISDALE BECK @ CHOP GATE HALL CAR PARK', 'active', 'Lorem', 'United Kingdom', 304);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 231, 54.298765875711034, -0.8558768842032732, 'SEVEN AT SEVEN BRIDGE LOWER ASKEW', 'active', 'Lorem', 'United Kingdom', 305);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 232, 54.352688665859624, -0.8863378602593398, 'NORTHDALE BECK AT ROSEDALE', 'active', 'Lorem', 'United Kingdom', 306);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 233, 54.35765050893889, -1.1194086013750728, 'LEDGE BECK @ LEDGE BECK BRIDGE', 'active', 'Lorem', 'United Kingdom', 307);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 234, 54.30982659071518, -1.1365521047175506, 'SEPH AT LASKILL HOUSE', 'active', 'Lorem', 'United Kingdom', 308);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 235, 54.296880239159705, -0.5589843520912443, 'TROUTSDALE BECK AT MOOR ROAD', 'active', 'Lorem', 'United Kingdom', 309);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 236, 54.31071551894075, -0.5667559025294674, 'BLACK BECK AT DARNCOMBE BRIDGE', 'active', 'Lorem', 'United Kingdom', 310);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 237, 54.295739096777275, -0.8457122567552872, 'CROPTON BECK AT CROPTON BRIDGE', 'active', 'Lorem', 'United Kingdom', 311);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 238, 54.35631362600009, -1.123422495257774, 'SEPH AT THE GRANGE BRIDGE', 'active', 'Lorem', 'United Kingdom', 312);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('ANY FISH - NOT INCLUDING FLATFISH - WHOLE ANIMAL', 239, 53.99206806455994, -0.913548290623778, 'EQSD BIOTA MONITORING - STAMFORD BRIDGE', 'active', 'Lorem', 'United Kingdom', 313);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('POND / LAKE / RESERVOIR WATER', 240, 52.88745199461411, -1.321642915428252, 'CHURCH WILNE RESERVOIR NR SAWLEY GRANGE', 'active', 'Lorem', 'United Kingdom', 314);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 241, 52.89063196992413, -1.3436653529319258, 'RIVER DERWENT AT DRAYCOTT FERRY', 'active', 'Lorem', 'United Kingdom', 315);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 242, 53.8883659361239, -1.2634741018293683, 'WHARFE ABOVE TADCASTER WEIR', 'active', 'Lorem', 'United Kingdom', 316);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 243, 54.04643891942996, -1.9516482313701655, 'WHARFE AT BURNSALL BRIDGE', 'active', 'Lorem', 'United Kingdom', 317);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 243, 54.10344204388947, -2.0334606376767894, 'WHARFE AT CONISTONE BRIDGE', 'active', 'Lorem', 'United Kingdom', 318);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 244, 54.05755064744498, -1.96032750787341, 'HEBDEN BECK AT MILL LANE BRIDGE', 'active', 'Lorem', 'United Kingdom', 319);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 244, 54.061774011387115, -1.9581082105244796, 'HEBDEN BECK ABOVE BROW WELL FISHERIES', 'active', 'Lorem', 'United Kingdom', 320);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 245, 54.22815762952254, -2.2009119324160995, 'OUGHTERSHAW BECK BELOW OUGHTERSHAW STW', 'active', 'Lorem', 'United Kingdom', 321);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 246, 53.86801359873173, -1.1576378939011163, 'THE FLEET AT HOLME GREEN', 'active', 'Lorem', 'United Kingdom', 322);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 247, 53.854208727619955, -1.2272682117066815, 'DORTS DIKE AT B1223 ULLESKELF', 'active', 'Lorem', 'United Kingdom', 323);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 248, 54.02957244120751, -1.9100828323847932, 'FIR BECK AT HAUGH BRIDGE', 'active', 'Lorem', 'United Kingdom', 324);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 249, 53.91270427598688, -1.4100007925145022, 'WHARFE AT LINTON BRIDGE', 'active', 'Lorem', 'United Kingdom', 325);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 250, 54.14385957262042, -2.10756860274448, 'SKIRFARE U/S COWSIDE BECK', 'active', 'Lorem', 'United Kingdom', 326);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 251, 54.16983244499223, -2.1700246087629873, 'SKIRFARE U/S HESELDEN BECK', 'active', 'Lorem', 'United Kingdom', 327);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 252, 54.21749044830868, -2.194940774059689, 'GREENFIELD BECK AT BECKERMONDS', 'active', 'Lorem', 'United Kingdom', 328);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 244, 54.066709574538386, -1.962549562490838, 'HEBDEN BECK U/S HEBDEN VILLAGE', 'active', 'Lorem', 'United Kingdom', 329);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 253, 53.44982495450007, -1.7456272354750586, 'RIVER DERWENT AT SLIPPERY STONES', 'active', 'Lorem', 'United Kingdom', 330);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('POND / LAKE / RESERVOIR WATER', 254, 54.110383542164435, -1.785539984392072, 'GOUTHWAITE RESERVOIR', 'active', 'Lorem', 'United Kingdom', 331);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 255, 53.965864115510946, -1.527444093534701, 'CRIMPLE BECK AT ALMSFORD BRIDGE', 'active', 'Lorem', 'United Kingdom', 332);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 255, 53.97281264564986, -1.4694331457318588, 'CRIMPLE BECK AT FOLLIFOOT BRIDGE', 'active', 'Lorem', 'United Kingdom', 333);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 256, 54.093611371605135, -1.7747248435600378, 'ASHFOLDSIDE BECK AT CORN CLOSE', 'active', 'Lorem', 'United Kingdom', 334);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 257, 53.95958738041055, -1.4544064082398667, 'PARK BECK AT SHAW BRIDGE - SPOFFORTH', 'active', 'Lorem', 'United Kingdom', 335);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 257, 53.958878902199665, -1.4527697162725386, 'TOAD HOLE BECK AT FOLLIFOOT LANE', 'active', 'Lorem', 'United Kingdom', 336);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 258, 54.04926021214349, -1.5805670093123867, 'THORNTON BECK AT SCARAH BRIDGE', 'active', 'Lorem', 'United Kingdom', 337);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 259, 54.07089099452301, -1.7113699554110111, 'FELL BECK AT B6165 D/S SMELTHOUSES', 'active', 'Lorem', 'United Kingdom', 338);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 260, 54.006983429371026, -1.433783338957773, 'THE RAMPART @ YORK ROAD', 'active', 'Lorem', 'United Kingdom', 339);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 260, 53.98527239023347, -1.4119806247953943, 'GUNDRIFS BECK AT RIBSTON PARK', 'active', 'Lorem', 'United Kingdom', 340);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 261, 54.27009476851954, -1.4680527157059065, 'SWALE AT MAUNBY', 'active', 'Lorem', 'United Kingdom', 341);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 262, 54.42695926070259, -1.4624031321579964, 'WISKE AT LITTLE SMEATON', 'active', 'Lorem', 'United Kingdom', 342);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 263, 52.92869183577684, -1.4305929755427762, 'CHADDESDEN BROOK AT CHADDESDEN PARK', 'active', 'Lorem', 'United Kingdom', 343);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 264, 54.38679903102669, -1.6994136863611176, 'COLBURN BECK AT COLBURN VILLAGE', 'active', 'Lorem', 'United Kingdom', 344);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 262, 54.41290985527353, -1.3369646010824512, 'TRENHOLME STELL NEAR EAST ROUNTON', 'active', 'Lorem', 'United Kingdom', 345);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 265, 54.42384832669315, -1.531166820114964, 'THE STELL AT EAST COWTON', 'active', 'Lorem', 'United Kingdom', 346);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 266, 54.29150428956224, -1.3507733060374558, 'BROAD BECK AT BORROWBY', 'active', 'Lorem', 'United Kingdom', 347);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 267, 54.37935577411602, -2.076826053505374, 'GUNNERSIDE BECK AT GUNNERSIDE', 'active', 'Lorem', 'United Kingdom', 348);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 268, 54.3854899234599, -1.9804940128673802, 'BARNEY BECK AT HELAUGH', 'active', 'Lorem', 'United Kingdom', 349);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 269, 54.31033545422824, -1.4470773257328944, 'OTTERINGTON BECK AT A167', 'active', 'Lorem', 'United Kingdom', 350);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 270, 54.410186740372716, -2.174841817919091, 'STONESDALE BECK ABOVE CURRACK FORCE', 'active', 'Lorem', 'United Kingdom', 351);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 271, 54.226301567871715, -1.515520609318382, 'INGS GOIT AT HALL FARM - KIRKLINGTON', 'active', 'Lorem', 'United Kingdom', 352);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 272, 54.18938202857845, -1.3427487203873654, 'PARADISE BECK AT PARADISE FARM', 'active', 'Lorem', 'United Kingdom', 353);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 273, 54.25014827888938, -1.414776908901203, 'SIKE STELL AT SIKE BRIDGE', 'active', 'Lorem', 'United Kingdom', 354);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 274, 54.28245487981812, -1.5628457602579116, 'OLD STELL AT FLOOD BRIDGE', 'active', 'Lorem', 'United Kingdom', 355);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 275, 54.26290443251147, -1.4845259804301403, 'HEALAM BECK AT SWAINBY LANE', 'active', 'Lorem', 'United Kingdom', 356);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 276, 54.265027723762955, -1.3198072170770947, 'SPITAL BECK AT SPITAL BRIDGE UPSALL LANE', 'active', 'Lorem', 'United Kingdom', 357);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 277, 54.18602887407905, -1.3409477206182379, 'WILLOW BECK AT WILLOW BRIDGE', 'active', 'Lorem', 'United Kingdom', 358);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 278, 54.311766747597694, -1.662410918828145, 'BROMPTON BECK AT PATRICK BRIDGE', 'active', 'Lorem', 'United Kingdom', 359);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 279, 54.31045523904173, -1.5846663882171785, 'SCURF BECK AT CRAKEHALL INGS', 'active', 'Lorem', 'United Kingdom', 360);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 280, 54.374346313342606, -1.8512236476471846, 'GILL BECK AT EDDY''''S BRIDGE', 'active', 'Lorem', 'United Kingdom', 361);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 281, 54.39740646100529, -1.7231633232265846, 'SAND BECK AT LONGWOOD BANK', 'active', 'Lorem', 'United Kingdom', 362);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 282, 54.40287274809698, -2.223056624113075, 'GREAT SLEDDALE BECK AT KELD CALF PASTURE', 'active', 'Lorem', 'United Kingdom', 363);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 283, 54.408735869362154, -2.1775625588727276, 'SWALE AT PARK BRIDGE (STONESDALE LANE)', 'active', 'Lorem', 'United Kingdom', 364);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 284, 54.40331353145671, -2.2228279556407533, 'BIRKDALE BECK AT STONE HOUSE FORD', 'active', 'Lorem', 'United Kingdom', 365);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 285, 54.424757132943846, -2.212433264242833, 'WHITSUNDALE BECK D/S HOODS BOTTOM BECK', 'active', 'Lorem', 'United Kingdom', 366);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 286, 54.36417960540422, -1.5565310737126772, 'KIPLIN BECK U/S CONFLUENCE OF SWALE', 'active', 'Lorem', 'United Kingdom', 367);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 287, 54.30334567322536, -1.6688878182378395, 'NEWTON BECK AT NEWTON BRIDGE', 'active', 'Lorem', 'United Kingdom', 368);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 288, 54.304012142607526, -1.3621178400429665, 'COD BECK AT CROSBY NEW BRIDGE', 'active', 'Lorem', 'United Kingdom', 369);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 289, 54.153862078789956, -1.3507220860309876, 'SWALE AT CRAKEHILL D/S TOPCLIFFE', 'active', 'Lorem', 'United Kingdom', 370);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 290, 52.93968312767262, -1.5065440280265405, 'MARKEATON BROOK AT MARKEATON', 'active', 'Lorem', 'United Kingdom', 371);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('POND / LAKE / RESERVOIR WATER', 291, 52.96303936323471, -1.5360537168806279, 'KEDLESTON PARK LAKE AT FOOTBRIDGE', 'active', 'Lorem', 'United Kingdom', 372);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 292, 52.93751333037867, -1.5079077808787438, 'MACKWORTH BROOK AT MARKEATON', 'active', 'Lorem', 'United Kingdom', 373);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 292, 52.947654636435104, -1.570878817113692, 'MACKWORTH BROOK AT KIRK LANGLEY', 'active', 'Lorem', 'United Kingdom', 374);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 293, 53.02558498025305, -1.506460935352476, 'BLACK BROOK AT BLACKBROOK', 'active', 'Lorem', 'United Kingdom', 375);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('ANY FISH - NOT INCLUDING FLATFISH - WHOLE ANIMAL', 294, 53.09542487247999, -1.4324432163190577, 'RIVER AMBER AT SOUTH WINGFIELD', 'active', 'Lorem', 'United Kingdom', 376);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 42, 52.9890868112491, -0.9929293165015745, '51466', 'active', 'Lorem', 'United Kingdom', 377);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 42, 52.9890868112491, -0.9929293165015745, '51466', 'active', 'Lorem', 'United Kingdom', 378);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('POND / LAKE / RESERVOIR WATER', 295, 53.069818538910006, -1.6299031574049387, 'CARSINGTON WATER NRMP', 'active', 'Lorem', 'United Kingdom', 379);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 296, 53.24531635058378, -1.585415091878529, 'HEATHY LEA BROOK AT ROBIN HOOD', 'active', 'Lorem', 'United Kingdom', 380);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 297, 53.32024512372212, -1.6495408572309784, 'HIGHLOW BROOK D/S LEADMILL TROUT FARM', 'active', 'Lorem', 'United Kingdom', 381);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 298, 53.326349268787425, -1.659144790888027, 'HOOD BROOK UPSTREAM DERWENT', 'active', 'Lorem', 'United Kingdom', 382);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 299, 53.32657187438742, -1.7408188076276974, 'BRADWELL BROOK AT SOURCE', 'active', 'Lorem', 'United Kingdom', 383);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 300, 53.38266877651777, -1.6806900805107896, 'LADYBOWER BRK AT CUTTHROAT BRIDGE WFD-O', 'active', 'Lorem', 'United Kingdom', 384);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('POND / LAKE / RESERVOIR WATER', 301, 53.370938218419106, -1.69786623114179, 'LADYBOWER RESERVOIR NRMP', 'active', 'Lorem', 'United Kingdom', 385);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 302, 53.38757179348724, -1.7550639058336013, 'RIVER ASHOP ABOVE LADYBOWER RESERVOIR', 'active', 'Lorem', 'United Kingdom', 386);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 303, 52.80188341763055, -1.5401422424870719, '53186', 'active', 'Lorem', 'United Kingdom', 387);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 304, 52.83460978663389, -1.4180753787660239, 'RAMSLEY BROOK AT KINGS NEWTON', 'active', 'Lorem', 'United Kingdom', 388);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 304, 52.821015457381165, -1.3959972461061805, 'RAMSLEY BK U/S WILSON STW', 'active', 'Lorem', 'United Kingdom', 389);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 305, 52.87296643406674, -1.4575888970527942, 'CUTTLE BROOK AT MOOR LANE BRIDGE', 'active', 'Lorem', 'United Kingdom', 390);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 305, 52.88913656608915, -1.4813310719627122, 'CUTTLE BROOK AT RECKITTS', 'active', 'Lorem', 'United Kingdom', 391);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('POND / LAKE / RESERVOIR WATER', 306, 52.82897297815962, -1.5184839171307345, 'MILTON BROOK - FOREMARK SAILING CLUB', 'active', 'Lorem', 'United Kingdom', 392);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 307, 52.8560730023156, -1.5154077517179103, 'TWYFORD BROOK AT TWYFORD', 'active', 'Lorem', 'United Kingdom', 393);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 307, 52.862341573519444, -1.5295527646316232, 'TWYFORD BROOK D/S FINDERN STW', 'active', 'Lorem', 'United Kingdom', 394);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 303, 52.77846496350071, -1.5285278905622421, 'REPTON BROOK U/S WOODVILLE STW', 'active', 'Lorem', 'United Kingdom', 395);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 308, 52.90996472502705, -1.5972880638004476, 'RADBOURNE BROOK AT DALBURY HOLLOW', 'active', 'Lorem', 'United Kingdom', 396);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 309, 52.98304499812591, -2.006525572039915, 'RIVER TEAN - BROOKHOUSES', 'active', 'Lorem', 'United Kingdom', 397);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 6, 52.9742260866602, -1.9864503940067997, 'CECILLY/MOBBERLEY BROOK - MOBBERLEY', 'active', 'Lorem', 'United Kingdom', 398);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 310, 52.9330353951849, -1.8586208919919465, 'ALDERS BROOK (WARILOW BROOK) - COMBRIDGE', 'active', 'Lorem', 'United Kingdom', 399);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 311, 53.05847266735833, -2.0084164963121274, 'COMBES BROOK - BASFORD', 'active', 'Lorem', 'United Kingdom', 400);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 3, 53.07959185632339, -2.0584147817802685, 'ENDON BROOK - WALL GRANGE ENDON', 'active', 'Lorem', 'United Kingdom', 401);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 312, 53.082930201859, -2.0229175064023788, 'LEEK BROOK', 'active', 'Lorem', 'United Kingdom', 402);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 313, 52.982205106033334, -1.823756515052245, 'MILL BROOK MILL LANE ELLASTONE', 'active', 'Lorem', 'United Kingdom', 403);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 314, 53.04939367949083, -1.8769319417983394, 'RIVER HAMPS - WATERHOUSES', 'active', 'Lorem', 'United Kingdom', 404);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 314, 53.06026508386053, -1.911488365924504, 'RIVER HAMPS - WINKHILL', 'active', 'Lorem', 'United Kingdom', 405);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 315, 52.77812624541641, -1.6367515913236903, 'DARKLANDS BROOK - DRAKELOW', 'active', 'Lorem', 'United Kingdom', 406);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 315, 52.77012617738171, -1.6059886313333822, 'DARKLANDS BROOK - D/S BC NADINS', 'active', 'Lorem', 'United Kingdom', 407);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 315, 52.76435312585319, -1.60277983926712, 'CASTLE GRESLEY BK - D/S COTON PARK STW', 'active', 'Lorem', 'United Kingdom', 408);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 316, 52.72258889678888, -1.7161705228187523, 'RIVER MEASE - CROXALL', 'active', 'Lorem', 'United Kingdom', 409);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 316, 52.69966377968283, -1.6137252402110909, 'RIVER MEASE - CLIFTON CAMPVILLE', 'active', 'Lorem', 'United Kingdom', 410);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 316, 52.69598703844574, -1.5896391007500505, 'CHILCOTE BROOK - MANOR FARM', 'active', 'Lorem', 'United Kingdom', 411);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 316, 52.71931419123611, -1.5765401387286981, 'OVERSEAL BROOK - NETHERSEAL', 'active', 'Lorem', 'United Kingdom', 412);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 317, 52.70094055679532, -1.4775677542013166, 'GILWISKAW BROOK - MEASHAM FIELDS FARM', 'active', 'Lorem', 'United Kingdom', 413);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 317, 52.71349931818595, -1.471496758067447, 'GILWISKAW BROOK - D/S PACKINGTON STW', 'active', 'Lorem', 'United Kingdom', 414);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 317, 52.74051176850429, -1.4731386610486217, 'GILWISKAW BROOK - ASHBY-DE-LA-ZOUCH', 'active', 'Lorem', 'United Kingdom', 415);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 317, 52.7610922688811, -1.4758838401289565, 'GILWISKAW BROOK - U/S ASHBY', 'active', 'Lorem', 'United Kingdom', 416);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 318, 52.56406000162508, -1.99307680149442, 'RIVER TAME - (OLDBURY) BESCOT', 'active', 'Lorem', 'United Kingdom', 417);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 318, 52.53697811692442, -2.0320765669210097, 'RIVER TAME - (OLDBURY) TIPTON EAGLE LANE', 'active', 'Lorem', 'United Kingdom', 418);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 319, 52.6312731492505, -1.688112453937307, 'RIVER ANKER - BOLE BRIDGE TAMWORTH', 'active', 'Lorem', 'United Kingdom', 419);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 319, 52.6178973593108, -1.6149597743717494, 'RIVER ANKER - POLESWORTH', 'active', 'Lorem', 'United Kingdom', 420);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 319, 52.5919392104094, -1.5474455336108581, 'RIVER ANKER - FIELDON BRIDGE', 'active', 'Lorem', 'United Kingdom', 421);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('FINAL SEWAGE EFFLUENT', 319, 52.601893836706815, -1.577404807117898, 'PENMIRE BROOK - 2KM DS GRENDON STW', 'active', 'Lorem', 'United Kingdom', 422);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 319, 52.59451850858428, -1.5943636837849064, 'PENMIRE BROOK D/S GRENDON STW', 'active', 'Lorem', 'United Kingdom', 423);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 319, 52.59353940255394, -1.5998936964400672, 'PENMIRE BROOK - A5 U/S GRENDON', 'active', 'Lorem', 'United Kingdom', 424);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 319, 52.594136685809175, -1.6146948081262886, 'PENMIRE BROOK - U/S DORDON', 'active', 'Lorem', 'United Kingdom', 425);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 319, 52.57750230789236, -1.6027543588223352, 'BADDESLEY BROOK - ROTHERMANS HILL', 'active', 'Lorem', 'United Kingdom', 426);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 320, 52.52000165907764, -1.4251832969788365, 'SKETCHLEY BROOK - NUNEATON FIELDS FARM', 'active', 'Lorem', 'United Kingdom', 427);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 320, 52.52883629787615, -1.3975172752359855, 'SKETCHLEY BROOK - A5 ROAD BRIDGE', 'active', 'Lorem', 'United Kingdom', 428);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 320, 52.531656477929765, -1.3795676021880394, 'SKETCHLEY BROOK - US HINCKLEY STW', 'active', 'Lorem', 'United Kingdom', 429);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 321, 52.63233173627938, -1.8558038862188821, 'FOOTHERLEY BROOK - FOOTHERLEY HALL', 'active', 'Lorem', 'United Kingdom', 430);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 321, 52.614247017932236, -1.8659061578637686, 'FOOTHERLEY BK -  US LITTLE ASTON STW', 'active', 'Lorem', 'United Kingdom', 431);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 321, 52.614247017932236, -1.8659061578637686, 'FOOTHERLEY BK -  US LITTLE ASTON STW', 'active', 'Lorem', 'United Kingdom', 432);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 322, 52.58650275432833, -1.705330343137144, 'LANGLEY BK  DS MIDDLETON POOL LANGLEY BK', 'active', 'Lorem', 'United Kingdom', 433);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 322, 52.569544529659, -1.7645779988590662, 'LANGLEY BK DS LANGLEY STW', 'active', 'Lorem', 'United Kingdom', 434);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 323, 52.547245009261054, -1.6747560091135738, 'DOG LANE BK - BRIDGE B4098', 'active', 'Lorem', 'United Kingdom', 435);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('POND / LAKE / RESERVOIR WATER', 324, 52.516526371883366, -1.6683809836529873, 'RIVER BOURNE - SHUSTOKE RESERVOIR', 'active', 'Lorem', 'United Kingdom', 436);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 325, 52.49591541950381, -1.5970098942727116, 'DIDGELEY BROOK AT R BOURNE CONFLUENCE', 'active', 'Lorem', 'United Kingdom', 437);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 325, 52.49599687986862, -1.5971711746212005, 'RIVER BOURNE - FILLONGLEY LODGE', 'active', 'Lorem', 'United Kingdom', 438);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 326, 52.488547296592316, -1.7442299123592728, 'RIVER COLE - COOKS LANE', 'active', 'Lorem', 'United Kingdom', 439);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 326, 52.48901824773955, -1.8137114376308607, 'RIVER COLE - STECHFORD BRIDGE', 'active', 'Lorem', 'United Kingdom', 440);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 326, 52.46371302301988, -1.8392966638400292, 'R COLE - HAYBARNES BRIDGE A45', 'active', 'Lorem', 'United Kingdom', 441);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 326, 52.453322620191, -1.8548881957037715, 'RIVER COLE - WARWICK RD, GREET', 'active', 'Lorem', 'United Kingdom', 442);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 326, 52.44309303296823, -1.8557747392952735, 'RIVER COLE - STRATFORD RD', 'active', 'Lorem', 'United Kingdom', 443);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 327, 52.38287851216784, -1.698309867304778, 'TEMPLE BALSALL BROOK - AT B4101 BRIDGE', 'active', 'Lorem', 'United Kingdom', 444);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 328, 52.381673470855404, -1.7017118098283044, 'CUTTLE BK/HERON BROOK - TEMPLE BALSALL', 'active', 'Lorem', 'United Kingdom', 445);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('POND / LAKE / RESERVOIR WATER', 329, 52.579171664043365, -1.8533805346388494, 'BRACEBRIDGE POOL SUTTON PARK', 'active', 'Lorem', 'United Kingdom', 446);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 330, 52.484295155139144, -1.8723107447080949, 'RIVER REA - ERSKINE STREET', 'active', 'Lorem', 'United Kingdom', 447);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 330, 52.45330027057205, -1.9035220433960545, 'RIVER REA - CANNON HILL PARK', 'active', 'Lorem', 'United Kingdom', 448);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('POND / LAKE / RESERVOIR WATER', 331, 52.45340345175214, -1.9214008125423838, 'EDGBASTON POOL, BIRMINGHAM', 'active', 'Lorem', 'United Kingdom', 449);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 318, 52.53713993334924, -2.0320766937122534, 'TIPTON BK - CONFLUENCE WITH R.TAME', 'active', 'Lorem', 'United Kingdom', 450);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 318, 52.532799138751315, -2.0531688230541905, '10M D/S OPEN CULVERT TRIPLEX FOUNDRY', 'active', 'Lorem', 'United Kingdom', 451);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 332, 52.73600883730326, -1.7558789289110885, 'PYFORD/CURBOROUGH BROOK - ALREWAS', 'active', 'Lorem', 'United Kingdom', 452);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 332, 52.71608683326352, -1.8094601480307544, 'PYFORD/CURBOROUGH BROOK', 'active', 'Lorem', 'United Kingdom', 453);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('POND / LAKE / RESERVOIR WATER', 333, 52.688964682575566, -1.8208655145359356, 'STOWE POOL ST CHADS ROAD', 'active', 'Lorem', 'United Kingdom', 454);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 334, 52.742364833196305, -1.8705067296362037, 'SHROPSHIRE BROOK - HANDACRE', 'active', 'Lorem', 'United Kingdom', 455);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 335, 52.75995865802069, -1.9399531891322317, 'RISING BK - INLET HAGLEY POOL-RUGELEY', 'active', 'Lorem', 'United Kingdom', 456);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('ANY FISH - NOT INCLUDING FLATFISH - WHOLE ANIMAL', 336, 52.80720207223568, -2.1230800475938687, 'RIVER SOW - BROAD EYE BRIDGE', 'active', 'Lorem', 'United Kingdom', 457);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 337, 52.86492027030183, -2.2707615512884263, 'RIVER SOW - PERSHALL', 'active', 'Lorem', 'United Kingdom', 458);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('POND / LAKE / RESERVOIR WATER', 338, 52.862974145553, -2.291529588304352, 'COP MERE LAKE WFD', 'active', 'Lorem', 'United Kingdom', 459);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 339, 52.72157173516283, -2.127871375807755, 'R PENK - PENKRIDGE-CUTTLESTONE BRIDGE', 'active', 'Lorem', 'United Kingdom', 460);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 340, 52.72719420658879, -2.147522555166711, 'WHISTON/LONGNOR BROOK - WHISTON MILL', 'active', 'Lorem', 'United Kingdom', 461);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 341, 52.811348299532035, -2.1520518519852674, 'DOXEY/PRESFORD/CLANFORD BK - DOXEY', 'active', 'Lorem', 'United Kingdom', 462);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 341, 52.82387213211456, -2.1768640673605937, 'GAMESELY BROOK SEIGH FORD', 'active', 'Lorem', 'United Kingdom', 463);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 341, 52.80615252178342, -2.1836452652491936, 'BUTTERBANK BROOK GORSTY LANE', 'active', 'Lorem', 'United Kingdom', 464);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 342, 52.91812261408805, -2.261411778512572, 'MEECE BROOK - CRANBERRY', 'active', 'Lorem', 'United Kingdom', 465);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 343, 52.8980553321976, -2.266791005587696, 'CHATCULL BROOK BROWNS BRIDGE ROCK LANE', 'active', 'Lorem', 'United Kingdom', 466);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 344, 52.87856870788009, -2.2657202920671686, 'BROCKTON BROOK - BROCKTON BANK', 'active', 'Lorem', 'United Kingdom', 467);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 345, 53.01923084711057, -2.1496094286334704, 'CAUSELEY BROOK - BUCKNALL', 'active', 'Lorem', 'United Kingdom', 468);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 345, 53.023947257249404, -2.111176055881109, 'CAUSELEY BROOK REAR ASH HALL DOWNSTREAM', 'active', 'Lorem', 'United Kingdom', 469);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 345, 53.02412703968198, -2.111176516305184, 'CAUSELEY BROOK REAR ASH HALL DISCHARGE', 'active', 'Lorem', 'United Kingdom', 470);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 345, 53.02421748688873, -2.1105803941771604, 'CAUSELEY BROOK REAR ASH HALL UPSTREAM', 'active', 'Lorem', 'United Kingdom', 471);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 346, 53.048010387741655, -2.152380032041567, 'FORD GREEN BROOK - MILTON', 'active', 'Lorem', 'United Kingdom', 472);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 346, 53.089031893655104, -2.1812978656430406, 'FORD GREEN BROOK - BRINDLEY FORD', 'active', 'Lorem', 'United Kingdom', 473);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 346, 53.05484069730085, -2.173112681980458, 'OLD COLLIERY BK U/S ROAD BRIDGE', 'active', 'Lorem', 'United Kingdom', 474);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 346, 53.05326099152376, -2.177596963416027, 'OLD COLLIERY BK - D/S OF CULVERT', 'active', 'Lorem', 'United Kingdom', 475);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('CANAL WATER', 347, 52.92498535112151, -1.0961040021149149, 'TOLLERTON BRIDGE - GRANTHAM CANAL', 'active', 'Lorem', 'United Kingdom', 476);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 328, 52.37363252506826, -1.722330268595813, 'GRAND UNION CANAL  HERONFIELD BK', 'active', 'Lorem', 'United Kingdom', 477);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('CANAL WATER', 318, 52.51375156275378, -2.0161594513594094, 'BHAM CANAL BHAM LEVEL, D/S HMIP HEPWORTH', 'active', 'Lorem', 'United Kingdom', 478);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('CANAL WATER', 348, 52.420922503414914, -1.9215751446863947, 'WORCESTER & BHAM C, PERSHORED RD LIFFORD', 'active', 'Lorem', 'United Kingdom', 479);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('CANAL WATER', 348, 52.47275180977751, -1.9112971759105248, 'WORCESTER & BHAM C - BATH ROW BRIDGE', 'active', 'Lorem', 'United Kingdom', 480);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('CANAL WATER', 349, 52.740526399466965, -2.094452121983839, 'PARK GATE TEDDESLEY', 'active', 'Lorem', 'United Kingdom', 481);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('CANAL WATER', 349, 52.79276953714166, -2.0385094722317665, 'TIXALL BRIDGE', 'active', 'Lorem', 'United Kingdom', 482);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('CANAL WATER', 350, 52.679591806483494, -2.073906965896648, 'HATHERTON BRANCH 4X', 'active', 'Lorem', 'United Kingdom', 483);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('CANAL WATER', 351, 52.72492585716725, -1.789432990167345, 'TRENT & MERSEY CANAL - FRADLEY JUNCTION', 'active', 'Lorem', 'United Kingdom', 484);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('CANAL WATER', 351, 52.789162399398414, -1.9951625927213048, 'TRENT & MERSEY CANAL - LITTLE HAYWOOD', 'active', 'Lorem', 'United Kingdom', 485);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('CANAL WATER', 351, 52.96623331138305, -2.1797103617197293, 'TRENT & MERSEY CANAL - HEM HEATH', 'active', 'Lorem', 'United Kingdom', 486);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('CANAL WATER', 352, 53.06601134972046, -2.028952295049048, 'CALDON CANAL - CHEDDLETON', 'active', 'Lorem', 'United Kingdom', 487);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 353, 53.68862402919393, -0.38979834688314513, 'BARROW BECK', 'active', 'Lorem', 'United Kingdom', 488);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 354, 53.41405840522635, 0.030607176650694467, 'BLACK DYKE CATCHMENT TRIB LOUTH CANAL', 'active', 'Lorem', 'United Kingdom', 489);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 355, 53.4482505146372, -0.5031501349604562, 'BLACK DYKE', 'active', 'Lorem', 'United Kingdom', 490);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 316, 52.709051487945146, -1.5826043754369408, 'RIVER MEASE D/S NETHERSEAL STW', 'active', 'Lorem', 'United Kingdom', 491);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 316, 52.6974317174665, -1.6241176923806355, 'RIVER MEASE D/S CLIFTON CAMPVILLE STW', 'active', 'Lorem', 'United Kingdom', 492);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 316, 52.70389860770515, -1.6907032975900262, 'R MEASE D/S EDINGALE STW', 'active', 'Lorem', 'United Kingdom', 493);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 316, 52.72949274665377, -1.5696742314023666, 'OVERSEAL BK D/S OVERSEAL STW', 'active', 'Lorem', 'United Kingdom', 494);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('ESTUARINE WATER', 356, 53.64484481551607, -0.14656243589435652, 'CLEAN SITE - TI02 MONITORING POINT, 1985', 'active', 'Lorem', 'United Kingdom', 495);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('ESTUARINE WATER', 356, 53.62387110325176, -0.0033574048746349084, 'R.HUMBER CONTROL SITE 29 (SUNK ISLAND)', 'active', 'Lorem', 'United Kingdom', 496);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 357, 53.51928148951658, -0.5145546721670988, 'HIBALDSTOW AREA CATCHMENT', 'active', 'Lorem', 'United Kingdom', 497);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('MYTILUS EDULIS - MUSSEL - WHOLE ANIMAL', 356, 53.56781030262307, -0.03695743056715887, 'R.HUMBER CLEETHORPES TOWN - MID SHORE', 'active', 'Lorem', 'United Kingdom', 498);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('ESTUARY SEDIMENT - SUB TIDAL - <63UM FRACTION', 356, 53.69399046776341, -0.2310285151968425, 'R.HUMBER COMMITTEE SITE 7702', 'active', 'Lorem', 'United Kingdom', 499);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('PLATICTHYS FLESUS - FLOUNDER - MUSCLE', 356, 53.58317987377636, -0.04228812101191401, 'HEC SITE N33 (CSEMP GRIMSBY ROADS)', 'active', 'Lorem', 'United Kingdom', 500);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 358, 53.53785912717762, -0.4913449057870297, 'KETTLEBY BECK POOL END', 'active', 'Lorem', 'United Kingdom', 501);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 359, 53.42149440586555, -0.37686591471634723, 'KINGERBY BECK CATCHMENT', 'active', 'Lorem', 'United Kingdom', 502);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 359, 53.424783664838756, -0.4278812998240932, 'KINGERBY BECK', 'active', 'Lorem', 'United Kingdom', 503);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 360, 53.361148581647896, -0.022839810464551996, 'LUD - GB104029061955', 'active', 'Lorem', 'United Kingdom', 504);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 361, 53.373412348870126, 0.01314529442455677, 'R.LUD RIVER HEAD', 'active', 'Lorem', 'United Kingdom', 505);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 362, 53.38735949253667, -0.32917292046498986, 'MARKET RASEN PASTURE LANE BRIDGE', 'active', 'Lorem', 'United Kingdom', 506);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 363, 53.47257499150955, 0.0173658707320809, 'NEW DIKE CATCHMENT TRIB LOUTH CANAL', 'active', 'Lorem', 'United Kingdom', 507);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 364, 53.651692775642914, -0.2498062386482464, 'N KILLINGHOLME DRN.U/S S.KILL.STW', 'active', 'Lorem', 'United Kingdom', 508);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 364, 53.653345521620345, -0.24603051727371897, 'N KILLINGHOLME MAIN DRN.D/S KILLING''''M SW', 'active', 'Lorem', 'United Kingdom', 509);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 365, 53.42885979402071, 0.014468418071580379, 'POULTON DRAIN CATCHMENT TRIB LOUTH CANAL', 'active', 'Lorem', 'United Kingdom', 510);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('ESTUARINE WATER', 356, 53.64239726075329, -0.20243186778422032, 'R.HUMBER INT.TERMINAL WEST (HIGH TIDE)', 'active', 'Lorem', 'United Kingdom', 511);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('ESTUARINE WATER', 366, 53.7086091485615, -0.3660511208540504, 'R.HUMBER NEW HOLLAND LOW SLACK', 'active', 'Lorem', 'United Kingdom', 512);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 367, 53.388133115239896, -0.3176841162783127, 'WOODLANDS', 'active', 'Lorem', 'United Kingdom', 513);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 368, 54.26774600949282, -0.8602518730416886, 'SEVEN U/S SINNINGTON', 'active', 'Lorem', 'United Kingdom', 514);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('ESTUARINE WATER', 356, 53.61966003503493, -0.1532144077226685, 'SCM-TI02 MONITORING POINT 1988', 'active', 'Lorem', 'United Kingdom', 515);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 369, 53.48401035064703, 0.10033815419808853, 'SEVEN TOWNS NORTH EAU - GB104029062140', 'active', 'Lorem', 'United Kingdom', 516);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 364, 53.636461830663336, -0.23003166498227068, 'S KILL.DRN.ROSPER ROAD', 'active', 'Lorem', 'United Kingdom', 517);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 370, 53.46743470838397, -0.2078723061589994, 'THORESWAY BECK (TRIB OF WAITHE BECK)', 'active', 'Lorem', 'United Kingdom', 518);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 371, 53.44921409946289, -0.4039397605885887, 'THORNTON AND OWESBY', 'active', 'Lorem', 'United Kingdom', 519);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('ESTUARINE WATER', 356, 53.60819491046351, -0.09335671591590632, 'TIOXIDE-TIO2 MONITORING 1988', 'active', 'Lorem', 'United Kingdom', 520);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 372, 53.36414339518883, -0.03597246840761175, 'WELTON LE WOLD TO LOUTH CATCH', 'active', 'Lorem', 'United Kingdom', 521);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 355, 53.45252615649503, -0.4928796474350918, 'WADDINGHAM BLACK DYKE GAUGING STATION', 'active', 'Lorem', 'United Kingdom', 522);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 373, 53.4613259938178, -0.1819639905193193, 'WAITHE BECK THORGANBY BRIDGE', 'active', 'Lorem', 'United Kingdom', 523);
+INSERT INTO station (station_type, water_body_id, lat, long, name, status, description, country, station_manager) VALUES ('RIVER / RUNNING SURFACE WATER', 373, 53.41687493276657, -0.21198405561863046, 'WAITHE BECK', 'active', 'Lorem', 'United Kingdom', 524);
 
 INSERT INTO station_parameter (parameter_id, station_id) VALUES ('1', 1);
 INSERT INTO station_parameter (parameter_id, station_id) VALUES ('2', 1);

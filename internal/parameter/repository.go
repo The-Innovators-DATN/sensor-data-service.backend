@@ -3,6 +3,7 @@ package parameter
 import (
 	"context"
 	"fmt"
+	"log"
 	"time"
 
 	"sensor-data-service.backend/infrastructure/cache"
@@ -27,6 +28,7 @@ func NewRepository(store db.Store, cache cache.Store) Repository {
 }
 
 func (r *postgresRepo) GetAll(ctx context.Context) ([]Parameter, error) {
+	log.Printf("[debug] GetAll called")
 	cacheKey := "parameter:all"
 	var cached []Parameter
 	found, err := r.cache.GetJSON(ctx, cacheKey, &cached)
@@ -59,6 +61,7 @@ func (r *postgresRepo) GetAll(ctx context.Context) ([]Parameter, error) {
 }
 
 func (r *postgresRepo) GetByID(ctx context.Context, id int) (Parameter, error) {
+	log.Printf("[debug] GetByID called with id: %d", id)
 	cacheKey := fmt.Sprintf("parameter:%d", id)
 	var cached Parameter
 	found, err := r.cache.GetJSON(ctx, cacheKey, &cached)
@@ -88,6 +91,7 @@ func (r *postgresRepo) GetByID(ctx context.Context, id int) (Parameter, error) {
 }
 
 func (r *postgresRepo) Create(ctx context.Context, p Parameter) error {
+	log.Printf("[debug] Create called with parameter: %+v", p)
 	sql := `INSERT INTO parameter(name, unit, parameter_group, description, created_at, updated_at) 
 			VALUES ($1, $2, $3, $4, $5, $6)`
 	err := r.store.Exec(ctx, sql, p.Name, p.Unit, p.ParameterGroup, p.Description, p.CreatedAt, p.UpdatedAt)
@@ -98,6 +102,7 @@ func (r *postgresRepo) Create(ctx context.Context, p Parameter) error {
 }
 
 func (r *postgresRepo) Update(ctx context.Context, p Parameter) error {
+	log.Printf("[debug] Update called with parameter: %+v", p)
 	sql := `UPDATE parameter 
 			SET name = $1, unit = $2, parameter_group = $3, description = $4, updated_at = $5 
 			WHERE id = $6`
@@ -110,6 +115,7 @@ func (r *postgresRepo) Update(ctx context.Context, p Parameter) error {
 }
 
 func (r *postgresRepo) Delete(ctx context.Context, id int) error {
+	log.Printf("[debug] Delete called with id: %d", id)
 	sql := `DELETE FROM parameter WHERE id = $1`
 	err := r.store.Exec(ctx, sql, id)
 	if err == nil {

@@ -2,7 +2,7 @@
 // versions:
 // 	protoc-gen-go v1.36.6
 // 	protoc        v3.12.4
-// source: metricdata.proto
+// source: metricdatapb/metricdata.proto
 
 package metricdatapb
 
@@ -11,6 +11,7 @@ import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
+	commonpb "sensor-data-service.backend/api/pb/commonpb"
 	sync "sync"
 	unsafe "unsafe"
 )
@@ -61,11 +62,11 @@ func (x TargetType) String() string {
 }
 
 func (TargetType) Descriptor() protoreflect.EnumDescriptor {
-	return file_metricdata_proto_enumTypes[0].Descriptor()
+	return file_metricdatapb_metricdata_proto_enumTypes[0].Descriptor()
 }
 
 func (TargetType) Type() protoreflect.EnumType {
-	return &file_metricdata_proto_enumTypes[0]
+	return &file_metricdatapb_metricdata_proto_enumTypes[0]
 }
 
 func (x TargetType) Number() protoreflect.EnumNumber {
@@ -74,7 +75,7 @@ func (x TargetType) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use TargetType.Descriptor instead.
 func (TargetType) EnumDescriptor() ([]byte, []int) {
-	return file_metricdata_proto_rawDescGZIP(), []int{0}
+	return file_metricdatapb_metricdata_proto_rawDescGZIP(), []int{0}
 }
 
 type TimeRange struct {
@@ -87,7 +88,7 @@ type TimeRange struct {
 
 func (x *TimeRange) Reset() {
 	*x = TimeRange{}
-	mi := &file_metricdata_proto_msgTypes[0]
+	mi := &file_metricdatapb_metricdata_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -99,7 +100,7 @@ func (x *TimeRange) String() string {
 func (*TimeRange) ProtoMessage() {}
 
 func (x *TimeRange) ProtoReflect() protoreflect.Message {
-	mi := &file_metricdata_proto_msgTypes[0]
+	mi := &file_metricdatapb_metricdata_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -112,7 +113,7 @@ func (x *TimeRange) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TimeRange.ProtoReflect.Descriptor instead.
 func (*TimeRange) Descriptor() ([]byte, []int) {
-	return file_metricdata_proto_rawDescGZIP(), []int{0}
+	return file_metricdatapb_metricdata_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *TimeRange) GetFrom() string {
@@ -141,7 +142,7 @@ type SeriesSelector struct {
 
 func (x *SeriesSelector) Reset() {
 	*x = SeriesSelector{}
-	mi := &file_metricdata_proto_msgTypes[1]
+	mi := &file_metricdatapb_metricdata_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -153,7 +154,7 @@ func (x *SeriesSelector) String() string {
 func (*SeriesSelector) ProtoMessage() {}
 
 func (x *SeriesSelector) ProtoReflect() protoreflect.Message {
-	mi := &file_metricdata_proto_msgTypes[1]
+	mi := &file_metricdatapb_metricdata_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -166,7 +167,7 @@ func (x *SeriesSelector) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SeriesSelector.ProtoReflect.Descriptor instead.
 func (*SeriesSelector) Descriptor() ([]byte, []int) {
-	return file_metricdata_proto_rawDescGZIP(), []int{1}
+	return file_metricdatapb_metricdata_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *SeriesSelector) GetRefId() string {
@@ -208,7 +209,7 @@ type ForecastConfig struct {
 
 func (x *ForecastConfig) Reset() {
 	*x = ForecastConfig{}
-	mi := &file_metricdata_proto_msgTypes[2]
+	mi := &file_metricdatapb_metricdata_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -220,7 +221,7 @@ func (x *ForecastConfig) String() string {
 func (*ForecastConfig) ProtoMessage() {}
 
 func (x *ForecastConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_metricdata_proto_msgTypes[2]
+	mi := &file_metricdatapb_metricdata_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -233,7 +234,7 @@ func (x *ForecastConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ForecastConfig.ProtoReflect.Descriptor instead.
 func (*ForecastConfig) Descriptor() ([]byte, []int) {
-	return file_metricdata_proto_rawDescGZIP(), []int{2}
+	return file_metricdatapb_metricdata_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *ForecastConfig) GetEnabled() bool {
@@ -270,7 +271,7 @@ type MetricSeriesRequest struct {
 
 func (x *MetricSeriesRequest) Reset() {
 	*x = MetricSeriesRequest{}
-	mi := &file_metricdata_proto_msgTypes[3]
+	mi := &file_metricdatapb_metricdata_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -282,7 +283,7 @@ func (x *MetricSeriesRequest) String() string {
 func (*MetricSeriesRequest) ProtoMessage() {}
 
 func (x *MetricSeriesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_metricdata_proto_msgTypes[3]
+	mi := &file_metricdatapb_metricdata_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -295,7 +296,7 @@ func (x *MetricSeriesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MetricSeriesRequest.ProtoReflect.Descriptor instead.
 func (*MetricSeriesRequest) Descriptor() ([]byte, []int) {
-	return file_metricdata_proto_rawDescGZIP(), []int{3}
+	return file_metricdatapb_metricdata_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *MetricSeriesRequest) GetChartType() string {
@@ -345,7 +346,7 @@ type MetricPoint struct {
 
 func (x *MetricPoint) Reset() {
 	*x = MetricPoint{}
-	mi := &file_metricdata_proto_msgTypes[4]
+	mi := &file_metricdatapb_metricdata_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -357,7 +358,7 @@ func (x *MetricPoint) String() string {
 func (*MetricPoint) ProtoMessage() {}
 
 func (x *MetricPoint) ProtoReflect() protoreflect.Message {
-	mi := &file_metricdata_proto_msgTypes[4]
+	mi := &file_metricdatapb_metricdata_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -370,7 +371,7 @@ func (x *MetricPoint) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MetricPoint.ProtoReflect.Descriptor instead.
 func (*MetricPoint) Descriptor() ([]byte, []int) {
-	return file_metricdata_proto_rawDescGZIP(), []int{4}
+	return file_metricdatapb_metricdata_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *MetricPoint) GetDatetime() string {
@@ -408,7 +409,7 @@ type SeriesData struct {
 
 func (x *SeriesData) Reset() {
 	*x = SeriesData{}
-	mi := &file_metricdata_proto_msgTypes[5]
+	mi := &file_metricdatapb_metricdata_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -420,7 +421,7 @@ func (x *SeriesData) String() string {
 func (*SeriesData) ProtoMessage() {}
 
 func (x *SeriesData) ProtoReflect() protoreflect.Message {
-	mi := &file_metricdata_proto_msgTypes[5]
+	mi := &file_metricdatapb_metricdata_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -433,7 +434,7 @@ func (x *SeriesData) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SeriesData.ProtoReflect.Descriptor instead.
 func (*SeriesData) Descriptor() ([]byte, []int) {
-	return file_metricdata_proto_rawDescGZIP(), []int{5}
+	return file_metricdatapb_metricdata_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *SeriesData) GetRefId() string {
@@ -487,7 +488,7 @@ type MetricSeriesResponse struct {
 
 func (x *MetricSeriesResponse) Reset() {
 	*x = MetricSeriesResponse{}
-	mi := &file_metricdata_proto_msgTypes[6]
+	mi := &file_metricdatapb_metricdata_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -499,7 +500,7 @@ func (x *MetricSeriesResponse) String() string {
 func (*MetricSeriesResponse) ProtoMessage() {}
 
 func (x *MetricSeriesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_metricdata_proto_msgTypes[6]
+	mi := &file_metricdatapb_metricdata_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -512,7 +513,7 @@ func (x *MetricSeriesResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MetricSeriesResponse.ProtoReflect.Descriptor instead.
 func (*MetricSeriesResponse) Descriptor() ([]byte, []int) {
-	return file_metricdata_proto_rawDescGZIP(), []int{6}
+	return file_metricdatapb_metricdata_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *MetricSeriesResponse) GetResults() []*SeriesData {
@@ -522,12 +523,12 @@ func (x *MetricSeriesResponse) GetResults() []*SeriesData {
 	return nil
 }
 
-var File_metricdata_proto protoreflect.FileDescriptor
+var File_metricdatapb_metricdata_proto protoreflect.FileDescriptor
 
-const file_metricdata_proto_rawDesc = "" +
+const file_metricdatapb_metricdata_proto_rawDesc = "" +
 	"\n" +
-	"\x10metricdata.proto\x12\n" +
-	"metricdata\x1a\x1cgoogle/api/annotations.proto\"/\n" +
+	"\x1dmetricdatapb/metricdata.proto\x12\n" +
+	"metricdata\x1a\x1cgoogle/api/annotations.proto\x1a\x15commonpb/common.proto\"/\n" +
 	"\tTimeRange\x12\x12\n" +
 	"\x04from\x18\x01 \x01(\tR\x04from\x12\x0e\n" +
 	"\x02to\x18\x02 \x01(\tR\x02to\"\x9a\x01\n" +
@@ -571,35 +572,36 @@ const file_metricdata_proto_rawDesc = "" +
 	"\n" +
 	"WATER_BODY\x10\x02\x12\r\n" +
 	"\tCATCHMENT\x10\x03\x12\x0f\n" +
-	"\vRIVER_BASIN\x10\x042\x87\x01\n" +
-	"\x11MetricDataService\x12r\n" +
-	"\x0fGetMetricSeries\x12\x1f.metricdata.MetricSeriesRequest\x1a .metricdata.MetricSeriesResponse\"\x1c\x82\xd3\xe4\x93\x02\x16:\x01*\"\x11/v0/metric_seriesB\x1eZ\x1cpb/metricdatapb;metricdatapbb\x06proto3"
+	"\vRIVER_BASIN\x10\x042\x7f\n" +
+	"\x11MetricDataService\x12j\n" +
+	"\x0fGetMetricSeries\x12\x1f.metricdata.MetricSeriesRequest\x1a\x18.common.StandardResponse\"\x1c\x82\xd3\xe4\x93\x02\x16:\x01*\"\x11/v0/metric_seriesB>Z<sensor-data-service.backend/api/pb/metricdatapb;metricdatapbb\x06proto3"
 
 var (
-	file_metricdata_proto_rawDescOnce sync.Once
-	file_metricdata_proto_rawDescData []byte
+	file_metricdatapb_metricdata_proto_rawDescOnce sync.Once
+	file_metricdatapb_metricdata_proto_rawDescData []byte
 )
 
-func file_metricdata_proto_rawDescGZIP() []byte {
-	file_metricdata_proto_rawDescOnce.Do(func() {
-		file_metricdata_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_metricdata_proto_rawDesc), len(file_metricdata_proto_rawDesc)))
+func file_metricdatapb_metricdata_proto_rawDescGZIP() []byte {
+	file_metricdatapb_metricdata_proto_rawDescOnce.Do(func() {
+		file_metricdatapb_metricdata_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_metricdatapb_metricdata_proto_rawDesc), len(file_metricdatapb_metricdata_proto_rawDesc)))
 	})
-	return file_metricdata_proto_rawDescData
+	return file_metricdatapb_metricdata_proto_rawDescData
 }
 
-var file_metricdata_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_metricdata_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
-var file_metricdata_proto_goTypes = []any{
-	(TargetType)(0),              // 0: metricdata.TargetType
-	(*TimeRange)(nil),            // 1: metricdata.TimeRange
-	(*SeriesSelector)(nil),       // 2: metricdata.SeriesSelector
-	(*ForecastConfig)(nil),       // 3: metricdata.ForecastConfig
-	(*MetricSeriesRequest)(nil),  // 4: metricdata.MetricSeriesRequest
-	(*MetricPoint)(nil),          // 5: metricdata.MetricPoint
-	(*SeriesData)(nil),           // 6: metricdata.SeriesData
-	(*MetricSeriesResponse)(nil), // 7: metricdata.MetricSeriesResponse
+var file_metricdatapb_metricdata_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
+var file_metricdatapb_metricdata_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
+var file_metricdatapb_metricdata_proto_goTypes = []any{
+	(TargetType)(0),                   // 0: metricdata.TargetType
+	(*TimeRange)(nil),                 // 1: metricdata.TimeRange
+	(*SeriesSelector)(nil),            // 2: metricdata.SeriesSelector
+	(*ForecastConfig)(nil),            // 3: metricdata.ForecastConfig
+	(*MetricSeriesRequest)(nil),       // 4: metricdata.MetricSeriesRequest
+	(*MetricPoint)(nil),               // 5: metricdata.MetricPoint
+	(*SeriesData)(nil),                // 6: metricdata.SeriesData
+	(*MetricSeriesResponse)(nil),      // 7: metricdata.MetricSeriesResponse
+	(*commonpb.StandardResponse)(nil), // 8: common.StandardResponse
 }
-var file_metricdata_proto_depIdxs = []int32{
+var file_metricdatapb_metricdata_proto_depIdxs = []int32{
 	0, // 0: metricdata.SeriesSelector.target_type:type_name -> metricdata.TargetType
 	1, // 1: metricdata.MetricSeriesRequest.time_range:type_name -> metricdata.TimeRange
 	3, // 2: metricdata.MetricSeriesRequest.forecast:type_name -> metricdata.ForecastConfig
@@ -609,7 +611,7 @@ var file_metricdata_proto_depIdxs = []int32{
 	5, // 6: metricdata.SeriesData.forecast:type_name -> metricdata.MetricPoint
 	6, // 7: metricdata.MetricSeriesResponse.results:type_name -> metricdata.SeriesData
 	4, // 8: metricdata.MetricDataService.GetMetricSeries:input_type -> metricdata.MetricSeriesRequest
-	7, // 9: metricdata.MetricDataService.GetMetricSeries:output_type -> metricdata.MetricSeriesResponse
+	8, // 9: metricdata.MetricDataService.GetMetricSeries:output_type -> common.StandardResponse
 	9, // [9:10] is the sub-list for method output_type
 	8, // [8:9] is the sub-list for method input_type
 	8, // [8:8] is the sub-list for extension type_name
@@ -617,27 +619,27 @@ var file_metricdata_proto_depIdxs = []int32{
 	0, // [0:8] is the sub-list for field type_name
 }
 
-func init() { file_metricdata_proto_init() }
-func file_metricdata_proto_init() {
-	if File_metricdata_proto != nil {
+func init() { file_metricdatapb_metricdata_proto_init() }
+func file_metricdatapb_metricdata_proto_init() {
+	if File_metricdatapb_metricdata_proto != nil {
 		return
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: unsafe.Slice(unsafe.StringData(file_metricdata_proto_rawDesc), len(file_metricdata_proto_rawDesc)),
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_metricdatapb_metricdata_proto_rawDesc), len(file_metricdatapb_metricdata_proto_rawDesc)),
 			NumEnums:      1,
 			NumMessages:   7,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
-		GoTypes:           file_metricdata_proto_goTypes,
-		DependencyIndexes: file_metricdata_proto_depIdxs,
-		EnumInfos:         file_metricdata_proto_enumTypes,
-		MessageInfos:      file_metricdata_proto_msgTypes,
+		GoTypes:           file_metricdatapb_metricdata_proto_goTypes,
+		DependencyIndexes: file_metricdatapb_metricdata_proto_depIdxs,
+		EnumInfos:         file_metricdatapb_metricdata_proto_enumTypes,
+		MessageInfos:      file_metricdatapb_metricdata_proto_msgTypes,
 	}.Build()
-	File_metricdata_proto = out.File
-	file_metricdata_proto_goTypes = nil
-	file_metricdata_proto_depIdxs = nil
+	File_metricdatapb_metricdata_proto = out.File
+	file_metricdatapb_metricdata_proto_goTypes = nil
+	file_metricdatapb_metricdata_proto_depIdxs = nil
 }

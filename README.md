@@ -94,17 +94,20 @@ go run cmd/station/main.go
 ## 🧬 Protobuf Compilation
 
 ```bash
-protoc -I api/proto   --go_out=paths=import:api   --go-grpc_out=paths=import:api   --grpc-gateway_out=import:api --go-grpc_out=paths=source_relative:api/pb \  api/proto/parameter.proto
-```
-```bash
 protoc \
   -I=api/proto \
   -I=third_party \
-  --go_out=paths=source_relative:api/pb/metricdatapb/ \
-  --go-grpc_out=paths=source_relative:api/pb/metricdatapb/\
-  --grpc-gateway_out=paths=source_relative:api/pb/metricdatapb/ \
-  api/proto/metricdata.proto
+  --go_out=paths=source_relative:api/pb \
+  --go-grpc_out=paths=source_relative:api/pb \
+  --grpc-gateway_out=paths=source_relative:api/pb \
+  api/proto/commonpb/common.proto \
+  api/proto/metricdatapb/metricdata.proto \
+  api/proto/parameterpb/parameter.proto \
+  api/proto/stationpb/station.proto
 ```
+
+```
+
 ---
 
 ## 🔍 API Testing
