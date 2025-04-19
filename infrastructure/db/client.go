@@ -5,27 +5,24 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"sensor-data-service.backend/config" // đổi thành tên module của bạn
 )
 
-func InitDB(ctx context.Context, cfg config.DBConfig) (*pgx.Conn, error) {
-	// Validate config
-	if cfg.Host == "" || cfg.User == "" || cfg.Password == "" || cfg.Name == "" {
-		return nil, fmt.Errorf("missing database config values")
-	}
-
-	// Build connection string
+func InitDB(ctx context.Context, cfg config.DBConfig) (*pgxpool.Pool, error) {
 	dbURL := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
 		cfg.Host, cfg.Port, cfg.User, cfg.Password, cfg.Name)
 
-	// Connect
-	db, err := pgx.Connect(ctx, dbURL)
+	poolConfig, err := pgxpool.ParseConfig(dbURL)
 	if err != nil {
-		log.Fatalf("DB connection failed: %v", err)
-		return nil, err
+		return nil, fmt.Errorf("unable to parse config: %w", err)
 	}
 
-	log.Println("Connected to database")
-	return db, nil
+	pool, err := pgxpool.NewWithConfig(ctx, poolConfig)
+	if err != nil {
+		return nil, fmt.Errorf("unable to connect to db: %w", err)
+	}
+
+	log.Println("Connected to Postgres via pgxpool")
+	return pool, nil
 }

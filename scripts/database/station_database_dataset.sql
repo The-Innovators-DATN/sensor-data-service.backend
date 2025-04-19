@@ -42,7 +42,7 @@ CREATE TABLE "catchment" (
     "country" VARCHAR(255),
     "description" TEXT,
     "updated_at" TIMESTAMP NOT NULL,
-    "status" VARCHAR(50)
+    "status" VARCHAR(50) NOT NULL default 'active'
 );
 
 -- 2. River Basin
@@ -52,7 +52,7 @@ CREATE TABLE "river_basin" (
     "name" VARCHAR(255) NOT NULL,
     "description" TEXT NOT NULL,
     "updated_at" TIMESTAMP NOT NULL,
-    "status" VARCHAR(50)
+    "status" VARCHAR(50) NOT NULL default 'active'
 );
 
 -- 3. Water Body (tham chiếu catchment)
@@ -62,6 +62,7 @@ CREATE TABLE "water_body" (
     "type" VARCHAR(255) NOT NULL,
     "name" VARCHAR(255) NOT NULL,
     "catchment_id" INTEGER NOT NULL,
+    "status" VARCHAR(50) NOT NULL default 'active',
     "updated_at" TIMESTAMP NOT NULL,
     "description" TEXT NOT NULL
 );

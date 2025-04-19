@@ -256,6 +256,7 @@ type ParameterResponse struct {
 	Description    string                 `protobuf:"bytes,5,opt,name=description,proto3" json:"description,omitempty"`
 	CreatedAt      string                 `protobuf:"bytes,6,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	UpdatedAt      string                 `protobuf:"bytes,7,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	Status         string                 `protobuf:"bytes,8,opt,name=status,proto3" json:"status,omitempty"`
 	unknownFields  protoimpl.UnknownFields
 	sizeCache      protoimpl.SizeCache
 }
@@ -335,6 +336,13 @@ func (x *ParameterResponse) GetCreatedAt() string {
 func (x *ParameterResponse) GetUpdatedAt() string {
 	if x != nil {
 		return x.UpdatedAt
+	}
+	return ""
+}
+
+func (x *ParameterResponse) GetStatus() string {
+	if x != nil {
+		return x.Status
 	}
 	return ""
 }
@@ -445,7 +453,7 @@ const file_parameterpb_parameter_proto_rawDesc = "" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x12\n" +
 	"\x04unit\x18\x03 \x01(\tR\x04unit\x12'\n" +
 	"\x0fparameter_group\x18\x04 \x01(\tR\x0eparameterGroup\x12 \n" +
-	"\vdescription\x18\x05 \x01(\tR\vdescription\"\xd4\x01\n" +
+	"\vdescription\x18\x05 \x01(\tR\vdescription\"\xec\x01\n" +
 	"\x11ParameterResponse\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x05R\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x12\n" +
@@ -455,7 +463,8 @@ const file_parameterpb_parameter_proto_rawDesc = "" +
 	"\n" +
 	"created_at\x18\x06 \x01(\tR\tcreatedAt\x12\x1d\n" +
 	"\n" +
-	"updated_at\x18\a \x01(\tR\tupdatedAt\"U\n" +
+	"updated_at\x18\a \x01(\tR\tupdatedAt\x12\x16\n" +
+	"\x06status\x18\b \x01(\tR\x06status\"U\n" +
 	"\x15ParameterListResponse\x12<\n" +
 	"\n" +
 	"parameters\x18\x01 \x03(\v2\x1c.parameter.ParameterResponseR\n" +

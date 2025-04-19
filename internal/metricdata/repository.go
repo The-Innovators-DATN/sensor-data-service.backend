@@ -1,3 +1,4 @@
+// metricdata_repository.go (refactored)
 package metricdata
 
 import (
@@ -15,27 +16,27 @@ import (
 	"sensor-data-service.backend/internal/common/castutil"
 )
 
-// Thời hạn mà data nằm trong RedisTimeSeries
-const RedisRetention = 7 * 24 * time.Hour // 7 ngày
+const RedisRetention = 7 * 24 * time.Hour // 7 days
 
+// MetricDataRepository wraps CH + Redis + relational store
 type MetricDataRepository struct {
 	store db.Store
 	cache cache.Store
 	chdb  metric.Store
 }
 
-func NewMetricDataRepository(chdb metric.Store, store db.Store, cache cache.Store) *MetricDataRepository {
-	return &MetricDataRepository{chdb: chdb, store: store, cache: cache}
+func NewMetricDataRepository(ch metric.Store, s db.Store, c cache.Store) *MetricDataRepository {
+	return &MetricDataRepository{chdb: ch, store: s, cache: c}
 }
 
-// GetMetricSeriesData: hàm chính xử lý request
+// -------------------------------------------------- public entry --------------------------------------------------
+
 func (r *MetricDataRepository) GetMetricSeriesData(ctx context.Context, req *metricpb.MetricSeriesRequest) ([]*metricpb.SeriesData, error) {
 	log.Print("[debug] GetMetricSeriesData called")
-	var results []*metricpb.SeriesData
 
-	stepSeconds := req.StepSeconds
-	if stepSeconds <= 0 {
-		stepSeconds = 3600 // fallback 1h
+	step := req.StepSeconds
+	if step <= 0 {
+		step = 3600 // default 1 h
 	}
 
 	from, err := time.Parse(time.RFC3339, req.TimeRange.From)
@@ -47,438 +48,314 @@ func (r *MetricDataRepository) GetMetricSeriesData(ctx context.Context, req *met
 		return nil, fmt.Errorf("invalid time_range.to: %w", err)
 	}
 
-	now := time.Now().UTC()
-	cutoff := now.Add(-RedisRetention)
+	cutoff := time.Now().UTC().Add(-RedisRetention)
+	var out []*metricpb.SeriesData
 
 	for _, sel := range req.Series {
-		// Lấy danh sách station(s) tuỳ target_type
-		var stationIDs []int32
-		if sel.TargetType == metricpb.TargetType_STATION {
-			stationIDs = []int32{sel.TargetId}
-		} else {
-			list, err := r.GetStationsByTarget(ctx, sel.TargetType, sel.TargetId)
-			if err != nil {
-				return nil, fmt.Errorf("getStationsByTarget failed: %w", err)
-			}
-			if len(list) == 0 {
-				log.Printf("[warn] no stations for target_type=%v, target_id=%v", sel.TargetType, sel.TargetId)
-				continue
-			}
-			stationIDs = list
+		stations, err := r.resolveStations(ctx, sel.TargetType, sel.TargetId)
+		if err != nil {
+			return nil, err
+		}
+		if len(stations) == 0 {
+			log.Printf("[warn] no station for target=%v:%d", sel.TargetType, sel.TargetId)
+			continue
 		}
 
-		var seriesPoints []*metricpb.MetricPoint
+		var points []*metricpb.MetricPoint
 		switch {
 		case to.Before(cutoff):
-			// Hoàn toàn ngoài 7 ngày => Query CH
-			seriesPoints, err = r.queryAggregatorCH(ctx, stationIDs, sel.MetricId, from, to, stepSeconds)
-			if err != nil {
-				return nil, err
-			}
+			points, err = r.queryAggregatorCH(ctx, stations, sel.MetricId, from, to, step)
 		case from.After(cutoff):
-			// Hoàn toàn trong 7 ngày => Query Redis
-			seriesPoints, err = r.queryAggregatorRedis(ctx, stationIDs, sel.MetricId, from, to, stepSeconds)
-			if err != nil {
-				return nil, err
-			}
+			points, err = r.queryAggregatorRedis(ctx, stations, sel.MetricId, from, to, step)
 		default:
-			// Giao nhau => tách 2 phần
-			chTo := cutoff
-			redisFrom := cutoff
-
-			oldPoints, err1 := r.queryAggregatorCH(ctx, stationIDs, sel.MetricId, from, chTo, stepSeconds)
+			oldPt, err1 := r.queryAggregatorCH(ctx, stations, sel.MetricId, from, cutoff, step)
 			if err1 != nil {
 				return nil, err1
 			}
-			newPoints, err2 := r.queryAggregatorRedis(ctx, stationIDs, sel.MetricId, redisFrom, to, stepSeconds)
+			newPt, err2 := r.queryAggregatorRedis(ctx, stations, sel.MetricId, cutoff, to, step)
 			if err2 != nil {
 				return nil, err2
 			}
-			seriesPoints = mergeSeriesPoints(oldPoints, newPoints)
+			points = mergeSeriesPoints(oldPt, newPt)
+		}
+		if err != nil {
+			return nil, err
 		}
 
-		results = append(results, &metricpb.SeriesData{
+		out = append(out, &metricpb.SeriesData{
 			RefId:      sel.RefId,
 			TargetType: sel.TargetType,
 			TargetId:   sel.TargetId,
 			MetricId:   sel.MetricId,
-			Series:     seriesPoints,
+			Series:     points,
 		})
 	}
-
-	return results, nil
+	return out, nil
 }
 
-// GetStationsByTarget trả về danh sách station_id theo target_type
-// Nếu không tìm thấy trong Redis cache thì lấy từ DB và cache lại
-func (r *MetricDataRepository) GetStationsByTarget(ctx context.Context, targetType metricpb.TargetType, targetId int32) ([]int32, error) {
-	log.Print("[debug] GetStationsByTarget called")
-	cacheKey := fmt.Sprintf("station_targets:%d:%d", targetType, targetId)
+// ----------------------------------------------- station resolution ------------------------------------------------
 
-	// Redis cache first
+func (r *MetricDataRepository) resolveStations(ctx context.Context, t metricpb.TargetType, id int32) ([]int32, error) {
+	if t == metricpb.TargetType_STATION {
+		return []int32{id}, nil
+	}
+	key := fmt.Sprintf("station_targets:%d:%d", t, id)
+
+	var cached []int32
+	ok, err := r.cache.GetJSON(ctx, key, &cached)
+	if err != nil {
+		log.Printf("[error][cache] failed to GetJSON for key=%s: %v", key, err)
+	}
+	if ok {
+		return cached, nil
+	}
+
+	sql, err := buildStationQuery(t)
+	if err != nil {
+		return nil, fmt.Errorf("[resolve][buildQuery] unsupported target type (%v): %w", t, err)
+	}
+
+	rows, err := r.store.ExecQuery(ctx, sql, id)
+	if err != nil {
+		return nil, fmt.Errorf("[resolve][store] failed to exec query (%s): %w", sql, err)
+	}
+
 	var ids []int32
-	found, err := r.cache.GetJSON(ctx, cacheKey, &ids)
-	if err != nil {
-		log.Printf("[warn] GetStationsByTarget Redis fail: %v", err)
-	}
-	if found {
-		return ids, nil
+	for _, r := range rows {
+		ids = append(ids, int32(castutil.ToInt(r["id"])))
 	}
 
-	// Query từ DB
-	var sql string
-	switch targetType {
-	case metricpb.TargetType_STATION:
-		sql = "SELECT id FROM station WHERE id = $1"
-	case metricpb.TargetType_WATER_BODY:
-		sql = "SELECT id FROM station WHERE water_body_id = $1"
-	case metricpb.TargetType_CATCHMENT:
-		sql = `
-			SELECT s.id
-			FROM station s
-			JOIN water_body w ON s.water_body_id = w.id
-			WHERE w.catchment_id = $1
-		`
-	case metricpb.TargetType_RIVER_BASIN:
-		sql = `
-			SELECT s.id
-			FROM station s
-			JOIN water_body w ON s.water_body_id = w.id
-			JOIN catchment c ON w.catchment_id = c.id
-			WHERE c.river_basin_id = $1
-		`
-	default:
-		return nil, fmt.Errorf("unsupported target type: %v", targetType)
+	if err := r.cache.SetJSON(ctx, key, ids, int64(time.Hour.Seconds())); err != nil {
+		log.Printf("[warn][cache] failed to SetJSON cache for key=%s: %v", key, err)
 	}
-
-	rows, err := r.store.ExecQuery(ctx, sql, targetId)
-	if err != nil {
-		return nil, fmt.Errorf("GetStationsByTarget db query failed: %w", err)
-	}
-
-	for _, row := range rows {
-		ids = append(ids, int32(castutil.ToInt(row["id"])))
-	}
-
-	// Cache lại
-	if err := r.cache.SetJSON(ctx, cacheKey, ids, int64(time.Hour.Seconds())); err != nil {
-		log.Printf("[warn] cache station target fail: %v", err)
-	}
-
 	return ids, nil
 }
 
-// ------------------- Aggregator CH -------------------
+func buildStationQuery(t metricpb.TargetType) (string, error) {
+	switch t {
+	case metricpb.TargetType_WATER_BODY:
+		return "SELECT id FROM station WHERE water_body_id = $1", nil
+	case metricpb.TargetType_CATCHMENT:
+		return `SELECT s.id FROM station s JOIN water_body w ON s.water_body_id = w.id WHERE w.catchment_id = $1`, nil
+	case metricpb.TargetType_RIVER_BASIN:
+		return `SELECT s.id FROM station s JOIN water_body w ON s.water_body_id = w.id JOIN catchment c ON w.catchment_id = c.id WHERE c.river_basin_id = $1`, nil
+	default:
+		return "", fmt.Errorf("unsupported target type: %v", t)
+	}
+}
 
-// queryAggregatorCH: group by station(s) + interval => avg(value), maxOrNull(trend_anomaly)
-func (r *MetricDataRepository) queryAggregatorCH(
-	ctx context.Context,
-	stationIDs []int32,
-	metricID int32,
-	from, to time.Time,
-	stepSeconds int32,
-) ([]*metricpb.MetricPoint, error) {
-	log.Print("[debug] queryAggregatorCH called")
-	if len(stationIDs) == 0 {
+// ----------------------------------------------- ClickHouse aggregator ---------------------------------------------
+
+func (r *MetricDataRepository) queryAggregatorCH(ctx context.Context, stations []int32, metricID int32, from, to time.Time, step int32) ([]*metricpb.MetricPoint, error) {
+	if len(stations) == 0 {
 		return nil, nil
 	}
 
-	var query string
-	if len(stationIDs) == 1 {
-		query = fmt.Sprintf(`
-SELECT
-    toStartOfInterval(datetime, INTERVAL %d second) AS interval_time,
-    avg(value) AS avg_val,
-    max(trend_anomaly) AS anomaly
-FROM messages_sharded
-WHERE station_id = %d
-  AND metric_id = %d
-  AND datetime BETWEEN toDateTime('%s') AND toDateTime('%s')
-GROUP BY interval_time
-ORDER BY interval_time`,
-			stepSeconds, stationIDs[0], metricID,
-			from.Format("2006-01-02 15:04:05"),
-			to.Format("2006-01-02 15:04:05"),
-		)
+	var cond string
+	if len(stations) == 1 {
+		cond = fmt.Sprintf("station_id = %d", stations[0])
 	} else {
-		idStr := strings.Trim(strings.Join(strings.Fields(fmt.Sprint(stationIDs)), ","), "[]")
-		query = fmt.Sprintf(`
-SELECT
-    toStartOfInterval(datetime, INTERVAL %d second) AS interval_time,
-    avg(value) AS avg_val,
-    max(trend_anomaly) AS anomaly
-FROM messages_sharded
-WHERE station_id IN (%s)
-  AND metric_id = %d
-  AND datetime BETWEEN toDateTime('%s') AND toDateTime('%s')
-GROUP BY interval_time
-ORDER BY interval_time`,
-			stepSeconds, idStr, metricID,
-			from.Format("2006-01-02 15:04:05"),
-			to.Format("2006-01-02 15:04:05"),
-		)
+		cond = fmt.Sprintf("station_id IN (%s)", strings.Trim(strings.Join(strings.Fields(fmt.Sprint(stations)), ","), "[]"))
 	}
 
-	rows, err := r.chdb.ExecQuery(ctx, query)
+	q := fmt.Sprintf(`SELECT toStartOfInterval(datetime, INTERVAL %d second) AS t, avg(value) AS v, max(trend_anomaly) AS a FROM messages_sharded WHERE %s AND metric_id = %d AND datetime BETWEEN toDateTime('%s') AND toDateTime('%s') GROUP BY t ORDER BY t`, step, cond, metricID, from.Format("2006-01-02 15:04:05"), to.Format("2006-01-02 15:04:05"))
+
+	rows, err := r.chdb.ExecQuery(ctx, q)
 	if err != nil {
-		return nil, fmt.Errorf("clickhouse aggregator query failed: %w", err)
+		log.Printf("[error][ch-query] failed CH query: %s", q)
+		return nil, fmt.Errorf("[ch-query] failed: %w", err)
 	}
 
-	var points []*metricpb.MetricPoint
-	for _, row := range rows {
-		// log.Printf("anomaly raw type: %T, value: %#v\n", row["anomaly"], row["anomaly"])
-
-		itime, _ := row["interval_time"].(time.Time)
-		avgVal, _ := castutil.ToFloat(row["avg_val"])
-		var anomaly bool
-		if v, ok := row["anomaly"]; ok && v != nil {
-			anomaly, _ = v.(bool)
-		}
-
-		points = append(points, &metricpb.MetricPoint{
-			Datetime:     itime.Format(time.RFC3339),
-			Value:        float32(avgVal),
-			TrendAnomaly: anomaly,
+	var pts []*metricpb.MetricPoint
+	for _, r := range rows {
+		ts := r["t"].(time.Time)
+		val, _ := castutil.ToFloat(r["v"])
+		pts = append(pts, &metricpb.MetricPoint{
+			Datetime:     ts.Format(time.RFC3339),
+			Value:        float32(val),
+			TrendAnomaly: castutil.ToBool(r["a"]),
 		})
 	}
-	return points, nil
+	return pts, nil
 }
 
-// ------------------- Aggregator Redis -------------------
+// ----------------------------------------------- Redis aggregator --------------------------------------------------
 
-// queryAggregatorRedis: nếu 1 station => queryRedisAggregatorSingle
-// nếu nhiều station => aggregateAcrossStationsRedis
-func (r *MetricDataRepository) queryAggregatorRedis(
-	ctx context.Context,
-	stationIDs []int32,
-	metricID int32,
-	from, to time.Time,
-	stepSeconds int32,
-) ([]*metricpb.MetricPoint, error) {
-	log.Print("[debug] queryAggregatorRedis called")
-	if len(stationIDs) == 0 {
-		return nil, nil
+func (r *MetricDataRepository) queryAggregatorRedis(ctx context.Context, stations []int32, metricID int32, from, to time.Time, step int32) ([]*metricpb.MetricPoint, error) {
+	if len(stations) == 1 {
+		return r.singleStationRedis(ctx, stations[0], metricID, from, to, step)
 	}
-	if len(stationIDs) == 1 {
-		return r.queryRedisAggregatorSingle(ctx, stationIDs[0], metricID, from, to, stepSeconds)
-	}
-	return r.aggregateAcrossStationsRedis(ctx, stationIDs, metricID, from, to, stepSeconds)
+	return r.multiStationRedis(ctx, stations, metricID, from, to, step)
 }
 
-// queryRedisAggregatorSingle: aggregator 1 station => TSRangeAgg.
-// Nếu trả về rỗng => gọi RefreshRedisSeriesData() => aggregator lần nữa.
-func (r *MetricDataRepository) queryRedisAggregatorSingle(
-	ctx context.Context,
-	stationID int32,
-	metricID int32,
-	from, to time.Time,
-	stepSeconds int32,
-) ([]*metricpb.MetricPoint, error) {
-	log.Print("[debug] queryRedisAggregatorSingle called")
+func (r *MetricDataRepository) singleStationRedis(ctx context.Context, stationID, metricID int32, from, to time.Time, step int32) ([]*metricpb.MetricPoint, error) {
 	tsKey := fmt.Sprintf("sensor_%d_%d", stationID, metricID)
-	anomalySetKey := fmt.Sprintf("trendanomaly:%d:%d", stationID, metricID)
+	anomalyKey := fmt.Sprintf("trendanomaly:%d:%d", stationID, metricID)
 
-	bucketDur := time.Duration(stepSeconds) * time.Second
+	ensureSeries(ctx, r.cache, tsKey)
+	ensureSet(ctx, r.cache, anomalyKey)
 
-	aggData, err := r.cache.TSRangeAgg(ctx, tsKey, from, to, cache.Avg, bucketDur)
-	if err != nil {
-		return nil, fmt.Errorf("TSRangeAgg fail key=%s: %w", tsKey, err)
+	bucket := time.Duration(step) * time.Second
+	data, err := r.cache.TSRangeAgg(ctx, tsKey, from, to, cache.Avg, bucket)
+	if isKeyMissing(err) {
+		ensureSeries(ctx, r.cache, tsKey)
+		err = nil
+		data = nil
 	}
-
-	// Nếu chưa có data => refresh Redis từ CH
-	if len(aggData) == 0 {
+	if err != nil {
+		return nil, err
+	}
+	if len(data) == 0 {
+		// back-fill nếu Redis chưa có
 		if err := r.RefreshRedisSeriesData(ctx, stationID, metricID, from, to); err != nil {
-			log.Printf("[warn] RefreshRedisSeriesData failed st=%d,metric=%d => %v", stationID, metricID, err)
+			log.Printf("[warn][redis-refresh] failed to refresh Redis data for station=%d metric=%d: %v", stationID, metricID, err)
 		}
-		// Gọi lại aggregator
-		aggData, err = r.cache.TSRangeAgg(ctx, tsKey, from, to, cache.Avg, bucketDur)
+
+		// Retry lần 1
+		data, err = r.cache.TSRangeAgg(ctx, tsKey, from, to, cache.Avg, bucket)
+		if err != nil && isKeyMissing(err) {
+			// Retry lần 2: nếu key vẫn chưa được tạo do CH cũng rỗng → đảm bảo tạo key
+			_ = r.cache.TSCreate(ctx, tsKey, RedisRetention)
+			data = []cache.TSTimestampValue{}
+			err = nil
+		}
 		if err != nil {
-			return nil, fmt.Errorf("TSRangeAgg after refresh fail key=%s: %w", tsKey, err)
+			return nil, fmt.Errorf("TSRangeAgg after refresh failed: %w", err)
 		}
 	}
 
-	var points []*metricpb.MetricPoint
-	for _, dp := range aggData {
-		tsMillis := dp.Timestamp
-		tParsed := time.UnixMilli(int64(tsMillis)).UTC()
-
-		exist, err := r.cache.SIsMember(ctx, anomalySetKey, fmt.Sprintf("%d", tsMillis))
-		if err != nil {
-			// fallback
-			exist = false
-			log.Printf("[warn] SIsMember fail key=%s => %v", anomalySetKey, err)
-		}
-
-		points = append(points, &metricpb.MetricPoint{
-			Datetime:     tParsed.Format(time.RFC3339),
+	var pts []*metricpb.MetricPoint
+	for _, dp := range data {
+		ts := time.UnixMilli(int64(dp.Timestamp))
+		flag, _ := r.cache.SIsMember(ctx, anomalyKey, fmt.Sprintf("%d", dp.Timestamp))
+		pts = append(pts, &metricpb.MetricPoint{
+			Datetime:     ts.Format(time.RFC3339),
 			Value:        float32(dp.Value),
-			TrendAnomaly: exist,
+			TrendAnomaly: flag,
 		})
 	}
-	return points, nil
+	return pts, nil
 }
 
-// aggregateAcrossStationsRedis: aggregator cho nhiều station => loop từng station => merge
-func (r *MetricDataRepository) aggregateAcrossStationsRedis(
-	ctx context.Context,
-	stationIDs []int32,
-	metricID int32,
-	from, to time.Time,
-	stepSeconds int32,
-) ([]*metricpb.MetricPoint, error) {
-	log.Print("[debug] aggregateAcrossStationsRedis called")
-	type bucketAgg struct {
-		sum     float64
-		count   int
-		anomaly bool
+// --------------------------------------------------------------------------------------------------
+// multi‑station redis aggregator (with key‑missing fix) --------------------------------------------
+
+func (r *MetricDataRepository) multiStationRedis(ctx context.Context, stations []int32, metricID int32, from, to time.Time, step int32) ([]*metricpb.MetricPoint, error) {
+	type bucket struct {
+		sum float64
+		n   int
+		an  bool
 	}
-	aggMap := make(map[int64]*bucketAgg)
-	bucketDur := time.Duration(stepSeconds) * time.Second
+	buckets := map[int64]*bucket{}
+	bucketDur := time.Duration(step) * time.Second
 
-	for _, stID := range stationIDs {
-		tsKey := fmt.Sprintf("sensor_%d_%d", stID, metricID)
-		anomalySetKey := fmt.Sprintf("trendanomaly:%d:%d", stID, metricID)
+	for _, st := range stations {
+		tsKey := fmt.Sprintf("sensor_%d_%d", st, metricID)
+		anomalyKey := fmt.Sprintf("trendanomaly:%d:%d", st, metricID)
+		ensureSeries(ctx, r.cache, tsKey)
+		ensureSet(ctx, r.cache, anomalyKey)
 
-		// Lấy data
-		stationAgg, err := r.cache.TSRangeAgg(ctx, tsKey, from, to, cache.Avg, bucketDur)
+		data, err := r.cache.TSRangeAgg(ctx, tsKey, from, to, cache.Avg, bucketDur)
+		if isKeyMissing(err) {
+			ensureSeries(ctx, r.cache, tsKey)
+			err = nil
+			data = nil
+		}
 		if err != nil {
-			return nil, fmt.Errorf("TSRangeAgg fail key=%s: %w", tsKey, err)
+			return nil, err
+		}
+		if len(data) == 0 {
+			if err := r.RefreshRedisSeriesData(ctx, st, metricID, from, to); err != nil {
+				log.Printf("[warn][redis-refresh] failed to refresh Redis data for station=%d metric=%d: %v", st, metricID, err)
+			}
+			data, _ = r.cache.TSRangeAgg(ctx, tsKey, from, to, cache.Avg, bucketDur)
 		}
 
-		// Nếu rỗng => refresh -> query lại
-		if len(stationAgg) == 0 {
-			if err := r.RefreshRedisSeriesData(ctx, stID, metricID, from, to); err != nil {
-				log.Printf("[warn] RefreshRedisSeriesData fail st=%d,m=%d => %v", stID, metricID, err)
+		for _, dp := range data {
+			ts := dp.Timestamp
+			b := buckets[ts]
+			if b == nil {
+				b = &bucket{}
+				buckets[ts] = b
 			}
-			stationAgg, err = r.cache.TSRangeAgg(ctx, tsKey, from, to, cache.Avg, bucketDur)
-			if err != nil {
-				return nil, fmt.Errorf("TSRangeAgg after refresh fail key=%s: %w", tsKey, err)
-			}
-		}
-
-		// Gom data vào aggMap
-		for _, dp := range stationAgg {
-			tsMillis := dp.Timestamp
-
-			exist, err := r.cache.SIsMember(ctx, anomalySetKey, fmt.Sprintf("%d", tsMillis))
-			if err != nil {
-				exist = false
-				log.Printf("[warn] SIsMember fail key=%s => %v", anomalySetKey, err)
-			}
-
-			if b, ok := aggMap[tsMillis]; ok {
-				b.sum += dp.Value
-				b.count++
-				b.anomaly = b.anomaly || exist
-			} else {
-				aggMap[tsMillis] = &bucketAgg{
-					sum:     dp.Value,
-					count:   1,
-					anomaly: exist,
-				}
-			}
+			b.sum += dp.Value
+			b.n++
+			flag, _ := r.cache.SIsMember(ctx, anomalyKey, fmt.Sprintf("%d", ts))
+			b.an = b.an || flag
 		}
 	}
 
-	// map -> sorted slice
-	var timestamps []int64
-	for ts := range aggMap {
-		timestamps = append(timestamps, ts)
+	var keys []int64
+	for k := range buckets {
+		keys = append(keys, k)
 	}
-	sort.Slice(timestamps, func(i, j int) bool {
-		return timestamps[i] < timestamps[j]
-	})
-
-	var points []*metricpb.MetricPoint
-	for _, ts := range timestamps {
-		entry := aggMap[ts]
-		avgVal := entry.sum / float64(entry.count)
-		tParsed := time.UnixMilli(ts).UTC()
-
-		points = append(points, &metricpb.MetricPoint{
-			Datetime:     tParsed.Format(time.RFC3339),
-			Value:        float32(avgVal),
-			TrendAnomaly: entry.anomaly,
+	sort.Slice(keys, func(i, j int) bool { return keys[i] < keys[j] })
+	var pts []*metricpb.MetricPoint
+	for _, k := range keys {
+		b := buckets[k]
+		pts = append(pts, &metricpb.MetricPoint{
+			Datetime:     time.UnixMilli(k).Format(time.RFC3339),
+			Value:        float32(b.sum / float64(b.n)),
+			TrendAnomaly: b.an,
 		})
 	}
-
-	return points, nil
+	return pts, nil
 }
 
-// ------------------- Refresh Redis (CH -> Redis) -------------------
+// ----------------------------------------------- CH → Redis back‑fill ---------------------------------------------
 
-// RefreshRedisSeriesData: Lấy data [from,to] từ CH, ghi vào Redis TS + anomaly set
-// - TS.ADD sensor_{stationID}_{metricID} {timestamp_ms} {value}
-// - if anomaly => SADD trendanomaly:stationID:metricID {timestamp_ms} else => SREM ...
-func (r *MetricDataRepository) RefreshRedisSeriesData(
-	ctx context.Context,
-	stationID, metricID int32,
-	from, to time.Time,
-) error {
-	log.Print("[debug] RefreshRedisSeriesData called")
-	// Query CH data + anomaly
-	query := fmt.Sprintf(`
-SELECT
-    toUnixTimestamp(datetime)*1000 AS ts_ms,
-    value,
-    trend_anomaly as anomaly
-FROM messages_sharded
-WHERE station_id = %d
-  AND metric_id = %d
-  AND datetime BETWEEN toDateTime('%s') AND toDateTime('%s')
-ORDER BY datetime
-`,
-		stationID,
-		metricID,
-		from.Format("2006-01-02 15:04:05"),
-		to.Format("2006-01-02 15:04:05"),
-	)
+func (r *MetricDataRepository) RefreshRedisSeriesData(ctx context.Context, stationID, metricID int32, from, to time.Time) error {
+	ensureSeries(ctx, r.cache, fmt.Sprintf("sensor_%d_%d", stationID, metricID))
+	ensureSet(ctx, r.cache, fmt.Sprintf("trendanomaly:%d:%d", stationID, metricID))
 
-	rows, err := r.chdb.ExecQuery(ctx, query)
+	q := fmt.Sprintf(`SELECT toUnixTimestamp(datetime)*1000 AS ts, value, trend_anomaly FROM messages_sharded WHERE station_id=%d AND metric_id=%d AND datetime BETWEEN toDateTime('%s') AND toDateTime('%s')`, stationID, metricID, from.Format("2006-01-02 15:04:05"), to.Format("2006-01-02 15:04:05"))
+	rows, err := r.chdb.ExecQuery(ctx, q)
 	if err != nil {
-		return fmt.Errorf("RefreshRedisSeriesData: CH query failed: %w", err)
+		return fmt.Errorf("[refresh][CH] exec query failed for station=%d metric=%d: %w", stationID, metricID, err)
 	}
 
 	tsKey := fmt.Sprintf("sensor_%d_%d", stationID, metricID)
+	anKey := fmt.Sprintf("trendanomaly:%d:%d", stationID, metricID)
 	anomalySetKey := fmt.Sprintf("trendanomaly:%d:%d", stationID, metricID)
-
-	for _, row := range rows {
-		tsF, _ := castutil.ToFloat(row["ts_ms"])
-		tsMs := int64(tsF)
-
-		val, _ := castutil.ToFloat(row["value"])
-		var anomaly bool
-		if v, ok := row["anomaly"]; ok && v != nil {
-			anomaly, _ = v.(bool)
+	if len(rows) == 0 {
+		_ = r.cache.TSCreate(ctx, tsKey, RedisRetention)
+		_ = r.cache.Set(ctx, anomalySetKey, "", 0) // Set rỗng để không bị lỗi SIsMember
+	}
+	for _, rRow := range rows {
+		tsF, _ := castutil.ToFloat(rRow["ts"])
+		ts := int64(tsF)
+		val, _ := castutil.ToFloat(rRow["value"])
+		_ = r.cache.TSAdd(ctx, tsKey, time.UnixMilli(ts), val)
+		if castutil.ToBool(rRow["trend_anomaly"]) {
+			_ = r.cache.SAdd(ctx, anKey, fmt.Sprintf("%d", ts))
+		} else {
+			_ = r.cache.SRem(ctx, anKey, fmt.Sprintf("%d", ts))
 		}
-
-		// Ghi data point vào Redis TimeSeries
-		// TS.ADD <key> <timestamp_ms> <value>
-		if err := r.cache.TSAdd(ctx, tsKey, time.UnixMilli(tsMs), val); err != nil {
-			log.Printf("[warn] TSAdd fail key=%s, ts=%d => %v", tsKey, tsMs, err)
-		}
-
-		// Update anomaly set
-		tsStr := fmt.Sprintf("%d", tsMs)
-		if anomaly {
-			if err := r.cache.SAdd(ctx, anomalySetKey, tsStr); err != nil {
-				log.Printf("[warn] SAdd fail for key=%s => %v", anomalySetKey, err)
-			}
-		}
-
 	}
 	return nil
 }
 
-// ------------------- Utils -------------------
+// ----------------------------------------------- helpers -----------------------------------------------------------
+// --------------------------------------------------------------------------------------------------
+// util helpers -------------------------------------------------------------------------------------
 
-func mergeSeriesPoints(oldList, newList []*metricpb.MetricPoint) []*metricpb.MetricPoint {
-	log.Print("[debug] mergeSeriesPoints called")
-	merged := append(oldList, newList...)
-	sort.Slice(merged, func(i, j int) bool {
-		ti, _ := time.Parse(time.RFC3339, merged[i].Datetime)
-		tj, _ := time.Parse(time.RFC3339, merged[j].Datetime)
-		return ti.Before(tj)
-	})
+func isKeyMissing(err error) bool {
+	if err == nil {
+		return false
+	}
+	return strings.Contains(err.Error(), "key does not exist") || strings.Contains(err.Error(), "TSDB")
+}
+
+func ensureSeries(ctx context.Context, c cache.Store, key string) {
+	_ = c.TSCreate(ctx, key, RedisRetention) // create if absent, ignore error otherwise
+}
+
+func ensureSet(ctx context.Context, c cache.Store, key string) {
+	_ = c.Set(ctx, key, "", 0) // create empty string key if not exist
+}
+
+func mergeSeriesPoints(a, b []*metricpb.MetricPoint) []*metricpb.MetricPoint {
+	merged := append(a, b...)
+	sort.Slice(merged, func(i, j int) bool { return merged[i].Datetime < merged[j].Datetime })
 	return merged
 }

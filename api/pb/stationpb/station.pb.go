@@ -8,7 +8,6 @@ package stationpb
 
 import (
 	empty "github.com/golang/protobuf/ptypes/empty"
-	wrappers "github.com/golang/protobuf/ptypes/wrappers"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
@@ -258,6 +257,186 @@ func (x *Station) GetUpdatedAt() string {
 	return ""
 }
 
+type StationParameter struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	StationId     int32                  `protobuf:"varint,1,opt,name=station_id,json=stationId,proto3" json:"station_id,omitempty"`
+	ParameterId   int32                  `protobuf:"varint,2,opt,name=parameter_id,json=parameterId,proto3" json:"parameter_id,omitempty"`
+	Status        string                 `protobuf:"bytes,3,opt,name=status,proto3" json:"status,omitempty"`
+	LastReceivAt  string                 `protobuf:"bytes,4,opt,name=last_receiv_at,json=lastReceivAt,proto3" json:"last_receiv_at,omitempty"`
+	LastValue     float64                `protobuf:"fixed64,5,opt,name=last_value,json=lastValue,proto3" json:"last_value,omitempty"`
+	CreatedAt     string                 `protobuf:"bytes,6,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	UpdatedAt     string                 `protobuf:"bytes,7,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *StationParameter) Reset() {
+	*x = StationParameter{}
+	mi := &file_stationpb_station_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *StationParameter) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*StationParameter) ProtoMessage() {}
+
+func (x *StationParameter) ProtoReflect() protoreflect.Message {
+	mi := &file_stationpb_station_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use StationParameter.ProtoReflect.Descriptor instead.
+func (*StationParameter) Descriptor() ([]byte, []int) {
+	return file_stationpb_station_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *StationParameter) GetStationId() int32 {
+	if x != nil {
+		return x.StationId
+	}
+	return 0
+}
+
+func (x *StationParameter) GetParameterId() int32 {
+	if x != nil {
+		return x.ParameterId
+	}
+	return 0
+}
+
+func (x *StationParameter) GetStatus() string {
+	if x != nil {
+		return x.Status
+	}
+	return ""
+}
+
+func (x *StationParameter) GetLastReceivAt() string {
+	if x != nil {
+		return x.LastReceivAt
+	}
+	return ""
+}
+
+func (x *StationParameter) GetLastValue() float64 {
+	if x != nil {
+		return x.LastValue
+	}
+	return 0
+}
+
+func (x *StationParameter) GetCreatedAt() string {
+	if x != nil {
+		return x.CreatedAt
+	}
+	return ""
+}
+
+func (x *StationParameter) GetUpdatedAt() string {
+	if x != nil {
+		return x.UpdatedAt
+	}
+	return ""
+}
+
+type StationParameterList struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Items         []*StationParameter    `protobuf:"bytes,1,rep,name=items,proto3" json:"items,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *StationParameterList) Reset() {
+	*x = StationParameterList{}
+	mi := &file_stationpb_station_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *StationParameterList) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*StationParameterList) ProtoMessage() {}
+
+func (x *StationParameterList) ProtoReflect() protoreflect.Message {
+	mi := &file_stationpb_station_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use StationParameterList.ProtoReflect.Descriptor instead.
+func (*StationParameterList) Descriptor() ([]byte, []int) {
+	return file_stationpb_station_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *StationParameterList) GetItems() []*StationParameter {
+	if x != nil {
+		return x.Items
+	}
+	return nil
+}
+
+type StationParamRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	StationId     int32                  `protobuf:"varint,1,opt,name=station_id,json=stationId,proto3" json:"station_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *StationParamRequest) Reset() {
+	*x = StationParamRequest{}
+	mi := &file_stationpb_station_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *StationParamRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*StationParamRequest) ProtoMessage() {}
+
+func (x *StationParamRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_stationpb_station_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use StationParamRequest.ProtoReflect.Descriptor instead.
+func (*StationParamRequest) Descriptor() ([]byte, []int) {
+	return file_stationpb_station_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *StationParamRequest) GetStationId() int32 {
+	if x != nil {
+		return x.StationId
+	}
+	return 0
+}
+
 type StationQuery struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Keyword       string                 `protobuf:"bytes,1,opt,name=keyword,proto3" json:"keyword,omitempty"`
@@ -270,7 +449,7 @@ type StationQuery struct {
 
 func (x *StationQuery) Reset() {
 	*x = StationQuery{}
-	mi := &file_stationpb_station_proto_msgTypes[2]
+	mi := &file_stationpb_station_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -282,7 +461,7 @@ func (x *StationQuery) String() string {
 func (*StationQuery) ProtoMessage() {}
 
 func (x *StationQuery) ProtoReflect() protoreflect.Message {
-	mi := &file_stationpb_station_proto_msgTypes[2]
+	mi := &file_stationpb_station_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -295,7 +474,7 @@ func (x *StationQuery) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StationQuery.ProtoReflect.Descriptor instead.
 func (*StationQuery) Descriptor() ([]byte, []int) {
-	return file_stationpb_station_proto_rawDescGZIP(), []int{2}
+	return file_stationpb_station_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *StationQuery) GetKeyword() string {
@@ -335,7 +514,7 @@ type StationID struct {
 
 func (x *StationID) Reset() {
 	*x = StationID{}
-	mi := &file_stationpb_station_proto_msgTypes[3]
+	mi := &file_stationpb_station_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -347,7 +526,7 @@ func (x *StationID) String() string {
 func (*StationID) ProtoMessage() {}
 
 func (x *StationID) ProtoReflect() protoreflect.Message {
-	mi := &file_stationpb_station_proto_msgTypes[3]
+	mi := &file_stationpb_station_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -360,10 +539,142 @@ func (x *StationID) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StationID.ProtoReflect.Descriptor instead.
 func (*StationID) Descriptor() ([]byte, []int) {
-	return file_stationpb_station_proto_rawDescGZIP(), []int{3}
+	return file_stationpb_station_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *StationID) GetId() int32 {
+	if x != nil {
+		return x.Id
+	}
+	return 0
+}
+
+type RiverBasinID struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            int32                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RiverBasinID) Reset() {
+	*x = RiverBasinID{}
+	mi := &file_stationpb_station_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RiverBasinID) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RiverBasinID) ProtoMessage() {}
+
+func (x *RiverBasinID) ProtoReflect() protoreflect.Message {
+	mi := &file_stationpb_station_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RiverBasinID.ProtoReflect.Descriptor instead.
+func (*RiverBasinID) Descriptor() ([]byte, []int) {
+	return file_stationpb_station_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *RiverBasinID) GetId() int32 {
+	if x != nil {
+		return x.Id
+	}
+	return 0
+}
+
+type CatchmentID struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            int32                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CatchmentID) Reset() {
+	*x = CatchmentID{}
+	mi := &file_stationpb_station_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CatchmentID) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CatchmentID) ProtoMessage() {}
+
+func (x *CatchmentID) ProtoReflect() protoreflect.Message {
+	mi := &file_stationpb_station_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CatchmentID.ProtoReflect.Descriptor instead.
+func (*CatchmentID) Descriptor() ([]byte, []int) {
+	return file_stationpb_station_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *CatchmentID) GetId() int32 {
+	if x != nil {
+		return x.Id
+	}
+	return 0
+}
+
+type WaterBodyID struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            int32                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *WaterBodyID) Reset() {
+	*x = WaterBodyID{}
+	mi := &file_stationpb_station_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *WaterBodyID) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*WaterBodyID) ProtoMessage() {}
+
+func (x *WaterBodyID) ProtoReflect() protoreflect.Message {
+	mi := &file_stationpb_station_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use WaterBodyID.ProtoReflect.Descriptor instead.
+func (*WaterBodyID) Descriptor() ([]byte, []int) {
+	return file_stationpb_station_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *WaterBodyID) GetId() int32 {
 	if x != nil {
 		return x.Id
 	}
@@ -379,7 +690,7 @@ type StationList struct {
 
 func (x *StationList) Reset() {
 	*x = StationList{}
-	mi := &file_stationpb_station_proto_msgTypes[4]
+	mi := &file_stationpb_station_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -391,7 +702,7 @@ func (x *StationList) String() string {
 func (*StationList) ProtoMessage() {}
 
 func (x *StationList) ProtoReflect() protoreflect.Message {
-	mi := &file_stationpb_station_proto_msgTypes[4]
+	mi := &file_stationpb_station_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -404,7 +715,7 @@ func (x *StationList) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StationList.ProtoReflect.Descriptor instead.
 func (*StationList) Descriptor() ([]byte, []int) {
-	return file_stationpb_station_proto_rawDescGZIP(), []int{4}
+	return file_stationpb_station_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *StationList) GetStations() []*Station {
@@ -423,7 +734,7 @@ type StationResponse struct {
 
 func (x *StationResponse) Reset() {
 	*x = StationResponse{}
-	mi := &file_stationpb_station_proto_msgTypes[5]
+	mi := &file_stationpb_station_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -435,7 +746,7 @@ func (x *StationResponse) String() string {
 func (*StationResponse) ProtoMessage() {}
 
 func (x *StationResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_stationpb_station_proto_msgTypes[5]
+	mi := &file_stationpb_station_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -448,7 +759,7 @@ func (x *StationResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StationResponse.ProtoReflect.Descriptor instead.
 func (*StationResponse) Descriptor() ([]byte, []int) {
-	return file_stationpb_station_proto_rawDescGZIP(), []int{5}
+	return file_stationpb_station_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *StationResponse) GetStation() *Station {
@@ -473,7 +784,7 @@ type StationLocation struct {
 
 func (x *StationLocation) Reset() {
 	*x = StationLocation{}
-	mi := &file_stationpb_station_proto_msgTypes[6]
+	mi := &file_stationpb_station_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -485,7 +796,7 @@ func (x *StationLocation) String() string {
 func (*StationLocation) ProtoMessage() {}
 
 func (x *StationLocation) ProtoReflect() protoreflect.Message {
-	mi := &file_stationpb_station_proto_msgTypes[6]
+	mi := &file_stationpb_station_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -498,7 +809,7 @@ func (x *StationLocation) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StationLocation.ProtoReflect.Descriptor instead.
 func (*StationLocation) Descriptor() ([]byte, []int) {
-	return file_stationpb_station_proto_rawDescGZIP(), []int{6}
+	return file_stationpb_station_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *StationLocation) GetWaterBodyName() string {
@@ -560,7 +871,7 @@ type StationWithLocation struct {
 
 func (x *StationWithLocation) Reset() {
 	*x = StationWithLocation{}
-	mi := &file_stationpb_station_proto_msgTypes[7]
+	mi := &file_stationpb_station_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -572,7 +883,7 @@ func (x *StationWithLocation) String() string {
 func (*StationWithLocation) ProtoMessage() {}
 
 func (x *StationWithLocation) ProtoReflect() protoreflect.Message {
-	mi := &file_stationpb_station_proto_msgTypes[7]
+	mi := &file_stationpb_station_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -585,7 +896,7 @@ func (x *StationWithLocation) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StationWithLocation.ProtoReflect.Descriptor instead.
 func (*StationWithLocation) Descriptor() ([]byte, []int) {
-	return file_stationpb_station_proto_rawDescGZIP(), []int{7}
+	return file_stationpb_station_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *StationWithLocation) GetStation() *Station {
@@ -611,13 +922,14 @@ type WaterBody struct {
 	CatchmentId   int32                  `protobuf:"varint,4,opt,name=catchment_id,json=catchmentId,proto3" json:"catchment_id,omitempty"`
 	Description   string                 `protobuf:"bytes,5,opt,name=description,proto3" json:"description,omitempty"`
 	UpdatedAt     string                 `protobuf:"bytes,6,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	Status        string                 `protobuf:"bytes,7,opt,name=status,proto3" json:"status,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *WaterBody) Reset() {
 	*x = WaterBody{}
-	mi := &file_stationpb_station_proto_msgTypes[8]
+	mi := &file_stationpb_station_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -629,7 +941,7 @@ func (x *WaterBody) String() string {
 func (*WaterBody) ProtoMessage() {}
 
 func (x *WaterBody) ProtoReflect() protoreflect.Message {
-	mi := &file_stationpb_station_proto_msgTypes[8]
+	mi := &file_stationpb_station_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -642,7 +954,7 @@ func (x *WaterBody) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WaterBody.ProtoReflect.Descriptor instead.
 func (*WaterBody) Descriptor() ([]byte, []int) {
-	return file_stationpb_station_proto_rawDescGZIP(), []int{8}
+	return file_stationpb_station_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *WaterBody) GetId() int32 {
@@ -687,6 +999,73 @@ func (x *WaterBody) GetUpdatedAt() string {
 	return ""
 }
 
+func (x *WaterBody) GetStatus() string {
+	if x != nil {
+		return x.Status
+	}
+	return ""
+}
+
+type WaterBodyQuery struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Keyword       string                 `protobuf:"bytes,1,opt,name=keyword,proto3" json:"keyword,omitempty"`
+	CatchmentId   int32                  `protobuf:"varint,2,opt,name=catchment_id,json=catchmentId,proto3" json:"catchment_id,omitempty"`
+	Type          string                 `protobuf:"bytes,3,opt,name=type,proto3" json:"type,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *WaterBodyQuery) Reset() {
+	*x = WaterBodyQuery{}
+	mi := &file_stationpb_station_proto_msgTypes[15]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *WaterBodyQuery) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*WaterBodyQuery) ProtoMessage() {}
+
+func (x *WaterBodyQuery) ProtoReflect() protoreflect.Message {
+	mi := &file_stationpb_station_proto_msgTypes[15]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use WaterBodyQuery.ProtoReflect.Descriptor instead.
+func (*WaterBodyQuery) Descriptor() ([]byte, []int) {
+	return file_stationpb_station_proto_rawDescGZIP(), []int{15}
+}
+
+func (x *WaterBodyQuery) GetKeyword() string {
+	if x != nil {
+		return x.Keyword
+	}
+	return ""
+}
+
+func (x *WaterBodyQuery) GetCatchmentId() int32 {
+	if x != nil {
+		return x.CatchmentId
+	}
+	return 0
+}
+
+func (x *WaterBodyQuery) GetType() string {
+	if x != nil {
+		return x.Type
+	}
+	return ""
+}
+
 type WaterBodyList struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	WaterBodies   []*WaterBody           `protobuf:"bytes,1,rep,name=water_bodies,json=waterBodies,proto3" json:"water_bodies,omitempty"`
@@ -696,7 +1075,7 @@ type WaterBodyList struct {
 
 func (x *WaterBodyList) Reset() {
 	*x = WaterBodyList{}
-	mi := &file_stationpb_station_proto_msgTypes[9]
+	mi := &file_stationpb_station_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -708,7 +1087,7 @@ func (x *WaterBodyList) String() string {
 func (*WaterBodyList) ProtoMessage() {}
 
 func (x *WaterBodyList) ProtoReflect() protoreflect.Message {
-	mi := &file_stationpb_station_proto_msgTypes[9]
+	mi := &file_stationpb_station_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -721,7 +1100,7 @@ func (x *WaterBodyList) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WaterBodyList.ProtoReflect.Descriptor instead.
 func (*WaterBodyList) Descriptor() ([]byte, []int) {
-	return file_stationpb_station_proto_rawDescGZIP(), []int{9}
+	return file_stationpb_station_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *WaterBodyList) GetWaterBodies() []*WaterBody {
@@ -740,7 +1119,7 @@ type WaterBodyResponse struct {
 
 func (x *WaterBodyResponse) Reset() {
 	*x = WaterBodyResponse{}
-	mi := &file_stationpb_station_proto_msgTypes[10]
+	mi := &file_stationpb_station_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -752,7 +1131,7 @@ func (x *WaterBodyResponse) String() string {
 func (*WaterBodyResponse) ProtoMessage() {}
 
 func (x *WaterBodyResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_stationpb_station_proto_msgTypes[10]
+	mi := &file_stationpb_station_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -765,7 +1144,7 @@ func (x *WaterBodyResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WaterBodyResponse.ProtoReflect.Descriptor instead.
 func (*WaterBodyResponse) Descriptor() ([]byte, []int) {
-	return file_stationpb_station_proto_rawDescGZIP(), []int{10}
+	return file_stationpb_station_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *WaterBodyResponse) GetWaterBody() *WaterBody {
@@ -791,7 +1170,7 @@ type Catchment struct {
 
 func (x *Catchment) Reset() {
 	*x = Catchment{}
-	mi := &file_stationpb_station_proto_msgTypes[11]
+	mi := &file_stationpb_station_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -803,7 +1182,7 @@ func (x *Catchment) String() string {
 func (*Catchment) ProtoMessage() {}
 
 func (x *Catchment) ProtoReflect() protoreflect.Message {
-	mi := &file_stationpb_station_proto_msgTypes[11]
+	mi := &file_stationpb_station_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -816,7 +1195,7 @@ func (x *Catchment) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Catchment.ProtoReflect.Descriptor instead.
 func (*Catchment) Descriptor() ([]byte, []int) {
-	return file_stationpb_station_proto_rawDescGZIP(), []int{11}
+	return file_stationpb_station_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *Catchment) GetId() int32 {
@@ -868,6 +1247,66 @@ func (x *Catchment) GetUpdatedAt() string {
 	return ""
 }
 
+type CatchmentQuery struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Keyword       string                 `protobuf:"bytes,1,opt,name=keyword,proto3" json:"keyword,omitempty"`
+	RiverBasinId  int32                  `protobuf:"varint,2,opt,name=river_basin_id,json=riverBasinId,proto3" json:"river_basin_id,omitempty"`
+	Country       string                 `protobuf:"bytes,3,opt,name=country,proto3" json:"country,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CatchmentQuery) Reset() {
+	*x = CatchmentQuery{}
+	mi := &file_stationpb_station_proto_msgTypes[19]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CatchmentQuery) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CatchmentQuery) ProtoMessage() {}
+
+func (x *CatchmentQuery) ProtoReflect() protoreflect.Message {
+	mi := &file_stationpb_station_proto_msgTypes[19]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CatchmentQuery.ProtoReflect.Descriptor instead.
+func (*CatchmentQuery) Descriptor() ([]byte, []int) {
+	return file_stationpb_station_proto_rawDescGZIP(), []int{19}
+}
+
+func (x *CatchmentQuery) GetKeyword() string {
+	if x != nil {
+		return x.Keyword
+	}
+	return ""
+}
+
+func (x *CatchmentQuery) GetRiverBasinId() int32 {
+	if x != nil {
+		return x.RiverBasinId
+	}
+	return 0
+}
+
+func (x *CatchmentQuery) GetCountry() string {
+	if x != nil {
+		return x.Country
+	}
+	return ""
+}
+
 type CatchmentList struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Catchments    []*Catchment           `protobuf:"bytes,1,rep,name=catchments,proto3" json:"catchments,omitempty"`
@@ -877,7 +1316,7 @@ type CatchmentList struct {
 
 func (x *CatchmentList) Reset() {
 	*x = CatchmentList{}
-	mi := &file_stationpb_station_proto_msgTypes[12]
+	mi := &file_stationpb_station_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -889,7 +1328,7 @@ func (x *CatchmentList) String() string {
 func (*CatchmentList) ProtoMessage() {}
 
 func (x *CatchmentList) ProtoReflect() protoreflect.Message {
-	mi := &file_stationpb_station_proto_msgTypes[12]
+	mi := &file_stationpb_station_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -902,7 +1341,7 @@ func (x *CatchmentList) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CatchmentList.ProtoReflect.Descriptor instead.
 func (*CatchmentList) Descriptor() ([]byte, []int) {
-	return file_stationpb_station_proto_rawDescGZIP(), []int{12}
+	return file_stationpb_station_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *CatchmentList) GetCatchments() []*Catchment {
@@ -921,7 +1360,7 @@ type CatchmentResponse struct {
 
 func (x *CatchmentResponse) Reset() {
 	*x = CatchmentResponse{}
-	mi := &file_stationpb_station_proto_msgTypes[13]
+	mi := &file_stationpb_station_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -933,7 +1372,7 @@ func (x *CatchmentResponse) String() string {
 func (*CatchmentResponse) ProtoMessage() {}
 
 func (x *CatchmentResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_stationpb_station_proto_msgTypes[13]
+	mi := &file_stationpb_station_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -946,7 +1385,7 @@ func (x *CatchmentResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CatchmentResponse.ProtoReflect.Descriptor instead.
 func (*CatchmentResponse) Descriptor() ([]byte, []int) {
-	return file_stationpb_station_proto_rawDescGZIP(), []int{13}
+	return file_stationpb_station_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *CatchmentResponse) GetCatchment() *Catchment {
@@ -970,7 +1409,7 @@ type RiverBasin struct {
 
 func (x *RiverBasin) Reset() {
 	*x = RiverBasin{}
-	mi := &file_stationpb_station_proto_msgTypes[14]
+	mi := &file_stationpb_station_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -982,7 +1421,7 @@ func (x *RiverBasin) String() string {
 func (*RiverBasin) ProtoMessage() {}
 
 func (x *RiverBasin) ProtoReflect() protoreflect.Message {
-	mi := &file_stationpb_station_proto_msgTypes[14]
+	mi := &file_stationpb_station_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -995,7 +1434,7 @@ func (x *RiverBasin) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RiverBasin.ProtoReflect.Descriptor instead.
 func (*RiverBasin) Descriptor() ([]byte, []int) {
-	return file_stationpb_station_proto_rawDescGZIP(), []int{14}
+	return file_stationpb_station_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *RiverBasin) GetId() int32 {
@@ -1033,6 +1472,58 @@ func (x *RiverBasin) GetUpdatedAt() string {
 	return ""
 }
 
+type RiverBasinQuery struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Keyword       string                 `protobuf:"bytes,1,opt,name=keyword,proto3" json:"keyword,omitempty"`
+	Status        string                 `protobuf:"bytes,2,opt,name=status,proto3" json:"status,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RiverBasinQuery) Reset() {
+	*x = RiverBasinQuery{}
+	mi := &file_stationpb_station_proto_msgTypes[23]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RiverBasinQuery) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RiverBasinQuery) ProtoMessage() {}
+
+func (x *RiverBasinQuery) ProtoReflect() protoreflect.Message {
+	mi := &file_stationpb_station_proto_msgTypes[23]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RiverBasinQuery.ProtoReflect.Descriptor instead.
+func (*RiverBasinQuery) Descriptor() ([]byte, []int) {
+	return file_stationpb_station_proto_rawDescGZIP(), []int{23}
+}
+
+func (x *RiverBasinQuery) GetKeyword() string {
+	if x != nil {
+		return x.Keyword
+	}
+	return ""
+}
+
+func (x *RiverBasinQuery) GetStatus() string {
+	if x != nil {
+		return x.Status
+	}
+	return ""
+}
+
 type RiverBasinList struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	RiverBasins   []*RiverBasin          `protobuf:"bytes,1,rep,name=river_basins,json=riverBasins,proto3" json:"river_basins,omitempty"`
@@ -1042,7 +1533,7 @@ type RiverBasinList struct {
 
 func (x *RiverBasinList) Reset() {
 	*x = RiverBasinList{}
-	mi := &file_stationpb_station_proto_msgTypes[15]
+	mi := &file_stationpb_station_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1054,7 +1545,7 @@ func (x *RiverBasinList) String() string {
 func (*RiverBasinList) ProtoMessage() {}
 
 func (x *RiverBasinList) ProtoReflect() protoreflect.Message {
-	mi := &file_stationpb_station_proto_msgTypes[15]
+	mi := &file_stationpb_station_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1067,7 +1558,7 @@ func (x *RiverBasinList) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RiverBasinList.ProtoReflect.Descriptor instead.
 func (*RiverBasinList) Descriptor() ([]byte, []int) {
-	return file_stationpb_station_proto_rawDescGZIP(), []int{15}
+	return file_stationpb_station_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *RiverBasinList) GetRiverBasins() []*RiverBasin {
@@ -1086,7 +1577,7 @@ type RiverBasinResponse struct {
 
 func (x *RiverBasinResponse) Reset() {
 	*x = RiverBasinResponse{}
-	mi := &file_stationpb_station_proto_msgTypes[16]
+	mi := &file_stationpb_station_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1098,7 +1589,7 @@ func (x *RiverBasinResponse) String() string {
 func (*RiverBasinResponse) ProtoMessage() {}
 
 func (x *RiverBasinResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_stationpb_station_proto_msgTypes[16]
+	mi := &file_stationpb_station_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1111,12 +1602,172 @@ func (x *RiverBasinResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RiverBasinResponse.ProtoReflect.Descriptor instead.
 func (*RiverBasinResponse) Descriptor() ([]byte, []int) {
-	return file_stationpb_station_proto_rawDescGZIP(), []int{16}
+	return file_stationpb_station_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *RiverBasinResponse) GetRiverBasin() *RiverBasin {
 	if x != nil {
 		return x.RiverBasin
+	}
+	return nil
+}
+
+type StationAttachment struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Uid           string                 `protobuf:"bytes,1,opt,name=uid,proto3" json:"uid,omitempty"`
+	StationId     int32                  `protobuf:"varint,2,opt,name=station_id,json=stationId,proto3" json:"station_id,omitempty"`
+	DisplayName   string                 `protobuf:"bytes,3,opt,name=display_name,json=displayName,proto3" json:"display_name,omitempty"`
+	Filename      string                 `protobuf:"bytes,4,opt,name=filename,proto3" json:"filename,omitempty"`
+	ContentType   string                 `protobuf:"bytes,5,opt,name=content_type,json=contentType,proto3" json:"content_type,omitempty"`
+	Size          int32                  `protobuf:"varint,6,opt,name=size,proto3" json:"size,omitempty"`
+	WorkflowState string                 `protobuf:"bytes,7,opt,name=workflow_state,json=workflowState,proto3" json:"workflow_state,omitempty"`
+	FileState     string                 `protobuf:"bytes,8,opt,name=file_state,json=fileState,proto3" json:"file_state,omitempty"`
+	CreatedAt     string                 `protobuf:"bytes,9,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	UpdatedAt     string                 `protobuf:"bytes,10,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *StationAttachment) Reset() {
+	*x = StationAttachment{}
+	mi := &file_stationpb_station_proto_msgTypes[26]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *StationAttachment) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*StationAttachment) ProtoMessage() {}
+
+func (x *StationAttachment) ProtoReflect() protoreflect.Message {
+	mi := &file_stationpb_station_proto_msgTypes[26]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use StationAttachment.ProtoReflect.Descriptor instead.
+func (*StationAttachment) Descriptor() ([]byte, []int) {
+	return file_stationpb_station_proto_rawDescGZIP(), []int{26}
+}
+
+func (x *StationAttachment) GetUid() string {
+	if x != nil {
+		return x.Uid
+	}
+	return ""
+}
+
+func (x *StationAttachment) GetStationId() int32 {
+	if x != nil {
+		return x.StationId
+	}
+	return 0
+}
+
+func (x *StationAttachment) GetDisplayName() string {
+	if x != nil {
+		return x.DisplayName
+	}
+	return ""
+}
+
+func (x *StationAttachment) GetFilename() string {
+	if x != nil {
+		return x.Filename
+	}
+	return ""
+}
+
+func (x *StationAttachment) GetContentType() string {
+	if x != nil {
+		return x.ContentType
+	}
+	return ""
+}
+
+func (x *StationAttachment) GetSize() int32 {
+	if x != nil {
+		return x.Size
+	}
+	return 0
+}
+
+func (x *StationAttachment) GetWorkflowState() string {
+	if x != nil {
+		return x.WorkflowState
+	}
+	return ""
+}
+
+func (x *StationAttachment) GetFileState() string {
+	if x != nil {
+		return x.FileState
+	}
+	return ""
+}
+
+func (x *StationAttachment) GetCreatedAt() string {
+	if x != nil {
+		return x.CreatedAt
+	}
+	return ""
+}
+
+func (x *StationAttachment) GetUpdatedAt() string {
+	if x != nil {
+		return x.UpdatedAt
+	}
+	return ""
+}
+
+type StationAttachmentList struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Items         []*StationAttachment   `protobuf:"bytes,1,rep,name=items,proto3" json:"items,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *StationAttachmentList) Reset() {
+	*x = StationAttachmentList{}
+	mi := &file_stationpb_station_proto_msgTypes[27]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *StationAttachmentList) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*StationAttachmentList) ProtoMessage() {}
+
+func (x *StationAttachmentList) ProtoReflect() protoreflect.Message {
+	mi := &file_stationpb_station_proto_msgTypes[27]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use StationAttachmentList.ProtoReflect.Descriptor instead.
+func (*StationAttachmentList) Descriptor() ([]byte, []int) {
+	return file_stationpb_station_proto_rawDescGZIP(), []int{27}
+}
+
+func (x *StationAttachmentList) GetItems() []*StationAttachment {
+	if x != nil {
+		return x.Items
 	}
 	return nil
 }
@@ -1133,7 +1784,7 @@ type UploadRequest struct {
 
 func (x *UploadRequest) Reset() {
 	*x = UploadRequest{}
-	mi := &file_stationpb_station_proto_msgTypes[17]
+	mi := &file_stationpb_station_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1145,7 +1796,7 @@ func (x *UploadRequest) String() string {
 func (*UploadRequest) ProtoMessage() {}
 
 func (x *UploadRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_stationpb_station_proto_msgTypes[17]
+	mi := &file_stationpb_station_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1158,7 +1809,7 @@ func (x *UploadRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UploadRequest.ProtoReflect.Descriptor instead.
 func (*UploadRequest) Descriptor() ([]byte, []int) {
-	return file_stationpb_station_proto_rawDescGZIP(), []int{17}
+	return file_stationpb_station_proto_rawDescGZIP(), []int{28}
 }
 
 func (x *UploadRequest) GetStationId() int32 {
@@ -1193,7 +1844,7 @@ type TargetSelector struct {
 
 func (x *TargetSelector) Reset() {
 	*x = TargetSelector{}
-	mi := &file_stationpb_station_proto_msgTypes[18]
+	mi := &file_stationpb_station_proto_msgTypes[29]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1205,7 +1856,7 @@ func (x *TargetSelector) String() string {
 func (*TargetSelector) ProtoMessage() {}
 
 func (x *TargetSelector) ProtoReflect() protoreflect.Message {
-	mi := &file_stationpb_station_proto_msgTypes[18]
+	mi := &file_stationpb_station_proto_msgTypes[29]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1218,7 +1869,7 @@ func (x *TargetSelector) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TargetSelector.ProtoReflect.Descriptor instead.
 func (*TargetSelector) Descriptor() ([]byte, []int) {
-	return file_stationpb_station_proto_rawDescGZIP(), []int{18}
+	return file_stationpb_station_proto_rawDescGZIP(), []int{29}
 }
 
 func (x *TargetSelector) GetTargetType() TargetType {
@@ -1244,7 +1895,7 @@ type StationIDList struct {
 
 func (x *StationIDList) Reset() {
 	*x = StationIDList{}
-	mi := &file_stationpb_station_proto_msgTypes[19]
+	mi := &file_stationpb_station_proto_msgTypes[30]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1256,7 +1907,7 @@ func (x *StationIDList) String() string {
 func (*StationIDList) ProtoMessage() {}
 
 func (x *StationIDList) ProtoReflect() protoreflect.Message {
-	mi := &file_stationpb_station_proto_msgTypes[19]
+	mi := &file_stationpb_station_proto_msgTypes[30]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1269,7 +1920,7 @@ func (x *StationIDList) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StationIDList.ProtoReflect.Descriptor instead.
 func (*StationIDList) Descriptor() ([]byte, []int) {
-	return file_stationpb_station_proto_rawDescGZIP(), []int{19}
+	return file_stationpb_station_proto_rawDescGZIP(), []int{30}
 }
 
 func (x *StationIDList) GetStationIds() []int32 {
@@ -1290,7 +1941,7 @@ type OperationStatus struct {
 
 func (x *OperationStatus) Reset() {
 	*x = OperationStatus{}
-	mi := &file_stationpb_station_proto_msgTypes[20]
+	mi := &file_stationpb_station_proto_msgTypes[31]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1302,7 +1953,7 @@ func (x *OperationStatus) String() string {
 func (*OperationStatus) ProtoMessage() {}
 
 func (x *OperationStatus) ProtoReflect() protoreflect.Message {
-	mi := &file_stationpb_station_proto_msgTypes[20]
+	mi := &file_stationpb_station_proto_msgTypes[31]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1315,7 +1966,7 @@ func (x *OperationStatus) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use OperationStatus.ProtoReflect.Descriptor instead.
 func (*OperationStatus) Descriptor() ([]byte, []int) {
-	return file_stationpb_station_proto_rawDescGZIP(), []int{20}
+	return file_stationpb_station_proto_rawDescGZIP(), []int{31}
 }
 
 func (x *OperationStatus) GetSuccess() bool {
@@ -1342,7 +1993,7 @@ type EnumList struct {
 
 func (x *EnumList) Reset() {
 	*x = EnumList{}
-	mi := &file_stationpb_station_proto_msgTypes[21]
+	mi := &file_stationpb_station_proto_msgTypes[32]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1354,7 +2005,7 @@ func (x *EnumList) String() string {
 func (*EnumList) ProtoMessage() {}
 
 func (x *EnumList) ProtoReflect() protoreflect.Message {
-	mi := &file_stationpb_station_proto_msgTypes[21]
+	mi := &file_stationpb_station_proto_msgTypes[32]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1367,7 +2018,7 @@ func (x *EnumList) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use EnumList.ProtoReflect.Descriptor instead.
 func (*EnumList) Descriptor() ([]byte, []int) {
-	return file_stationpb_station_proto_rawDescGZIP(), []int{21}
+	return file_stationpb_station_proto_rawDescGZIP(), []int{32}
 }
 
 func (x *EnumList) GetValues() []*EnumValue {
@@ -1381,7 +2032,7 @@ var File_stationpb_station_proto protoreflect.FileDescriptor
 
 const file_stationpb_station_proto_rawDesc = "" +
 	"\n" +
-	"\x17stationpb/station.proto\x12\astation\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1egoogle/protobuf/wrappers.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x15commonpb/common.proto\"\x1f\n" +
+	"\x17stationpb/station.proto\x12\astation\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x15commonpb/common.proto\"\x1f\n" +
 	"\tEnumValue\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\"\xd5\x02\n" +
 	"\aStation\x12\x0e\n" +
@@ -1399,13 +2050,36 @@ const file_stationpb_station_proto_rawDesc = "" +
 	"\n" +
 	"created_at\x18\v \x01(\tR\tcreatedAt\x12\x1d\n" +
 	"\n" +
-	"updated_at\x18\f \x01(\tR\tupdatedAt\"\x95\x01\n" +
+	"updated_at\x18\f \x01(\tR\tupdatedAt\"\xef\x01\n" +
+	"\x10StationParameter\x12\x1d\n" +
+	"\n" +
+	"station_id\x18\x01 \x01(\x05R\tstationId\x12!\n" +
+	"\fparameter_id\x18\x02 \x01(\x05R\vparameterId\x12\x16\n" +
+	"\x06status\x18\x03 \x01(\tR\x06status\x12$\n" +
+	"\x0elast_receiv_at\x18\x04 \x01(\tR\flastReceivAt\x12\x1d\n" +
+	"\n" +
+	"last_value\x18\x05 \x01(\x01R\tlastValue\x12\x1d\n" +
+	"\n" +
+	"created_at\x18\x06 \x01(\tR\tcreatedAt\x12\x1d\n" +
+	"\n" +
+	"updated_at\x18\a \x01(\tR\tupdatedAt\"G\n" +
+	"\x14StationParameterList\x12/\n" +
+	"\x05items\x18\x01 \x03(\v2\x19.station.StationParameterR\x05items\"4\n" +
+	"\x13StationParamRequest\x12\x1d\n" +
+	"\n" +
+	"station_id\x18\x01 \x01(\x05R\tstationId\"\x95\x01\n" +
 	"\fStationQuery\x12\x18\n" +
 	"\akeyword\x18\x01 \x01(\tR\akeyword\x12\"\n" +
 	"\rwater_body_id\x18\x02 \x01(\x05R\vwaterBodyId\x12!\n" +
 	"\fcatchment_id\x18\x03 \x01(\x05R\vcatchmentId\x12$\n" +
 	"\x0eriver_basin_id\x18\x04 \x01(\x05R\friverBasinId\"\x1b\n" +
 	"\tStationID\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\x05R\x02id\"\x1e\n" +
+	"\fRiverBasinID\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\x05R\x02id\"\x1d\n" +
+	"\vCatchmentID\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\x05R\x02id\"\x1d\n" +
+	"\vWaterBodyID\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x05R\x02id\";\n" +
 	"\vStationList\x12,\n" +
 	"\bstations\x18\x01 \x03(\v2\x10.station.StationR\bstations\"=\n" +
@@ -1421,7 +2095,7 @@ const file_stationpb_station_proto_rawDesc = "" +
 	"\x10river_basin_name\x18\a \x01(\tR\x0eriverBasinName\"w\n" +
 	"\x13StationWithLocation\x12*\n" +
 	"\astation\x18\x01 \x01(\v2\x10.station.StationR\astation\x124\n" +
-	"\blocation\x18\x02 \x01(\v2\x18.station.StationLocationR\blocation\"\xa7\x01\n" +
+	"\blocation\x18\x02 \x01(\v2\x18.station.StationLocationR\blocation\"\xbf\x01\n" +
 	"\tWaterBody\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x05R\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x12\n" +
@@ -1429,7 +2103,12 @@ const file_stationpb_station_proto_rawDesc = "" +
 	"\fcatchment_id\x18\x04 \x01(\x05R\vcatchmentId\x12 \n" +
 	"\vdescription\x18\x05 \x01(\tR\vdescription\x12\x1d\n" +
 	"\n" +
-	"updated_at\x18\x06 \x01(\tR\tupdatedAt\"F\n" +
+	"updated_at\x18\x06 \x01(\tR\tupdatedAt\x12\x16\n" +
+	"\x06status\x18\a \x01(\tR\x06status\"a\n" +
+	"\x0eWaterBodyQuery\x12\x18\n" +
+	"\akeyword\x18\x01 \x01(\tR\akeyword\x12!\n" +
+	"\fcatchment_id\x18\x02 \x01(\x05R\vcatchmentId\x12\x12\n" +
+	"\x04type\x18\x03 \x01(\tR\x04type\"F\n" +
 	"\rWaterBodyList\x125\n" +
 	"\fwater_bodies\x18\x01 \x03(\v2\x12.station.WaterBodyR\vwaterBodies\"F\n" +
 	"\x11WaterBodyResponse\x121\n" +
@@ -1443,7 +2122,11 @@ const file_stationpb_station_proto_rawDesc = "" +
 	"\vdescription\x18\x05 \x01(\tR\vdescription\x12\x16\n" +
 	"\x06status\x18\x06 \x01(\tR\x06status\x12\x1d\n" +
 	"\n" +
-	"updated_at\x18\a \x01(\tR\tupdatedAt\"C\n" +
+	"updated_at\x18\a \x01(\tR\tupdatedAt\"j\n" +
+	"\x0eCatchmentQuery\x12\x18\n" +
+	"\akeyword\x18\x01 \x01(\tR\akeyword\x12$\n" +
+	"\x0eriver_basin_id\x18\x02 \x01(\x05R\friverBasinId\x12\x18\n" +
+	"\acountry\x18\x03 \x01(\tR\acountry\"C\n" +
 	"\rCatchmentList\x122\n" +
 	"\n" +
 	"catchments\x18\x01 \x03(\v2\x12.station.CatchmentR\n" +
@@ -1457,12 +2140,33 @@ const file_stationpb_station_proto_rawDesc = "" +
 	"\vdescription\x18\x03 \x01(\tR\vdescription\x12\x16\n" +
 	"\x06status\x18\x04 \x01(\tR\x06status\x12\x1d\n" +
 	"\n" +
-	"updated_at\x18\x05 \x01(\tR\tupdatedAt\"H\n" +
+	"updated_at\x18\x05 \x01(\tR\tupdatedAt\"C\n" +
+	"\x0fRiverBasinQuery\x12\x18\n" +
+	"\akeyword\x18\x01 \x01(\tR\akeyword\x12\x16\n" +
+	"\x06status\x18\x02 \x01(\tR\x06status\"H\n" +
 	"\x0eRiverBasinList\x126\n" +
 	"\friver_basins\x18\x01 \x03(\v2\x13.station.RiverBasinR\vriverBasins\"J\n" +
 	"\x12RiverBasinResponse\x124\n" +
 	"\vriver_basin\x18\x01 \x01(\v2\x13.station.RiverBasinR\n" +
-	"riverBasin\"n\n" +
+	"riverBasin\"\xbe\x02\n" +
+	"\x11StationAttachment\x12\x10\n" +
+	"\x03uid\x18\x01 \x01(\tR\x03uid\x12\x1d\n" +
+	"\n" +
+	"station_id\x18\x02 \x01(\x05R\tstationId\x12!\n" +
+	"\fdisplay_name\x18\x03 \x01(\tR\vdisplayName\x12\x1a\n" +
+	"\bfilename\x18\x04 \x01(\tR\bfilename\x12!\n" +
+	"\fcontent_type\x18\x05 \x01(\tR\vcontentType\x12\x12\n" +
+	"\x04size\x18\x06 \x01(\x05R\x04size\x12%\n" +
+	"\x0eworkflow_state\x18\a \x01(\tR\rworkflowState\x12\x1d\n" +
+	"\n" +
+	"file_state\x18\b \x01(\tR\tfileState\x12\x1d\n" +
+	"\n" +
+	"created_at\x18\t \x01(\tR\tcreatedAt\x12\x1d\n" +
+	"\n" +
+	"updated_at\x18\n" +
+	" \x01(\tR\tupdatedAt\"I\n" +
+	"\x15StationAttachmentList\x120\n" +
+	"\x05items\x18\x01 \x03(\v2\x1a.station.StationAttachmentR\x05items\"n\n" +
 	"\rUploadRequest\x12\x1d\n" +
 	"\n" +
 	"station_id\x18\x01 \x01(\x05R\tstationId\x12\x1b\n" +
@@ -1487,27 +2191,32 @@ const file_stationpb_station_proto_rawDesc = "" +
 	"\n" +
 	"WATER_BODY\x10\x02\x12\r\n" +
 	"\tCATCHMENT\x10\x03\x12\x0f\n" +
-	"\vRIVER_BASIN\x10\x042\xae\x10\n" +
+	"\vRIVER_BASIN\x10\x042\x97\x14\n" +
 	"\x0eStationService\x12U\n" +
 	"\fListStations\x12\x15.station.StationQuery\x1a\x18.common.StandardResponse\"\x14\x82\xd3\xe4\x93\x02\x0e\x12\f/v0/stations\x12T\n" +
 	"\rCreateStation\x12\x10.station.Station\x1a\x18.common.StandardResponse\"\x17\x82\xd3\xe4\x93\x02\x11:\x01*\"\f/v0/stations\x12o\n" +
 	"\x13GetStationsByTarget\x12\x17.station.TargetSelector\x1a\x18.common.StandardResponse\"%\x82\xd3\xe4\x93\x02\x1f:\x01*\"\x1a/v0/stations_target/filter\x12U\n" +
 	"\n" +
 	"GetStation\x12\x12.station.StationID\x1a\x18.common.StandardResponse\"\x19\x82\xd3\xe4\x93\x02\x13\x12\x11/v0/stations/{id}\x12d\n" +
-	"\x0eDisableStation\x12\x12.station.StationID\x1a\x18.common.StandardResponse\"$\x82\xd3\xe4\x93\x02\x1e:\x01*\"\x19/v0/stations/{id}/disable\x12r\n" +
-	"\x11UploadStationData\x12\x16.station.UploadRequest\x1a\x18.common.StandardResponse\"+\x82\xd3\xe4\x93\x02%:\x01*\" /v0/stations/{station_id}/upload\x12]\n" +
+	"\x0eDisableStation\x12\x12.station.StationID\x1a\x18.common.StandardResponse\"$\x82\xd3\xe4\x93\x02\x1e:\x01*\"\x19/v0/stations/{id}/disable\x12w\n" +
+	"\x15GetParametersByTarget\x12\x17.station.TargetSelector\x1a\x18.common.StandardResponse\"+\x82\xd3\xe4\x93\x02%:\x01*\" /v0/station_parameters/by_target\x12l\n" +
+	"\x15GetStationAttachments\x12\x12.station.StationID\x1a\x18.common.StandardResponse\"%\x82\xd3\xe4\x93\x02\x1f\x12\x1d/v0/stations/{id}/attachments\x12r\n" +
+	"\x11UploadStationData\x12\x16.station.UploadRequest\x1a\x18.common.StandardResponse\"+\x82\xd3\xe4\x93\x02%:\x01*\" /v0/stations/{station_id}/upload\x12e\n" +
+	"\x10QueryWaterBodies\x12\x17.station.WaterBodyQuery\x1a\x18.common.StandardResponse\"\x1e\x82\xd3\xe4\x93\x02\x18\x12\x16/v0/water_bodies/query\x12b\n" +
+	"\x0fQueryCatchments\x12\x17.station.CatchmentQuery\x1a\x18.common.StandardResponse\"\x1c\x82\xd3\xe4\x93\x02\x16\x12\x14/v0/catchments/query\x12f\n" +
+	"\x10QueryRiverBasins\x12\x18.station.RiverBasinQuery\x1a\x18.common.StandardResponse\"\x1e\x82\xd3\xe4\x93\x02\x18\x12\x16/v0/river_basins/query\x12]\n" +
 	"\x0fListWaterBodies\x12\x16.google.protobuf.Empty\x1a\x18.common.StandardResponse\"\x18\x82\xd3\xe4\x93\x02\x12\x12\x10/v0/water_bodies\x12\\\n" +
-	"\x0fCreateWaterBody\x12\x12.station.WaterBody\x1a\x18.common.StandardResponse\"\x1b\x82\xd3\xe4\x93\x02\x15:\x01*\"\x10/v0/water_bodies\x12j\n" +
-	"\x0fDeleteWaterBody\x12\x1b.google.protobuf.Int32Value\x1a\x18.common.StandardResponse\" \x82\xd3\xe4\x93\x02\x1a*\x18/v0/water_bodies/{value}\x12g\n" +
-	"\fGetWaterBody\x12\x1b.google.protobuf.Int32Value\x1a\x18.common.StandardResponse\" \x82\xd3\xe4\x93\x02\x1a\x12\x18/v0/water_bodies/{value}\x12Z\n" +
-	"\x0eListCatchments\x12\x16.google.protobuf.Empty\x1a\x18.common.StandardResponse\"\x16\x82\xd3\xe4\x93\x02\x10\x12\x0e/v0/catchments\x12Z\n" +
-	"\x0fCreateCatchment\x12\x12.station.Catchment\x1a\x18.common.StandardResponse\"\x19\x82\xd3\xe4\x93\x02\x13:\x01*\"\x0e/v0/catchments\x12h\n" +
-	"\x0fDeleteCatchment\x12\x1b.google.protobuf.Int32Value\x1a\x18.common.StandardResponse\"\x1e\x82\xd3\xe4\x93\x02\x18*\x16/v0/catchments/{value}\x12e\n" +
-	"\fGetCatchment\x12\x1b.google.protobuf.Int32Value\x1a\x18.common.StandardResponse\"\x1e\x82\xd3\xe4\x93\x02\x18\x12\x16/v0/catchments/{value}\x12]\n" +
+	"\x0fCreateWaterBody\x12\x12.station.WaterBody\x1a\x18.common.StandardResponse\"\x1b\x82\xd3\xe4\x93\x02\x15:\x01*\"\x10/v0/water_bodies\x12`\n" +
+	"\x0fDeleteWaterBody\x12\x14.station.WaterBodyID\x1a\x18.common.StandardResponse\"\x1d\x82\xd3\xe4\x93\x02\x17*\x15/v0/water_bodies/{id}\x12a\n" +
+	"\x10GetWaterBodyByID\x12\x14.station.WaterBodyID\x1a\x18.common.StandardResponse\"\x1d\x82\xd3\xe4\x93\x02\x17\x12\x15/v0/water_bodies/{id}\x12[\n" +
+	"\x0eListCatchments\x12\x17.station.CatchmentQuery\x1a\x18.common.StandardResponse\"\x16\x82\xd3\xe4\x93\x02\x10\x12\x0e/v0/catchments\x12Z\n" +
+	"\x0fCreateCatchment\x12\x12.station.Catchment\x1a\x18.common.StandardResponse\"\x19\x82\xd3\xe4\x93\x02\x13:\x01*\"\x0e/v0/catchments\x12^\n" +
+	"\x0fDeleteCatchment\x12\x14.station.CatchmentID\x1a\x18.common.StandardResponse\"\x1b\x82\xd3\xe4\x93\x02\x15*\x13/v0/catchments/{id}\x12[\n" +
+	"\fGetCatchment\x12\x14.station.CatchmentID\x1a\x18.common.StandardResponse\"\x1b\x82\xd3\xe4\x93\x02\x15\x12\x13/v0/catchments/{id}\x12]\n" +
 	"\x0fListRiverBasins\x12\x16.google.protobuf.Empty\x1a\x18.common.StandardResponse\"\x18\x82\xd3\xe4\x93\x02\x12\x12\x10/v0/river_basins\x12^\n" +
-	"\x10CreateRiverBasin\x12\x13.station.RiverBasin\x1a\x18.common.StandardResponse\"\x1b\x82\xd3\xe4\x93\x02\x15:\x01*\"\x10/v0/river_basins\x12k\n" +
-	"\x10DeleteRiverBasin\x12\x1b.google.protobuf.Int32Value\x1a\x18.common.StandardResponse\" \x82\xd3\xe4\x93\x02\x1a*\x18/v0/river_basins/{value}\x12h\n" +
-	"\rGetRiverBasin\x12\x1b.google.protobuf.Int32Value\x1a\x18.common.StandardResponse\" \x82\xd3\xe4\x93\x02\x1a\x12\x18/v0/river_basins/{value}\x12]\n" +
+	"\x10CreateRiverBasin\x12\x13.station.RiverBasin\x1a\x18.common.StandardResponse\"\x1b\x82\xd3\xe4\x93\x02\x15:\x01*\"\x10/v0/river_basins\x12b\n" +
+	"\x10DeleteRiverBasin\x12\x15.station.RiverBasinID\x1a\x18.common.StandardResponse\"\x1d\x82\xd3\xe4\x93\x02\x17*\x15/v0/river_basins/{id}\x12c\n" +
+	"\x11GetRiverBasinByID\x12\x15.station.RiverBasinID\x1a\x18.common.StandardResponse\"\x1d\x82\xd3\xe4\x93\x02\x17\x12\x15/v0/river_basins/{id}\x12]\n" +
 	"\rListCountries\x12\x16.google.protobuf.Empty\x1a\x18.common.StandardResponse\"\x1a\x82\xd3\xe4\x93\x02\x14\x12\x12/v0/enum/countries\x12d\n" +
 	"\x10ListStationTypes\x12\x16.google.protobuf.Empty\x1a\x18.common.StandardResponse\"\x1e\x82\xd3\xe4\x93\x02\x18\x12\x16/v0/enum/station_types\x12W\n" +
 	"\n" +
@@ -1526,95 +2235,117 @@ func file_stationpb_station_proto_rawDescGZIP() []byte {
 }
 
 var file_stationpb_station_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_stationpb_station_proto_msgTypes = make([]protoimpl.MessageInfo, 22)
+var file_stationpb_station_proto_msgTypes = make([]protoimpl.MessageInfo, 33)
 var file_stationpb_station_proto_goTypes = []any{
 	(TargetType)(0),                   // 0: station.TargetType
 	(*EnumValue)(nil),                 // 1: station.EnumValue
 	(*Station)(nil),                   // 2: station.Station
-	(*StationQuery)(nil),              // 3: station.StationQuery
-	(*StationID)(nil),                 // 4: station.StationID
-	(*StationList)(nil),               // 5: station.StationList
-	(*StationResponse)(nil),           // 6: station.StationResponse
-	(*StationLocation)(nil),           // 7: station.StationLocation
-	(*StationWithLocation)(nil),       // 8: station.StationWithLocation
-	(*WaterBody)(nil),                 // 9: station.WaterBody
-	(*WaterBodyList)(nil),             // 10: station.WaterBodyList
-	(*WaterBodyResponse)(nil),         // 11: station.WaterBodyResponse
-	(*Catchment)(nil),                 // 12: station.Catchment
-	(*CatchmentList)(nil),             // 13: station.CatchmentList
-	(*CatchmentResponse)(nil),         // 14: station.CatchmentResponse
-	(*RiverBasin)(nil),                // 15: station.RiverBasin
-	(*RiverBasinList)(nil),            // 16: station.RiverBasinList
-	(*RiverBasinResponse)(nil),        // 17: station.RiverBasinResponse
-	(*UploadRequest)(nil),             // 18: station.UploadRequest
-	(*TargetSelector)(nil),            // 19: station.TargetSelector
-	(*StationIDList)(nil),             // 20: station.StationIDList
-	(*OperationStatus)(nil),           // 21: station.OperationStatus
-	(*EnumList)(nil),                  // 22: station.EnumList
-	(*empty.Empty)(nil),               // 23: google.protobuf.Empty
-	(*wrappers.Int32Value)(nil),       // 24: google.protobuf.Int32Value
-	(*commonpb.StandardResponse)(nil), // 25: common.StandardResponse
+	(*StationParameter)(nil),          // 3: station.StationParameter
+	(*StationParameterList)(nil),      // 4: station.StationParameterList
+	(*StationParamRequest)(nil),       // 5: station.StationParamRequest
+	(*StationQuery)(nil),              // 6: station.StationQuery
+	(*StationID)(nil),                 // 7: station.StationID
+	(*RiverBasinID)(nil),              // 8: station.RiverBasinID
+	(*CatchmentID)(nil),               // 9: station.CatchmentID
+	(*WaterBodyID)(nil),               // 10: station.WaterBodyID
+	(*StationList)(nil),               // 11: station.StationList
+	(*StationResponse)(nil),           // 12: station.StationResponse
+	(*StationLocation)(nil),           // 13: station.StationLocation
+	(*StationWithLocation)(nil),       // 14: station.StationWithLocation
+	(*WaterBody)(nil),                 // 15: station.WaterBody
+	(*WaterBodyQuery)(nil),            // 16: station.WaterBodyQuery
+	(*WaterBodyList)(nil),             // 17: station.WaterBodyList
+	(*WaterBodyResponse)(nil),         // 18: station.WaterBodyResponse
+	(*Catchment)(nil),                 // 19: station.Catchment
+	(*CatchmentQuery)(nil),            // 20: station.CatchmentQuery
+	(*CatchmentList)(nil),             // 21: station.CatchmentList
+	(*CatchmentResponse)(nil),         // 22: station.CatchmentResponse
+	(*RiverBasin)(nil),                // 23: station.RiverBasin
+	(*RiverBasinQuery)(nil),           // 24: station.RiverBasinQuery
+	(*RiverBasinList)(nil),            // 25: station.RiverBasinList
+	(*RiverBasinResponse)(nil),        // 26: station.RiverBasinResponse
+	(*StationAttachment)(nil),         // 27: station.StationAttachment
+	(*StationAttachmentList)(nil),     // 28: station.StationAttachmentList
+	(*UploadRequest)(nil),             // 29: station.UploadRequest
+	(*TargetSelector)(nil),            // 30: station.TargetSelector
+	(*StationIDList)(nil),             // 31: station.StationIDList
+	(*OperationStatus)(nil),           // 32: station.OperationStatus
+	(*EnumList)(nil),                  // 33: station.EnumList
+	(*empty.Empty)(nil),               // 34: google.protobuf.Empty
+	(*commonpb.StandardResponse)(nil), // 35: common.StandardResponse
 }
 var file_stationpb_station_proto_depIdxs = []int32{
-	2,  // 0: station.StationList.stations:type_name -> station.Station
-	2,  // 1: station.StationResponse.station:type_name -> station.Station
-	2,  // 2: station.StationWithLocation.station:type_name -> station.Station
-	7,  // 3: station.StationWithLocation.location:type_name -> station.StationLocation
-	9,  // 4: station.WaterBodyList.water_bodies:type_name -> station.WaterBody
-	9,  // 5: station.WaterBodyResponse.water_body:type_name -> station.WaterBody
-	12, // 6: station.CatchmentList.catchments:type_name -> station.Catchment
-	12, // 7: station.CatchmentResponse.catchment:type_name -> station.Catchment
-	15, // 8: station.RiverBasinList.river_basins:type_name -> station.RiverBasin
-	15, // 9: station.RiverBasinResponse.river_basin:type_name -> station.RiverBasin
-	0,  // 10: station.TargetSelector.target_type:type_name -> station.TargetType
-	1,  // 11: station.EnumList.values:type_name -> station.EnumValue
-	3,  // 12: station.StationService.ListStations:input_type -> station.StationQuery
-	2,  // 13: station.StationService.CreateStation:input_type -> station.Station
-	19, // 14: station.StationService.GetStationsByTarget:input_type -> station.TargetSelector
-	4,  // 15: station.StationService.GetStation:input_type -> station.StationID
-	4,  // 16: station.StationService.DisableStation:input_type -> station.StationID
-	18, // 17: station.StationService.UploadStationData:input_type -> station.UploadRequest
-	23, // 18: station.StationService.ListWaterBodies:input_type -> google.protobuf.Empty
-	9,  // 19: station.StationService.CreateWaterBody:input_type -> station.WaterBody
-	24, // 20: station.StationService.DeleteWaterBody:input_type -> google.protobuf.Int32Value
-	24, // 21: station.StationService.GetWaterBody:input_type -> google.protobuf.Int32Value
-	23, // 22: station.StationService.ListCatchments:input_type -> google.protobuf.Empty
-	12, // 23: station.StationService.CreateCatchment:input_type -> station.Catchment
-	24, // 24: station.StationService.DeleteCatchment:input_type -> google.protobuf.Int32Value
-	24, // 25: station.StationService.GetCatchment:input_type -> google.protobuf.Int32Value
-	23, // 26: station.StationService.ListRiverBasins:input_type -> google.protobuf.Empty
-	15, // 27: station.StationService.CreateRiverBasin:input_type -> station.RiverBasin
-	24, // 28: station.StationService.DeleteRiverBasin:input_type -> google.protobuf.Int32Value
-	24, // 29: station.StationService.GetRiverBasin:input_type -> google.protobuf.Int32Value
-	23, // 30: station.StationService.ListCountries:input_type -> google.protobuf.Empty
-	23, // 31: station.StationService.ListStationTypes:input_type -> google.protobuf.Empty
-	23, // 32: station.StationService.ListStatus:input_type -> google.protobuf.Empty
-	25, // 33: station.StationService.ListStations:output_type -> common.StandardResponse
-	25, // 34: station.StationService.CreateStation:output_type -> common.StandardResponse
-	25, // 35: station.StationService.GetStationsByTarget:output_type -> common.StandardResponse
-	25, // 36: station.StationService.GetStation:output_type -> common.StandardResponse
-	25, // 37: station.StationService.DisableStation:output_type -> common.StandardResponse
-	25, // 38: station.StationService.UploadStationData:output_type -> common.StandardResponse
-	25, // 39: station.StationService.ListWaterBodies:output_type -> common.StandardResponse
-	25, // 40: station.StationService.CreateWaterBody:output_type -> common.StandardResponse
-	25, // 41: station.StationService.DeleteWaterBody:output_type -> common.StandardResponse
-	25, // 42: station.StationService.GetWaterBody:output_type -> common.StandardResponse
-	25, // 43: station.StationService.ListCatchments:output_type -> common.StandardResponse
-	25, // 44: station.StationService.CreateCatchment:output_type -> common.StandardResponse
-	25, // 45: station.StationService.DeleteCatchment:output_type -> common.StandardResponse
-	25, // 46: station.StationService.GetCatchment:output_type -> common.StandardResponse
-	25, // 47: station.StationService.ListRiverBasins:output_type -> common.StandardResponse
-	25, // 48: station.StationService.CreateRiverBasin:output_type -> common.StandardResponse
-	25, // 49: station.StationService.DeleteRiverBasin:output_type -> common.StandardResponse
-	25, // 50: station.StationService.GetRiverBasin:output_type -> common.StandardResponse
-	25, // 51: station.StationService.ListCountries:output_type -> common.StandardResponse
-	25, // 52: station.StationService.ListStationTypes:output_type -> common.StandardResponse
-	25, // 53: station.StationService.ListStatus:output_type -> common.StandardResponse
-	33, // [33:54] is the sub-list for method output_type
-	12, // [12:33] is the sub-list for method input_type
-	12, // [12:12] is the sub-list for extension type_name
-	12, // [12:12] is the sub-list for extension extendee
-	0,  // [0:12] is the sub-list for field type_name
+	3,  // 0: station.StationParameterList.items:type_name -> station.StationParameter
+	2,  // 1: station.StationList.stations:type_name -> station.Station
+	2,  // 2: station.StationResponse.station:type_name -> station.Station
+	2,  // 3: station.StationWithLocation.station:type_name -> station.Station
+	13, // 4: station.StationWithLocation.location:type_name -> station.StationLocation
+	15, // 5: station.WaterBodyList.water_bodies:type_name -> station.WaterBody
+	15, // 6: station.WaterBodyResponse.water_body:type_name -> station.WaterBody
+	19, // 7: station.CatchmentList.catchments:type_name -> station.Catchment
+	19, // 8: station.CatchmentResponse.catchment:type_name -> station.Catchment
+	23, // 9: station.RiverBasinList.river_basins:type_name -> station.RiverBasin
+	23, // 10: station.RiverBasinResponse.river_basin:type_name -> station.RiverBasin
+	27, // 11: station.StationAttachmentList.items:type_name -> station.StationAttachment
+	0,  // 12: station.TargetSelector.target_type:type_name -> station.TargetType
+	1,  // 13: station.EnumList.values:type_name -> station.EnumValue
+	6,  // 14: station.StationService.ListStations:input_type -> station.StationQuery
+	2,  // 15: station.StationService.CreateStation:input_type -> station.Station
+	30, // 16: station.StationService.GetStationsByTarget:input_type -> station.TargetSelector
+	7,  // 17: station.StationService.GetStation:input_type -> station.StationID
+	7,  // 18: station.StationService.DisableStation:input_type -> station.StationID
+	30, // 19: station.StationService.GetParametersByTarget:input_type -> station.TargetSelector
+	7,  // 20: station.StationService.GetStationAttachments:input_type -> station.StationID
+	29, // 21: station.StationService.UploadStationData:input_type -> station.UploadRequest
+	16, // 22: station.StationService.QueryWaterBodies:input_type -> station.WaterBodyQuery
+	20, // 23: station.StationService.QueryCatchments:input_type -> station.CatchmentQuery
+	24, // 24: station.StationService.QueryRiverBasins:input_type -> station.RiverBasinQuery
+	34, // 25: station.StationService.ListWaterBodies:input_type -> google.protobuf.Empty
+	15, // 26: station.StationService.CreateWaterBody:input_type -> station.WaterBody
+	10, // 27: station.StationService.DeleteWaterBody:input_type -> station.WaterBodyID
+	10, // 28: station.StationService.GetWaterBodyByID:input_type -> station.WaterBodyID
+	20, // 29: station.StationService.ListCatchments:input_type -> station.CatchmentQuery
+	19, // 30: station.StationService.CreateCatchment:input_type -> station.Catchment
+	9,  // 31: station.StationService.DeleteCatchment:input_type -> station.CatchmentID
+	9,  // 32: station.StationService.GetCatchment:input_type -> station.CatchmentID
+	34, // 33: station.StationService.ListRiverBasins:input_type -> google.protobuf.Empty
+	23, // 34: station.StationService.CreateRiverBasin:input_type -> station.RiverBasin
+	8,  // 35: station.StationService.DeleteRiverBasin:input_type -> station.RiverBasinID
+	8,  // 36: station.StationService.GetRiverBasinByID:input_type -> station.RiverBasinID
+	34, // 37: station.StationService.ListCountries:input_type -> google.protobuf.Empty
+	34, // 38: station.StationService.ListStationTypes:input_type -> google.protobuf.Empty
+	34, // 39: station.StationService.ListStatus:input_type -> google.protobuf.Empty
+	35, // 40: station.StationService.ListStations:output_type -> common.StandardResponse
+	35, // 41: station.StationService.CreateStation:output_type -> common.StandardResponse
+	35, // 42: station.StationService.GetStationsByTarget:output_type -> common.StandardResponse
+	35, // 43: station.StationService.GetStation:output_type -> common.StandardResponse
+	35, // 44: station.StationService.DisableStation:output_type -> common.StandardResponse
+	35, // 45: station.StationService.GetParametersByTarget:output_type -> common.StandardResponse
+	35, // 46: station.StationService.GetStationAttachments:output_type -> common.StandardResponse
+	35, // 47: station.StationService.UploadStationData:output_type -> common.StandardResponse
+	35, // 48: station.StationService.QueryWaterBodies:output_type -> common.StandardResponse
+	35, // 49: station.StationService.QueryCatchments:output_type -> common.StandardResponse
+	35, // 50: station.StationService.QueryRiverBasins:output_type -> common.StandardResponse
+	35, // 51: station.StationService.ListWaterBodies:output_type -> common.StandardResponse
+	35, // 52: station.StationService.CreateWaterBody:output_type -> common.StandardResponse
+	35, // 53: station.StationService.DeleteWaterBody:output_type -> common.StandardResponse
+	35, // 54: station.StationService.GetWaterBodyByID:output_type -> common.StandardResponse
+	35, // 55: station.StationService.ListCatchments:output_type -> common.StandardResponse
+	35, // 56: station.StationService.CreateCatchment:output_type -> common.StandardResponse
+	35, // 57: station.StationService.DeleteCatchment:output_type -> common.StandardResponse
+	35, // 58: station.StationService.GetCatchment:output_type -> common.StandardResponse
+	35, // 59: station.StationService.ListRiverBasins:output_type -> common.StandardResponse
+	35, // 60: station.StationService.CreateRiverBasin:output_type -> common.StandardResponse
+	35, // 61: station.StationService.DeleteRiverBasin:output_type -> common.StandardResponse
+	35, // 62: station.StationService.GetRiverBasinByID:output_type -> common.StandardResponse
+	35, // 63: station.StationService.ListCountries:output_type -> common.StandardResponse
+	35, // 64: station.StationService.ListStationTypes:output_type -> common.StandardResponse
+	35, // 65: station.StationService.ListStatus:output_type -> common.StandardResponse
+	40, // [40:66] is the sub-list for method output_type
+	14, // [14:40] is the sub-list for method input_type
+	14, // [14:14] is the sub-list for extension type_name
+	14, // [14:14] is the sub-list for extension extendee
+	0,  // [0:14] is the sub-list for field type_name
 }
 
 func init() { file_stationpb_station_proto_init() }
@@ -1628,7 +2359,7 @@ func file_stationpb_station_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_stationpb_station_proto_rawDesc), len(file_stationpb_station_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   22,
+			NumMessages:   33,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

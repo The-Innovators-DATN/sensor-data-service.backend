@@ -3,7 +3,6 @@ syntax = "proto3";
 package station;
 
 import "google/protobuf/empty.proto";
-import "google/protobuf/wrappers.proto";
 import "google/api/annotations.proto";
 import "commonpb/common.proto";
 
@@ -37,7 +36,22 @@ message Station {
   string created_at = 11;
   string updated_at = 12;
 }
+message StationParameter {
+  int32 station_id = 1;
+  int32 parameter_id = 2;
+  string status = 3;
+  string last_receiv_at = 4;
+  double last_value = 5;
+  string created_at = 6;
+  string updated_at = 7;
+}
+message StationParameterList {
+  repeated StationParameter items = 1;
+}
 
+message StationParamRequest {
+  int32 station_id = 1;
+}
 message StationQuery {
   string keyword = 1;
   int32 water_body_id = 2;
@@ -45,7 +59,18 @@ message StationQuery {
   int32 river_basin_id = 4;
 }
 
+
 message StationID {
+  int32 id = 1;
+}
+
+message RiverBasinID {
+  int32 id = 1;
+}
+message CatchmentID {
+  int32 id = 1;
+}
+message WaterBodyID {
   int32 id = 1;
 }
 
@@ -80,6 +105,12 @@ message WaterBody {
   int32 catchment_id = 4;
   string description = 5;
   string updated_at = 6;
+    string status = 7;
+}
+message WaterBodyQuery {
+  string keyword = 1;
+  int32 catchment_id = 2;
+  string type = 3;
 }
 
 message WaterBodyList {
@@ -100,6 +131,11 @@ message Catchment {
   string status = 6;
   string updated_at = 7;
 }
+message CatchmentQuery {
+  string keyword = 1;
+  int32 river_basin_id = 2;
+  string country = 3;
+}
 
 message CatchmentList {
   repeated Catchment catchments = 1;
@@ -117,6 +153,10 @@ message RiverBasin {
   string status = 4;
   string updated_at = 5;
 }
+message RiverBasinQuery {
+  string keyword = 1;
+  string status = 2;
+}
 
 message RiverBasinList {
   repeated RiverBasin river_basins = 1;
@@ -125,6 +165,23 @@ message RiverBasinList {
 message RiverBasinResponse {
   RiverBasin river_basin = 1;
 }
+message StationAttachment {
+  string uid = 1;
+  int32 station_id = 2;
+  string display_name = 3;
+  string filename = 4;
+  string content_type = 5;
+  int32 size = 6;
+  string workflow_state = 7;
+  string file_state = 8;
+  string created_at = 9;
+  string updated_at = 10;
+}
+
+message StationAttachmentList {
+  repeated StationAttachment items = 1;
+}
+
 
 // STATION UPLOAD
 message UploadRequest {
@@ -187,13 +244,45 @@ service StationService {
       body: "*"
     };
   }
+rpc GetParametersByTarget(TargetSelector) returns (common.StandardResponse) {
+  option (google.api.http) = {
+    post: "/v0/station_parameters/by_target"
+    body: "*"
+  };
+}
 
+  rpc GetStationAttachments(StationID) returns (common.StandardResponse) {
+    option (google.api.http) = {
+      get: "/v0/stations/{id}/attachments"
+    };
+  }
   rpc UploadStationData(UploadRequest) returns (common.StandardResponse) {
     option (google.api.http) = {
       post: "/v0/stations/{station_id}/upload"
       body: "*"
     };
   }
+  // ===== WATER BODY QUERY =====
+rpc QueryWaterBodies(WaterBodyQuery) returns (common.StandardResponse) {
+  option (google.api.http) = {
+    get: "/v0/water_bodies/query"
+  };
+}
+
+// ===== CATCHMENT QUERY =====
+rpc QueryCatchments(CatchmentQuery) returns (common.StandardResponse) {
+  option (google.api.http) = {
+    get: "/v0/catchments/query"
+  };
+}
+
+// ===== RIVER BASIN QUERY =====
+rpc QueryRiverBasins(RiverBasinQuery) returns (common.StandardResponse) {
+  option (google.api.http) = {
+    get: "/v0/river_basins/query"
+  };
+}
+
   // ===== WATER BODY =====
   rpc ListWaterBodies(google.protobuf.Empty) returns (common.StandardResponse) {
     option (google.api.http) = {
@@ -208,20 +297,20 @@ service StationService {
     };
   }
 
-  rpc DeleteWaterBody(google.protobuf.Int32Value) returns (common.StandardResponse) {
+  rpc DeleteWaterBody(WaterBodyID) returns (common.StandardResponse) {
     option (google.api.http) = {
-      delete: "/v0/water_bodies/{value}"
+      delete: "/v0/water_bodies/{id}"
     };
   }
 
-  rpc GetWaterBody(google.protobuf.Int32Value) returns (common.StandardResponse) {
+  rpc GetWaterBodyByID(WaterBodyID) returns (common.StandardResponse) {
     option (google.api.http) = {
-      get: "/v0/water_bodies/{value}"
+      get: "/v0/water_bodies/{id}"
     };
   }
 
   // ===== CATCHMENT =====
-  rpc ListCatchments(google.protobuf.Empty) returns (common.StandardResponse) {
+  rpc ListCatchments(CatchmentQuery) returns (common.StandardResponse) {
     option (google.api.http) = {
       get: "/v0/catchments"
     };
@@ -234,15 +323,15 @@ service StationService {
     };
   }
 
-  rpc DeleteCatchment(google.protobuf.Int32Value) returns (common.StandardResponse) {
+  rpc DeleteCatchment(CatchmentID) returns (common.StandardResponse) {
     option (google.api.http) = {
-      delete: "/v0/catchments/{value}"
+      delete: "/v0/catchments/{id}"
     };
   }
 
-  rpc GetCatchment(google.protobuf.Int32Value) returns (common.StandardResponse) {
+  rpc GetCatchment(CatchmentID) returns (common.StandardResponse) {
     option (google.api.http) = {
-      get: "/v0/catchments/{value}"
+      get: "/v0/catchments/{id}"
     };
   }
 
@@ -260,15 +349,15 @@ service StationService {
     };
   }
 
-  rpc DeleteRiverBasin(google.protobuf.Int32Value) returns (common.StandardResponse) {
+  rpc DeleteRiverBasin(RiverBasinID) returns (common.StandardResponse) {
     option (google.api.http) = {
-      delete: "/v0/river_basins/{value}"
+      delete: "/v0/river_basins/{id}"
     };
   }
 
-  rpc GetRiverBasin(google.protobuf.Int32Value) returns (common.StandardResponse) {
+  rpc GetRiverBasinByID(RiverBasinID) returns (common.StandardResponse) {
     option (google.api.http) = {
-      get: "/v0/river_basins/{value}"
+      get: "/v0/river_basins/{id}"
     };
   }
 

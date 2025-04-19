@@ -1,6 +1,10 @@
 package castutil
 
-import "time"
+import (
+	"time"
+
+	"github.com/jackc/pgtype"
+)
 
 func ToInt(v interface{}) int {
 	switch x := v.(type) {
@@ -58,4 +62,59 @@ func ToTime(v interface{}) time.Time {
 func MustToFloat(v interface{}) float64 {
 	f, _ := ToFloat(v)
 	return f
+}
+func TimeToString(t *time.Time) string {
+	if t == nil {
+		return ""
+	}
+	return t.Format(time.RFC3339)
+}
+
+func Float32PointerOrZero(f *float64) float32 {
+	if f == nil {
+		return 0
+	}
+	return float32(*f)
+}
+func OptionalFloat(v interface{}) *float64 {
+	if v == nil {
+		return nil
+	}
+	switch f := v.(type) {
+	case float64:
+		return &f
+	case float32:
+		val := float64(f)
+		return &val
+	case int:
+		val := float64(f)
+		return &val
+	case int64:
+		val := float64(f)
+		return &val
+	default:
+		return nil
+	}
+}
+
+func OptionalTime(v interface{}) *time.Time {
+	if v == nil {
+		return nil
+	}
+	if t, ok := v.(time.Time); ok {
+		return &t
+	}
+	return nil
+}
+
+func FormatOptionalTime(t *time.Time) string {
+	if t == nil {
+		return ""
+	}
+	return t.Format(time.RFC3339)
+}
+func ToInt32Array(ids []int32) pgtype.Int4Array {
+	arr := pgtype.Int4Array{}
+	_ = arr.Set(ids) // convert slice to pg-compatible array
+	return arr
 }

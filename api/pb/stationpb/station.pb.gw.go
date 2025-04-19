@@ -15,7 +15,6 @@ import (
 	"net/http"
 
 	"github.com/golang/protobuf/ptypes/empty"
-	"github.com/golang/protobuf/ptypes/wrappers"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/utilities"
 	"google.golang.org/grpc"
@@ -197,6 +196,67 @@ func local_request_StationService_DisableStation_0(ctx context.Context, marshale
 	return msg, metadata, err
 }
 
+func request_StationService_GetParametersByTarget_0(ctx context.Context, marshaler runtime.Marshaler, client StationServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq TargetSelector
+		metadata runtime.ServerMetadata
+	)
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	msg, err := client.GetParametersByTarget(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+}
+
+func local_request_StationService_GetParametersByTarget_0(ctx context.Context, marshaler runtime.Marshaler, server StationServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq TargetSelector
+		metadata runtime.ServerMetadata
+	)
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	msg, err := server.GetParametersByTarget(ctx, &protoReq)
+	return msg, metadata, err
+}
+
+func request_StationService_GetStationAttachments_0(ctx context.Context, marshaler runtime.Marshaler, client StationServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq StationID
+		metadata runtime.ServerMetadata
+		err      error
+	)
+	io.Copy(io.Discard, req.Body)
+	val, ok := pathParams["id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "id")
+	}
+	protoReq.Id, err = runtime.Int32(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "id", err)
+	}
+	msg, err := client.GetStationAttachments(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+}
+
+func local_request_StationService_GetStationAttachments_0(ctx context.Context, marshaler runtime.Marshaler, server StationServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq StationID
+		metadata runtime.ServerMetadata
+		err      error
+	)
+	val, ok := pathParams["id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "id")
+	}
+	protoReq.Id, err = runtime.Int32(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "id", err)
+	}
+	msg, err := server.GetStationAttachments(ctx, &protoReq)
+	return msg, metadata, err
+}
+
 func request_StationService_UploadStationData_0(ctx context.Context, marshaler runtime.Marshaler, client StationServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
 		protoReq UploadRequest
@@ -236,6 +296,105 @@ func local_request_StationService_UploadStationData_0(ctx context.Context, marsh
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "station_id", err)
 	}
 	msg, err := server.UploadStationData(ctx, &protoReq)
+	return msg, metadata, err
+}
+
+var filter_StationService_QueryWaterBodies_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+
+func request_StationService_QueryWaterBodies_0(ctx context.Context, marshaler runtime.Marshaler, client StationServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq WaterBodyQuery
+		metadata runtime.ServerMetadata
+	)
+	io.Copy(io.Discard, req.Body)
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_StationService_QueryWaterBodies_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	msg, err := client.QueryWaterBodies(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+}
+
+func local_request_StationService_QueryWaterBodies_0(ctx context.Context, marshaler runtime.Marshaler, server StationServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq WaterBodyQuery
+		metadata runtime.ServerMetadata
+	)
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_StationService_QueryWaterBodies_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	msg, err := server.QueryWaterBodies(ctx, &protoReq)
+	return msg, metadata, err
+}
+
+var filter_StationService_QueryCatchments_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+
+func request_StationService_QueryCatchments_0(ctx context.Context, marshaler runtime.Marshaler, client StationServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq CatchmentQuery
+		metadata runtime.ServerMetadata
+	)
+	io.Copy(io.Discard, req.Body)
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_StationService_QueryCatchments_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	msg, err := client.QueryCatchments(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+}
+
+func local_request_StationService_QueryCatchments_0(ctx context.Context, marshaler runtime.Marshaler, server StationServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq CatchmentQuery
+		metadata runtime.ServerMetadata
+	)
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_StationService_QueryCatchments_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	msg, err := server.QueryCatchments(ctx, &protoReq)
+	return msg, metadata, err
+}
+
+var filter_StationService_QueryRiverBasins_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+
+func request_StationService_QueryRiverBasins_0(ctx context.Context, marshaler runtime.Marshaler, client StationServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq RiverBasinQuery
+		metadata runtime.ServerMetadata
+	)
+	io.Copy(io.Discard, req.Body)
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_StationService_QueryRiverBasins_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	msg, err := client.QueryRiverBasins(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+}
+
+func local_request_StationService_QueryRiverBasins_0(ctx context.Context, marshaler runtime.Marshaler, server StationServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq RiverBasinQuery
+		metadata runtime.ServerMetadata
+	)
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_StationService_QueryRiverBasins_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	msg, err := server.QueryRiverBasins(ctx, &protoReq)
 	return msg, metadata, err
 }
 
@@ -284,18 +443,18 @@ func local_request_StationService_CreateWaterBody_0(ctx context.Context, marshal
 
 func request_StationService_DeleteWaterBody_0(ctx context.Context, marshaler runtime.Marshaler, client StationServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq wrappers.Int32Value
+		protoReq WaterBodyID
 		metadata runtime.ServerMetadata
 		err      error
 	)
 	io.Copy(io.Discard, req.Body)
-	val, ok := pathParams["value"]
+	val, ok := pathParams["id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "value")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "id")
 	}
-	protoReq.Value, err = runtime.Int32(val)
+	protoReq.Id, err = runtime.Int32(val)
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "value", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "id", err)
 	}
 	msg, err := client.DeleteWaterBody(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
@@ -303,74 +462,88 @@ func request_StationService_DeleteWaterBody_0(ctx context.Context, marshaler run
 
 func local_request_StationService_DeleteWaterBody_0(ctx context.Context, marshaler runtime.Marshaler, server StationServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq wrappers.Int32Value
+		protoReq WaterBodyID
 		metadata runtime.ServerMetadata
 		err      error
 	)
-	val, ok := pathParams["value"]
+	val, ok := pathParams["id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "value")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "id")
 	}
-	protoReq.Value, err = runtime.Int32(val)
+	protoReq.Id, err = runtime.Int32(val)
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "value", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "id", err)
 	}
 	msg, err := server.DeleteWaterBody(ctx, &protoReq)
 	return msg, metadata, err
 }
 
-func request_StationService_GetWaterBody_0(ctx context.Context, marshaler runtime.Marshaler, client StationServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_StationService_GetWaterBodyByID_0(ctx context.Context, marshaler runtime.Marshaler, client StationServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq wrappers.Int32Value
+		protoReq WaterBodyID
 		metadata runtime.ServerMetadata
 		err      error
 	)
 	io.Copy(io.Discard, req.Body)
-	val, ok := pathParams["value"]
+	val, ok := pathParams["id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "value")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "id")
 	}
-	protoReq.Value, err = runtime.Int32(val)
+	protoReq.Id, err = runtime.Int32(val)
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "value", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "id", err)
 	}
-	msg, err := client.GetWaterBody(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.GetWaterBodyByID(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 }
 
-func local_request_StationService_GetWaterBody_0(ctx context.Context, marshaler runtime.Marshaler, server StationServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func local_request_StationService_GetWaterBodyByID_0(ctx context.Context, marshaler runtime.Marshaler, server StationServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq wrappers.Int32Value
+		protoReq WaterBodyID
 		metadata runtime.ServerMetadata
 		err      error
 	)
-	val, ok := pathParams["value"]
+	val, ok := pathParams["id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "value")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "id")
 	}
-	protoReq.Value, err = runtime.Int32(val)
+	protoReq.Id, err = runtime.Int32(val)
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "value", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "id", err)
 	}
-	msg, err := server.GetWaterBody(ctx, &protoReq)
+	msg, err := server.GetWaterBodyByID(ctx, &protoReq)
 	return msg, metadata, err
 }
+
+var filter_StationService_ListCatchments_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
 
 func request_StationService_ListCatchments_0(ctx context.Context, marshaler runtime.Marshaler, client StationServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq empty.Empty
+		protoReq CatchmentQuery
 		metadata runtime.ServerMetadata
 	)
 	io.Copy(io.Discard, req.Body)
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_StationService_ListCatchments_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
 	msg, err := client.ListCatchments(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 }
 
 func local_request_StationService_ListCatchments_0(ctx context.Context, marshaler runtime.Marshaler, server StationServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq empty.Empty
+		protoReq CatchmentQuery
 		metadata runtime.ServerMetadata
 	)
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_StationService_ListCatchments_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
 	msg, err := server.ListCatchments(ctx, &protoReq)
 	return msg, metadata, err
 }
@@ -401,18 +574,18 @@ func local_request_StationService_CreateCatchment_0(ctx context.Context, marshal
 
 func request_StationService_DeleteCatchment_0(ctx context.Context, marshaler runtime.Marshaler, client StationServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq wrappers.Int32Value
+		protoReq CatchmentID
 		metadata runtime.ServerMetadata
 		err      error
 	)
 	io.Copy(io.Discard, req.Body)
-	val, ok := pathParams["value"]
+	val, ok := pathParams["id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "value")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "id")
 	}
-	protoReq.Value, err = runtime.Int32(val)
+	protoReq.Id, err = runtime.Int32(val)
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "value", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "id", err)
 	}
 	msg, err := client.DeleteCatchment(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
@@ -420,17 +593,17 @@ func request_StationService_DeleteCatchment_0(ctx context.Context, marshaler run
 
 func local_request_StationService_DeleteCatchment_0(ctx context.Context, marshaler runtime.Marshaler, server StationServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq wrappers.Int32Value
+		protoReq CatchmentID
 		metadata runtime.ServerMetadata
 		err      error
 	)
-	val, ok := pathParams["value"]
+	val, ok := pathParams["id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "value")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "id")
 	}
-	protoReq.Value, err = runtime.Int32(val)
+	protoReq.Id, err = runtime.Int32(val)
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "value", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "id", err)
 	}
 	msg, err := server.DeleteCatchment(ctx, &protoReq)
 	return msg, metadata, err
@@ -438,18 +611,18 @@ func local_request_StationService_DeleteCatchment_0(ctx context.Context, marshal
 
 func request_StationService_GetCatchment_0(ctx context.Context, marshaler runtime.Marshaler, client StationServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq wrappers.Int32Value
+		protoReq CatchmentID
 		metadata runtime.ServerMetadata
 		err      error
 	)
 	io.Copy(io.Discard, req.Body)
-	val, ok := pathParams["value"]
+	val, ok := pathParams["id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "value")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "id")
 	}
-	protoReq.Value, err = runtime.Int32(val)
+	protoReq.Id, err = runtime.Int32(val)
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "value", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "id", err)
 	}
 	msg, err := client.GetCatchment(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
@@ -457,17 +630,17 @@ func request_StationService_GetCatchment_0(ctx context.Context, marshaler runtim
 
 func local_request_StationService_GetCatchment_0(ctx context.Context, marshaler runtime.Marshaler, server StationServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq wrappers.Int32Value
+		protoReq CatchmentID
 		metadata runtime.ServerMetadata
 		err      error
 	)
-	val, ok := pathParams["value"]
+	val, ok := pathParams["id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "value")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "id")
 	}
-	protoReq.Value, err = runtime.Int32(val)
+	protoReq.Id, err = runtime.Int32(val)
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "value", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "id", err)
 	}
 	msg, err := server.GetCatchment(ctx, &protoReq)
 	return msg, metadata, err
@@ -518,18 +691,18 @@ func local_request_StationService_CreateRiverBasin_0(ctx context.Context, marsha
 
 func request_StationService_DeleteRiverBasin_0(ctx context.Context, marshaler runtime.Marshaler, client StationServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq wrappers.Int32Value
+		protoReq RiverBasinID
 		metadata runtime.ServerMetadata
 		err      error
 	)
 	io.Copy(io.Discard, req.Body)
-	val, ok := pathParams["value"]
+	val, ok := pathParams["id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "value")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "id")
 	}
-	protoReq.Value, err = runtime.Int32(val)
+	protoReq.Id, err = runtime.Int32(val)
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "value", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "id", err)
 	}
 	msg, err := client.DeleteRiverBasin(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
@@ -537,56 +710,56 @@ func request_StationService_DeleteRiverBasin_0(ctx context.Context, marshaler ru
 
 func local_request_StationService_DeleteRiverBasin_0(ctx context.Context, marshaler runtime.Marshaler, server StationServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq wrappers.Int32Value
+		protoReq RiverBasinID
 		metadata runtime.ServerMetadata
 		err      error
 	)
-	val, ok := pathParams["value"]
+	val, ok := pathParams["id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "value")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "id")
 	}
-	protoReq.Value, err = runtime.Int32(val)
+	protoReq.Id, err = runtime.Int32(val)
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "value", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "id", err)
 	}
 	msg, err := server.DeleteRiverBasin(ctx, &protoReq)
 	return msg, metadata, err
 }
 
-func request_StationService_GetRiverBasin_0(ctx context.Context, marshaler runtime.Marshaler, client StationServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_StationService_GetRiverBasinByID_0(ctx context.Context, marshaler runtime.Marshaler, client StationServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq wrappers.Int32Value
+		protoReq RiverBasinID
 		metadata runtime.ServerMetadata
 		err      error
 	)
 	io.Copy(io.Discard, req.Body)
-	val, ok := pathParams["value"]
+	val, ok := pathParams["id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "value")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "id")
 	}
-	protoReq.Value, err = runtime.Int32(val)
+	protoReq.Id, err = runtime.Int32(val)
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "value", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "id", err)
 	}
-	msg, err := client.GetRiverBasin(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.GetRiverBasinByID(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 }
 
-func local_request_StationService_GetRiverBasin_0(ctx context.Context, marshaler runtime.Marshaler, server StationServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func local_request_StationService_GetRiverBasinByID_0(ctx context.Context, marshaler runtime.Marshaler, server StationServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq wrappers.Int32Value
+		protoReq RiverBasinID
 		metadata runtime.ServerMetadata
 		err      error
 	)
-	val, ok := pathParams["value"]
+	val, ok := pathParams["id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "value")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "id")
 	}
-	protoReq.Value, err = runtime.Int32(val)
+	protoReq.Id, err = runtime.Int32(val)
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "value", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "id", err)
 	}
-	msg, err := server.GetRiverBasin(ctx, &protoReq)
+	msg, err := server.GetRiverBasinByID(ctx, &protoReq)
 	return msg, metadata, err
 }
 
@@ -753,6 +926,46 @@ func RegisterStationServiceHandlerServer(ctx context.Context, mux *runtime.Serve
 		}
 		forward_StationService_DisableStation_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
+	mux.Handle(http.MethodPost, pattern_StationService_GetParametersByTarget_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/station.StationService/GetParametersByTarget", runtime.WithHTTPPathPattern("/v0/station_parameters/by_target"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_StationService_GetParametersByTarget_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_StationService_GetParametersByTarget_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
+	mux.Handle(http.MethodGet, pattern_StationService_GetStationAttachments_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/station.StationService/GetStationAttachments", runtime.WithHTTPPathPattern("/v0/stations/{id}/attachments"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_StationService_GetStationAttachments_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_StationService_GetStationAttachments_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
 	mux.Handle(http.MethodPost, pattern_StationService_UploadStationData_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -772,6 +985,66 @@ func RegisterStationServiceHandlerServer(ctx context.Context, mux *runtime.Serve
 			return
 		}
 		forward_StationService_UploadStationData_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
+	mux.Handle(http.MethodGet, pattern_StationService_QueryWaterBodies_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/station.StationService/QueryWaterBodies", runtime.WithHTTPPathPattern("/v0/water_bodies/query"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_StationService_QueryWaterBodies_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_StationService_QueryWaterBodies_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
+	mux.Handle(http.MethodGet, pattern_StationService_QueryCatchments_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/station.StationService/QueryCatchments", runtime.WithHTTPPathPattern("/v0/catchments/query"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_StationService_QueryCatchments_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_StationService_QueryCatchments_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
+	mux.Handle(http.MethodGet, pattern_StationService_QueryRiverBasins_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/station.StationService/QueryRiverBasins", runtime.WithHTTPPathPattern("/v0/river_basins/query"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_StationService_QueryRiverBasins_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_StationService_QueryRiverBasins_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
 	mux.Handle(http.MethodGet, pattern_StationService_ListWaterBodies_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
@@ -819,7 +1092,7 @@ func RegisterStationServiceHandlerServer(ctx context.Context, mux *runtime.Serve
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/station.StationService/DeleteWaterBody", runtime.WithHTTPPathPattern("/v0/water_bodies/{value}"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/station.StationService/DeleteWaterBody", runtime.WithHTTPPathPattern("/v0/water_bodies/{id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -833,25 +1106,25 @@ func RegisterStationServiceHandlerServer(ctx context.Context, mux *runtime.Serve
 		}
 		forward_StationService_DeleteWaterBody_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
-	mux.Handle(http.MethodGet, pattern_StationService_GetWaterBody_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle(http.MethodGet, pattern_StationService_GetWaterBodyByID_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/station.StationService/GetWaterBody", runtime.WithHTTPPathPattern("/v0/water_bodies/{value}"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/station.StationService/GetWaterBodyByID", runtime.WithHTTPPathPattern("/v0/water_bodies/{id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_StationService_GetWaterBody_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_StationService_GetWaterBodyByID_0(annotatedContext, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		forward_StationService_GetWaterBody_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_StationService_GetWaterBodyByID_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
 	mux.Handle(http.MethodGet, pattern_StationService_ListCatchments_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
@@ -899,7 +1172,7 @@ func RegisterStationServiceHandlerServer(ctx context.Context, mux *runtime.Serve
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/station.StationService/DeleteCatchment", runtime.WithHTTPPathPattern("/v0/catchments/{value}"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/station.StationService/DeleteCatchment", runtime.WithHTTPPathPattern("/v0/catchments/{id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -919,7 +1192,7 @@ func RegisterStationServiceHandlerServer(ctx context.Context, mux *runtime.Serve
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/station.StationService/GetCatchment", runtime.WithHTTPPathPattern("/v0/catchments/{value}"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/station.StationService/GetCatchment", runtime.WithHTTPPathPattern("/v0/catchments/{id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -979,7 +1252,7 @@ func RegisterStationServiceHandlerServer(ctx context.Context, mux *runtime.Serve
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/station.StationService/DeleteRiverBasin", runtime.WithHTTPPathPattern("/v0/river_basins/{value}"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/station.StationService/DeleteRiverBasin", runtime.WithHTTPPathPattern("/v0/river_basins/{id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -993,25 +1266,25 @@ func RegisterStationServiceHandlerServer(ctx context.Context, mux *runtime.Serve
 		}
 		forward_StationService_DeleteRiverBasin_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
-	mux.Handle(http.MethodGet, pattern_StationService_GetRiverBasin_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle(http.MethodGet, pattern_StationService_GetRiverBasinByID_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/station.StationService/GetRiverBasin", runtime.WithHTTPPathPattern("/v0/river_basins/{value}"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/station.StationService/GetRiverBasinByID", runtime.WithHTTPPathPattern("/v0/river_basins/{id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_StationService_GetRiverBasin_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_StationService_GetRiverBasinByID_0(annotatedContext, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		forward_StationService_GetRiverBasin_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_StationService_GetRiverBasinByID_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
 	mux.Handle(http.MethodGet, pattern_StationService_ListCountries_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
@@ -1198,6 +1471,40 @@ func RegisterStationServiceHandlerClient(ctx context.Context, mux *runtime.Serve
 		}
 		forward_StationService_DisableStation_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
+	mux.Handle(http.MethodPost, pattern_StationService_GetParametersByTarget_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/station.StationService/GetParametersByTarget", runtime.WithHTTPPathPattern("/v0/station_parameters/by_target"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_StationService_GetParametersByTarget_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_StationService_GetParametersByTarget_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
+	mux.Handle(http.MethodGet, pattern_StationService_GetStationAttachments_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/station.StationService/GetStationAttachments", runtime.WithHTTPPathPattern("/v0/stations/{id}/attachments"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_StationService_GetStationAttachments_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_StationService_GetStationAttachments_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
 	mux.Handle(http.MethodPost, pattern_StationService_UploadStationData_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -1214,6 +1521,57 @@ func RegisterStationServiceHandlerClient(ctx context.Context, mux *runtime.Serve
 			return
 		}
 		forward_StationService_UploadStationData_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
+	mux.Handle(http.MethodGet, pattern_StationService_QueryWaterBodies_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/station.StationService/QueryWaterBodies", runtime.WithHTTPPathPattern("/v0/water_bodies/query"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_StationService_QueryWaterBodies_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_StationService_QueryWaterBodies_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
+	mux.Handle(http.MethodGet, pattern_StationService_QueryCatchments_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/station.StationService/QueryCatchments", runtime.WithHTTPPathPattern("/v0/catchments/query"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_StationService_QueryCatchments_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_StationService_QueryCatchments_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
+	mux.Handle(http.MethodGet, pattern_StationService_QueryRiverBasins_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/station.StationService/QueryRiverBasins", runtime.WithHTTPPathPattern("/v0/river_basins/query"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_StationService_QueryRiverBasins_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_StationService_QueryRiverBasins_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
 	mux.Handle(http.MethodGet, pattern_StationService_ListWaterBodies_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
@@ -1253,7 +1611,7 @@ func RegisterStationServiceHandlerClient(ctx context.Context, mux *runtime.Serve
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/station.StationService/DeleteWaterBody", runtime.WithHTTPPathPattern("/v0/water_bodies/{value}"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/station.StationService/DeleteWaterBody", runtime.WithHTTPPathPattern("/v0/water_bodies/{id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1266,22 +1624,22 @@ func RegisterStationServiceHandlerClient(ctx context.Context, mux *runtime.Serve
 		}
 		forward_StationService_DeleteWaterBody_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
-	mux.Handle(http.MethodGet, pattern_StationService_GetWaterBody_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle(http.MethodGet, pattern_StationService_GetWaterBodyByID_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/station.StationService/GetWaterBody", runtime.WithHTTPPathPattern("/v0/water_bodies/{value}"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/station.StationService/GetWaterBodyByID", runtime.WithHTTPPathPattern("/v0/water_bodies/{id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_StationService_GetWaterBody_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_StationService_GetWaterBodyByID_0(annotatedContext, inboundMarshaler, client, req, pathParams)
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		forward_StationService_GetWaterBody_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_StationService_GetWaterBodyByID_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
 	mux.Handle(http.MethodGet, pattern_StationService_ListCatchments_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
@@ -1321,7 +1679,7 @@ func RegisterStationServiceHandlerClient(ctx context.Context, mux *runtime.Serve
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/station.StationService/DeleteCatchment", runtime.WithHTTPPathPattern("/v0/catchments/{value}"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/station.StationService/DeleteCatchment", runtime.WithHTTPPathPattern("/v0/catchments/{id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1338,7 +1696,7 @@ func RegisterStationServiceHandlerClient(ctx context.Context, mux *runtime.Serve
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/station.StationService/GetCatchment", runtime.WithHTTPPathPattern("/v0/catchments/{value}"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/station.StationService/GetCatchment", runtime.WithHTTPPathPattern("/v0/catchments/{id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1389,7 +1747,7 @@ func RegisterStationServiceHandlerClient(ctx context.Context, mux *runtime.Serve
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/station.StationService/DeleteRiverBasin", runtime.WithHTTPPathPattern("/v0/river_basins/{value}"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/station.StationService/DeleteRiverBasin", runtime.WithHTTPPathPattern("/v0/river_basins/{id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1402,22 +1760,22 @@ func RegisterStationServiceHandlerClient(ctx context.Context, mux *runtime.Serve
 		}
 		forward_StationService_DeleteRiverBasin_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
-	mux.Handle(http.MethodGet, pattern_StationService_GetRiverBasin_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle(http.MethodGet, pattern_StationService_GetRiverBasinByID_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/station.StationService/GetRiverBasin", runtime.WithHTTPPathPattern("/v0/river_basins/{value}"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/station.StationService/GetRiverBasinByID", runtime.WithHTTPPathPattern("/v0/river_basins/{id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_StationService_GetRiverBasin_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_StationService_GetRiverBasinByID_0(annotatedContext, inboundMarshaler, client, req, pathParams)
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		forward_StationService_GetRiverBasin_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_StationService_GetRiverBasinByID_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
 	mux.Handle(http.MethodGet, pattern_StationService_ListCountries_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
@@ -1474,49 +1832,59 @@ func RegisterStationServiceHandlerClient(ctx context.Context, mux *runtime.Serve
 }
 
 var (
-	pattern_StationService_ListStations_0        = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v0", "stations"}, ""))
-	pattern_StationService_CreateStation_0       = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v0", "stations"}, ""))
-	pattern_StationService_GetStationsByTarget_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v0", "stations_target", "filter"}, ""))
-	pattern_StationService_GetStation_0          = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "stations", "id"}, ""))
-	pattern_StationService_DisableStation_0      = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v0", "stations", "id", "disable"}, ""))
-	pattern_StationService_UploadStationData_0   = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v0", "stations", "station_id", "upload"}, ""))
-	pattern_StationService_ListWaterBodies_0     = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v0", "water_bodies"}, ""))
-	pattern_StationService_CreateWaterBody_0     = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v0", "water_bodies"}, ""))
-	pattern_StationService_DeleteWaterBody_0     = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "water_bodies", "value"}, ""))
-	pattern_StationService_GetWaterBody_0        = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "water_bodies", "value"}, ""))
-	pattern_StationService_ListCatchments_0      = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v0", "catchments"}, ""))
-	pattern_StationService_CreateCatchment_0     = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v0", "catchments"}, ""))
-	pattern_StationService_DeleteCatchment_0     = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "catchments", "value"}, ""))
-	pattern_StationService_GetCatchment_0        = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "catchments", "value"}, ""))
-	pattern_StationService_ListRiverBasins_0     = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v0", "river_basins"}, ""))
-	pattern_StationService_CreateRiverBasin_0    = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v0", "river_basins"}, ""))
-	pattern_StationService_DeleteRiverBasin_0    = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "river_basins", "value"}, ""))
-	pattern_StationService_GetRiverBasin_0       = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "river_basins", "value"}, ""))
-	pattern_StationService_ListCountries_0       = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v0", "enum", "countries"}, ""))
-	pattern_StationService_ListStationTypes_0    = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v0", "enum", "station_types"}, ""))
-	pattern_StationService_ListStatus_0          = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v0", "enum", "status"}, ""))
+	pattern_StationService_ListStations_0          = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v0", "stations"}, ""))
+	pattern_StationService_CreateStation_0         = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v0", "stations"}, ""))
+	pattern_StationService_GetStationsByTarget_0   = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v0", "stations_target", "filter"}, ""))
+	pattern_StationService_GetStation_0            = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "stations", "id"}, ""))
+	pattern_StationService_DisableStation_0        = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v0", "stations", "id", "disable"}, ""))
+	pattern_StationService_GetParametersByTarget_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v0", "station_parameters", "by_target"}, ""))
+	pattern_StationService_GetStationAttachments_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v0", "stations", "id", "attachments"}, ""))
+	pattern_StationService_UploadStationData_0     = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v0", "stations", "station_id", "upload"}, ""))
+	pattern_StationService_QueryWaterBodies_0      = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v0", "water_bodies", "query"}, ""))
+	pattern_StationService_QueryCatchments_0       = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v0", "catchments", "query"}, ""))
+	pattern_StationService_QueryRiverBasins_0      = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v0", "river_basins", "query"}, ""))
+	pattern_StationService_ListWaterBodies_0       = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v0", "water_bodies"}, ""))
+	pattern_StationService_CreateWaterBody_0       = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v0", "water_bodies"}, ""))
+	pattern_StationService_DeleteWaterBody_0       = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "water_bodies", "id"}, ""))
+	pattern_StationService_GetWaterBodyByID_0      = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "water_bodies", "id"}, ""))
+	pattern_StationService_ListCatchments_0        = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v0", "catchments"}, ""))
+	pattern_StationService_CreateCatchment_0       = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v0", "catchments"}, ""))
+	pattern_StationService_DeleteCatchment_0       = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "catchments", "id"}, ""))
+	pattern_StationService_GetCatchment_0          = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "catchments", "id"}, ""))
+	pattern_StationService_ListRiverBasins_0       = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v0", "river_basins"}, ""))
+	pattern_StationService_CreateRiverBasin_0      = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v0", "river_basins"}, ""))
+	pattern_StationService_DeleteRiverBasin_0      = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "river_basins", "id"}, ""))
+	pattern_StationService_GetRiverBasinByID_0     = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "river_basins", "id"}, ""))
+	pattern_StationService_ListCountries_0         = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v0", "enum", "countries"}, ""))
+	pattern_StationService_ListStationTypes_0      = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v0", "enum", "station_types"}, ""))
+	pattern_StationService_ListStatus_0            = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v0", "enum", "status"}, ""))
 )
 
 var (
-	forward_StationService_ListStations_0        = runtime.ForwardResponseMessage
-	forward_StationService_CreateStation_0       = runtime.ForwardResponseMessage
-	forward_StationService_GetStationsByTarget_0 = runtime.ForwardResponseMessage
-	forward_StationService_GetStation_0          = runtime.ForwardResponseMessage
-	forward_StationService_DisableStation_0      = runtime.ForwardResponseMessage
-	forward_StationService_UploadStationData_0   = runtime.ForwardResponseMessage
-	forward_StationService_ListWaterBodies_0     = runtime.ForwardResponseMessage
-	forward_StationService_CreateWaterBody_0     = runtime.ForwardResponseMessage
-	forward_StationService_DeleteWaterBody_0     = runtime.ForwardResponseMessage
-	forward_StationService_GetWaterBody_0        = runtime.ForwardResponseMessage
-	forward_StationService_ListCatchments_0      = runtime.ForwardResponseMessage
-	forward_StationService_CreateCatchment_0     = runtime.ForwardResponseMessage
-	forward_StationService_DeleteCatchment_0     = runtime.ForwardResponseMessage
-	forward_StationService_GetCatchment_0        = runtime.ForwardResponseMessage
-	forward_StationService_ListRiverBasins_0     = runtime.ForwardResponseMessage
-	forward_StationService_CreateRiverBasin_0    = runtime.ForwardResponseMessage
-	forward_StationService_DeleteRiverBasin_0    = runtime.ForwardResponseMessage
-	forward_StationService_GetRiverBasin_0       = runtime.ForwardResponseMessage
-	forward_StationService_ListCountries_0       = runtime.ForwardResponseMessage
-	forward_StationService_ListStationTypes_0    = runtime.ForwardResponseMessage
-	forward_StationService_ListStatus_0          = runtime.ForwardResponseMessage
+	forward_StationService_ListStations_0          = runtime.ForwardResponseMessage
+	forward_StationService_CreateStation_0         = runtime.ForwardResponseMessage
+	forward_StationService_GetStationsByTarget_0   = runtime.ForwardResponseMessage
+	forward_StationService_GetStation_0            = runtime.ForwardResponseMessage
+	forward_StationService_DisableStation_0        = runtime.ForwardResponseMessage
+	forward_StationService_GetParametersByTarget_0 = runtime.ForwardResponseMessage
+	forward_StationService_GetStationAttachments_0 = runtime.ForwardResponseMessage
+	forward_StationService_UploadStationData_0     = runtime.ForwardResponseMessage
+	forward_StationService_QueryWaterBodies_0      = runtime.ForwardResponseMessage
+	forward_StationService_QueryCatchments_0       = runtime.ForwardResponseMessage
+	forward_StationService_QueryRiverBasins_0      = runtime.ForwardResponseMessage
+	forward_StationService_ListWaterBodies_0       = runtime.ForwardResponseMessage
+	forward_StationService_CreateWaterBody_0       = runtime.ForwardResponseMessage
+	forward_StationService_DeleteWaterBody_0       = runtime.ForwardResponseMessage
+	forward_StationService_GetWaterBodyByID_0      = runtime.ForwardResponseMessage
+	forward_StationService_ListCatchments_0        = runtime.ForwardResponseMessage
+	forward_StationService_CreateCatchment_0       = runtime.ForwardResponseMessage
+	forward_StationService_DeleteCatchment_0       = runtime.ForwardResponseMessage
+	forward_StationService_GetCatchment_0          = runtime.ForwardResponseMessage
+	forward_StationService_ListRiverBasins_0       = runtime.ForwardResponseMessage
+	forward_StationService_CreateRiverBasin_0      = runtime.ForwardResponseMessage
+	forward_StationService_DeleteRiverBasin_0      = runtime.ForwardResponseMessage
+	forward_StationService_GetRiverBasinByID_0     = runtime.ForwardResponseMessage
+	forward_StationService_ListCountries_0         = runtime.ForwardResponseMessage
+	forward_StationService_ListStationTypes_0      = runtime.ForwardResponseMessage
+	forward_StationService_ListStatus_0            = runtime.ForwardResponseMessage
 )

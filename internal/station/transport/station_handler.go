@@ -3,9 +3,11 @@ package transport
 import (
 	"context"
 	"fmt"
+	"log"
 
 	"google.golang.org/protobuf/types/known/emptypb"
 	"sensor-data-service.backend/api/pb/commonpb"
+	"sensor-data-service.backend/api/pb/parameterpb"
 	"sensor-data-service.backend/api/pb/stationpb"
 	"sensor-data-service.backend/internal/common"
 	"sensor-data-service.backend/internal/station/domain"
@@ -140,6 +142,250 @@ func (h *StationHandler) GetStationsByTarget(ctx context.Context, req *stationpb
 	return common.WrapSuccess("GetStationsByTarget OK", &stationpb.StationIDList{
 		StationIds: stations,
 	})
+}
+
+func (h *StationHandler) ListRiverBasins(ctx context.Context, _ *emptypb.Empty) (*commonpb.StandardResponse, error) {
+	data, err := h.svc.ListRiverBasins(ctx)
+	if err != nil {
+		return common.WrapError("failed to list river basins"), nil
+	}
+	var res []*stationpb.RiverBasin
+	for _, r := range data {
+		res = append(res, &stationpb.RiverBasin{
+			Id:          r.ID,
+			Name:        r.Name,
+			Description: r.Description,
+			Status:      r.Status,
+			UpdatedAt:   r.UpdatedAt.Format("2006-01-02T15:04:05Z"),
+		})
+	}
+	return common.WrapSuccess("ok", &stationpb.RiverBasinList{RiverBasins: res})
+}
+func (h *StationHandler) GetRiverBasinByID(ctx context.Context, req *stationpb.RiverBasinID) (*commonpb.StandardResponse, error) {
+	r, err := h.svc.GetRiverBasin(ctx, req.Id)
+	if err != nil {
+		return common.WrapError("not found"), nil
+	}
+	return common.WrapSuccess("ok", &stationpb.RiverBasin{
+		Id:          r.ID,
+		Name:        r.Name,
+		Description: r.Description,
+		Status:      r.Status,
+		UpdatedAt:   r.UpdatedAt.Format("2006-01-02T15:04:05Z"),
+	})
+}
+func (h *StationHandler) CreateRiverBasin(ctx context.Context, req *stationpb.RiverBasin) (*commonpb.StandardResponse, error) {
+	r := domain.RiverBasin{
+		Name:        req.Name,
+		Description: req.Description,
+		Status:      req.Status,
+	}
+	err := h.svc.CreateRiverBasin(ctx, r)
+	if err != nil {
+		return common.WrapError(fmt.Sprintf("create failed: %v", err)), nil
+	}
+	return common.WrapSuccess("created", &emptypb.Empty{})
+}
+
+func (h *StationHandler) UpdateRiverBasin(ctx context.Context, req *stationpb.RiverBasin) (*commonpb.StandardResponse, error) {
+	r := domain.RiverBasin{
+		ID:          req.Id,
+		Name:        req.Name,
+		Description: req.Description,
+		Status:      req.Status,
+	}
+	err := h.svc.UpdateRiverBasin(ctx, r)
+	if err != nil {
+		return common.WrapError(fmt.Sprintf("update failed: %v", err)), nil
+	}
+	return common.WrapSuccess("updated", &emptypb.Empty{})
+}
+
+func (h *StationHandler) DeleteRiverBasin(ctx context.Context, req *stationpb.RiverBasinID) (*commonpb.StandardResponse, error) {
+	err := h.svc.DeleteRiverBasin(ctx, req.Id)
+	if err != nil {
+		return common.WrapError("delete failed"), nil
+	}
+	return common.WrapSuccess("deleted", &emptypb.Empty{})
+}
+
+func (h *StationHandler) ListWaterBodies(ctx context.Context, _ *emptypb.Empty) (*commonpb.StandardResponse, error) {
+	data, err := h.svc.ListWaterBodies(ctx)
+	if err != nil {
+		return common.WrapError("failed to list water bodies"), nil
+	}
+	var res []*stationpb.WaterBody
+	for _, w := range data {
+		res = append(res, &stationpb.WaterBody{
+			Id:          w.ID,
+			Name:        w.Name,
+			Description: w.Description,
+			Status:      w.Status,
+			UpdatedAt:   w.UpdatedAt.Format("2006-01-02T15:04:05Z"),
+		})
+	}
+	return common.WrapSuccess("ok", &stationpb.WaterBodyList{WaterBodies: res})
+}
+
+func (h *StationHandler) GetWaterBodyByID(ctx context.Context, req *stationpb.WaterBodyID) (*commonpb.StandardResponse, error) {
+	w, err := h.svc.GetWaterBody(ctx, req.Id)
+	if err != nil {
+		return common.WrapError("not found"), nil
+	}
+	return common.WrapSuccess("ok", &stationpb.WaterBody{
+		Id:          w.ID,
+		Name:        w.Name,
+		Description: w.Description,
+		Status:      w.Status,
+		UpdatedAt:   w.UpdatedAt.Format("2006-01-02T15:04:05Z"),
+	})
+}
+
+func (h *StationHandler) CreateWaterBody(ctx context.Context, req *stationpb.WaterBody) (*commonpb.StandardResponse, error) {
+	w := domain.WaterBody{
+		Name:        req.Name,
+		Description: req.Description,
+		Status:      req.Status,
+	}
+	err := h.svc.CreateWaterBody(ctx, w)
+	if err != nil {
+		return common.WrapError(fmt.Sprintf("create failed: %v", err)), nil
+	}
+	return common.WrapSuccess("created", &emptypb.Empty{})
+}
+
+func (h *StationHandler) UpdateWaterBody(ctx context.Context, req *stationpb.WaterBody) (*commonpb.StandardResponse, error) {
+	w := domain.WaterBody{
+		ID:          req.Id,
+		Name:        req.Name,
+		Description: req.Description,
+		Status:      req.Status,
+	}
+	err := h.svc.UpdateWaterBody(ctx, w)
+	if err != nil {
+		return common.WrapError(fmt.Sprintf("update failed: %v", err)), nil
+	}
+	return common.WrapSuccess("updated", &emptypb.Empty{})
+}
+
+func (h *StationHandler) DeleteWaterBody(ctx context.Context, req *stationpb.WaterBodyID) (*commonpb.StandardResponse, error) {
+	err := h.svc.DeleteWaterBody(ctx, req.Id)
+	if err != nil {
+		return common.WrapError("delete failed"), nil
+	}
+	return common.WrapSuccess("deleted", &emptypb.Empty{})
+}
+
+func (h *StationHandler) ListCatchments(ctx context.Context, req *stationpb.CatchmentQuery) (*commonpb.StandardResponse, error) {
+	data, err := h.svc.ListCatchments(ctx)
+	if err != nil {
+		return common.WrapError("failed to list catchments"), nil
+	}
+	var res []*stationpb.Catchment
+	for _, c := range data {
+		res = append(res, &stationpb.Catchment{
+			Id:           c.ID,
+			Name:         c.Name,
+			Description:  c.Description,
+			Status:       c.Status,
+			RiverBasinId: c.RiverBasinID,
+			Country:      c.Country,
+			UpdatedAt:    c.UpdatedAt.Format("2006-01-02T15:04:05Z"),
+		})
+	}
+	return common.WrapSuccess("ok", &stationpb.CatchmentList{Catchments: res})
+}
+
+func (h *StationHandler) GetCatchmentByID(ctx context.Context, req *stationpb.CatchmentID) (*commonpb.StandardResponse, error) {
+	c, err := h.svc.GetCatchmentByID(ctx, req.Id)
+	if err != nil {
+		return common.WrapError("not found"), nil
+	}
+	return common.WrapSuccess("ok", &stationpb.Catchment{
+		Id:           c.ID,
+		Name:         c.Name,
+		Description:  c.Description,
+		Status:       c.Status,
+		RiverBasinId: c.RiverBasinID,
+		Country:      c.Country,
+		UpdatedAt:    c.UpdatedAt.Format("2006-01-02T15:04:05Z"),
+	})
+}
+
+func (h *StationHandler) CreateCatchment(ctx context.Context, req *stationpb.Catchment) (*commonpb.StandardResponse, error) {
+	c := domain.Catchment{
+		Name:         req.Name,
+		Description:  req.Description,
+		Status:       req.Status,
+		RiverBasinID: req.RiverBasinId,
+		Country:      req.Country,
+	}
+	err := h.svc.CreateCatchment(ctx, c)
+	if err != nil {
+		return common.WrapError(fmt.Sprintf("create failed: %v", err)), nil
+	}
+	return common.WrapSuccess("created", &emptypb.Empty{})
+}
+func (h *StationHandler) GetParametersByTarget(ctx context.Context, req *stationpb.TargetSelector) (*commonpb.StandardResponse, error) {
+	log.Printf("GetParametersByTarget: targetType=%v, targetID=%d", req.TargetType, req.TargetId)
+
+	params, err := h.svc.GetDistinctParametersByTarget(ctx, req.TargetType, req.TargetId)
+	if err != nil {
+		return common.WrapError(fmt.Sprintf("failed to get parameters: %v", err)), nil
+	}
+
+	var res []*parameterpb.ParameterResponse
+	for _, p := range params {
+		res = append(res, &parameterpb.ParameterResponse{
+			Id:             int32(p.ID),
+			Name:           p.Name,
+			Unit:           p.Unit,
+			ParameterGroup: p.ParameterGroup,
+			Description:    p.Description,
+			Status:         p.Status,
+			CreatedAt:      p.CreatedAt.Format("2006-01-02T15:04:05Z"),
+			UpdatedAt:      p.UpdatedAt.Format("2006-01-02T15:04:05Z"),
+		})
+	}
+
+	return common.WrapSuccess("ok", &parameterpb.ParameterListResponse{Parameters: res})
+}
+
+// func (h *StationHandler) GetParametersByTarget(ctx context.Context, req *stationpb.TargetSelector) (*commonpb.StandardResponse, error) {
+// 	log.Printf("GetParametersByTarget: targetType=%v, targetID=%d", req.TargetType, req.TargetId)
+// 	params, err := h.svc.GetParametersByTarget(ctx, req.TargetType, req.TargetId)
+// 	if err != nil {
+// 		return common.WrapError(fmt.Sprintf("failed to get parameters: %v", err)), nil
+// 	}
+
+// 	var res []*stationpb.StationParameter
+// 	for _, p := range params {
+// 		param := &stationpb.StationParameter{
+// 			StationId:   p.StationID,
+// 			ParameterId: p.ParameterID,
+// 			Status:      p.Status,
+// 			UpdatedAt:   p.UpdatedAt.Format("2006-01-02T15:04:05Z"),
+// 		}
+
+// 		if p.LastValue != nil {
+// 			param.LastValue = *p.LastValue
+// 		}
+// 		if p.LastReceiveAt != nil {
+// 			param.LastReceivAt = p.LastReceiveAt.Format("2006-01-02T15:04:05Z")
+// 		}
+
+// 		res = append(res, param)
+// 	}
+
+// 	return common.WrapSuccess("ok", &stationpb.StationParameterList{Items: res})
+// }
+
+func (h *StationHandler) DeleteCatchment(ctx context.Context, req *stationpb.CatchmentID) (*commonpb.StandardResponse, error) {
+	err := h.svc.DeleteCatchment(ctx, req.Id)
+	if err != nil {
+		return common.WrapError("delete failed"), nil
+	}
+	return common.WrapSuccess("deleted", &emptypb.Empty{})
 }
 
 // ===== ENUMS =====

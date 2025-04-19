@@ -66,6 +66,7 @@ message ParameterResponse {
   string description = 5;
   string created_at = 6;
   string updated_at = 7;
+  string status = 8;
 }
 
 message ParameterListResponse {

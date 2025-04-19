@@ -9,7 +9,6 @@ package stationpb
 import (
 	context "context"
 	empty "github.com/golang/protobuf/ptypes/empty"
-	wrappers "github.com/golang/protobuf/ptypes/wrappers"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -22,27 +21,32 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	StationService_ListStations_FullMethodName        = "/station.StationService/ListStations"
-	StationService_CreateStation_FullMethodName       = "/station.StationService/CreateStation"
-	StationService_GetStationsByTarget_FullMethodName = "/station.StationService/GetStationsByTarget"
-	StationService_GetStation_FullMethodName          = "/station.StationService/GetStation"
-	StationService_DisableStation_FullMethodName      = "/station.StationService/DisableStation"
-	StationService_UploadStationData_FullMethodName   = "/station.StationService/UploadStationData"
-	StationService_ListWaterBodies_FullMethodName     = "/station.StationService/ListWaterBodies"
-	StationService_CreateWaterBody_FullMethodName     = "/station.StationService/CreateWaterBody"
-	StationService_DeleteWaterBody_FullMethodName     = "/station.StationService/DeleteWaterBody"
-	StationService_GetWaterBody_FullMethodName        = "/station.StationService/GetWaterBody"
-	StationService_ListCatchments_FullMethodName      = "/station.StationService/ListCatchments"
-	StationService_CreateCatchment_FullMethodName     = "/station.StationService/CreateCatchment"
-	StationService_DeleteCatchment_FullMethodName     = "/station.StationService/DeleteCatchment"
-	StationService_GetCatchment_FullMethodName        = "/station.StationService/GetCatchment"
-	StationService_ListRiverBasins_FullMethodName     = "/station.StationService/ListRiverBasins"
-	StationService_CreateRiverBasin_FullMethodName    = "/station.StationService/CreateRiverBasin"
-	StationService_DeleteRiverBasin_FullMethodName    = "/station.StationService/DeleteRiverBasin"
-	StationService_GetRiverBasin_FullMethodName       = "/station.StationService/GetRiverBasin"
-	StationService_ListCountries_FullMethodName       = "/station.StationService/ListCountries"
-	StationService_ListStationTypes_FullMethodName    = "/station.StationService/ListStationTypes"
-	StationService_ListStatus_FullMethodName          = "/station.StationService/ListStatus"
+	StationService_ListStations_FullMethodName          = "/station.StationService/ListStations"
+	StationService_CreateStation_FullMethodName         = "/station.StationService/CreateStation"
+	StationService_GetStationsByTarget_FullMethodName   = "/station.StationService/GetStationsByTarget"
+	StationService_GetStation_FullMethodName            = "/station.StationService/GetStation"
+	StationService_DisableStation_FullMethodName        = "/station.StationService/DisableStation"
+	StationService_GetParametersByTarget_FullMethodName = "/station.StationService/GetParametersByTarget"
+	StationService_GetStationAttachments_FullMethodName = "/station.StationService/GetStationAttachments"
+	StationService_UploadStationData_FullMethodName     = "/station.StationService/UploadStationData"
+	StationService_QueryWaterBodies_FullMethodName      = "/station.StationService/QueryWaterBodies"
+	StationService_QueryCatchments_FullMethodName       = "/station.StationService/QueryCatchments"
+	StationService_QueryRiverBasins_FullMethodName      = "/station.StationService/QueryRiverBasins"
+	StationService_ListWaterBodies_FullMethodName       = "/station.StationService/ListWaterBodies"
+	StationService_CreateWaterBody_FullMethodName       = "/station.StationService/CreateWaterBody"
+	StationService_DeleteWaterBody_FullMethodName       = "/station.StationService/DeleteWaterBody"
+	StationService_GetWaterBodyByID_FullMethodName      = "/station.StationService/GetWaterBodyByID"
+	StationService_ListCatchments_FullMethodName        = "/station.StationService/ListCatchments"
+	StationService_CreateCatchment_FullMethodName       = "/station.StationService/CreateCatchment"
+	StationService_DeleteCatchment_FullMethodName       = "/station.StationService/DeleteCatchment"
+	StationService_GetCatchment_FullMethodName          = "/station.StationService/GetCatchment"
+	StationService_ListRiverBasins_FullMethodName       = "/station.StationService/ListRiverBasins"
+	StationService_CreateRiverBasin_FullMethodName      = "/station.StationService/CreateRiverBasin"
+	StationService_DeleteRiverBasin_FullMethodName      = "/station.StationService/DeleteRiverBasin"
+	StationService_GetRiverBasinByID_FullMethodName     = "/station.StationService/GetRiverBasinByID"
+	StationService_ListCountries_FullMethodName         = "/station.StationService/ListCountries"
+	StationService_ListStationTypes_FullMethodName      = "/station.StationService/ListStationTypes"
+	StationService_ListStatus_FullMethodName            = "/station.StationService/ListStatus"
 )
 
 // StationServiceClient is the client API for StationService service.
@@ -55,22 +59,30 @@ type StationServiceClient interface {
 	GetStationsByTarget(ctx context.Context, in *TargetSelector, opts ...grpc.CallOption) (*commonpb.StandardResponse, error)
 	GetStation(ctx context.Context, in *StationID, opts ...grpc.CallOption) (*commonpb.StandardResponse, error)
 	DisableStation(ctx context.Context, in *StationID, opts ...grpc.CallOption) (*commonpb.StandardResponse, error)
+	GetParametersByTarget(ctx context.Context, in *TargetSelector, opts ...grpc.CallOption) (*commonpb.StandardResponse, error)
+	GetStationAttachments(ctx context.Context, in *StationID, opts ...grpc.CallOption) (*commonpb.StandardResponse, error)
 	UploadStationData(ctx context.Context, in *UploadRequest, opts ...grpc.CallOption) (*commonpb.StandardResponse, error)
+	// ===== WATER BODY QUERY =====
+	QueryWaterBodies(ctx context.Context, in *WaterBodyQuery, opts ...grpc.CallOption) (*commonpb.StandardResponse, error)
+	// ===== CATCHMENT QUERY =====
+	QueryCatchments(ctx context.Context, in *CatchmentQuery, opts ...grpc.CallOption) (*commonpb.StandardResponse, error)
+	// ===== RIVER BASIN QUERY =====
+	QueryRiverBasins(ctx context.Context, in *RiverBasinQuery, opts ...grpc.CallOption) (*commonpb.StandardResponse, error)
 	// ===== WATER BODY =====
 	ListWaterBodies(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*commonpb.StandardResponse, error)
 	CreateWaterBody(ctx context.Context, in *WaterBody, opts ...grpc.CallOption) (*commonpb.StandardResponse, error)
-	DeleteWaterBody(ctx context.Context, in *wrappers.Int32Value, opts ...grpc.CallOption) (*commonpb.StandardResponse, error)
-	GetWaterBody(ctx context.Context, in *wrappers.Int32Value, opts ...grpc.CallOption) (*commonpb.StandardResponse, error)
+	DeleteWaterBody(ctx context.Context, in *WaterBodyID, opts ...grpc.CallOption) (*commonpb.StandardResponse, error)
+	GetWaterBodyByID(ctx context.Context, in *WaterBodyID, opts ...grpc.CallOption) (*commonpb.StandardResponse, error)
 	// ===== CATCHMENT =====
-	ListCatchments(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*commonpb.StandardResponse, error)
+	ListCatchments(ctx context.Context, in *CatchmentQuery, opts ...grpc.CallOption) (*commonpb.StandardResponse, error)
 	CreateCatchment(ctx context.Context, in *Catchment, opts ...grpc.CallOption) (*commonpb.StandardResponse, error)
-	DeleteCatchment(ctx context.Context, in *wrappers.Int32Value, opts ...grpc.CallOption) (*commonpb.StandardResponse, error)
-	GetCatchment(ctx context.Context, in *wrappers.Int32Value, opts ...grpc.CallOption) (*commonpb.StandardResponse, error)
+	DeleteCatchment(ctx context.Context, in *CatchmentID, opts ...grpc.CallOption) (*commonpb.StandardResponse, error)
+	GetCatchment(ctx context.Context, in *CatchmentID, opts ...grpc.CallOption) (*commonpb.StandardResponse, error)
 	// ===== RIVER BASIN =====
 	ListRiverBasins(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*commonpb.StandardResponse, error)
 	CreateRiverBasin(ctx context.Context, in *RiverBasin, opts ...grpc.CallOption) (*commonpb.StandardResponse, error)
-	DeleteRiverBasin(ctx context.Context, in *wrappers.Int32Value, opts ...grpc.CallOption) (*commonpb.StandardResponse, error)
-	GetRiverBasin(ctx context.Context, in *wrappers.Int32Value, opts ...grpc.CallOption) (*commonpb.StandardResponse, error)
+	DeleteRiverBasin(ctx context.Context, in *RiverBasinID, opts ...grpc.CallOption) (*commonpb.StandardResponse, error)
+	GetRiverBasinByID(ctx context.Context, in *RiverBasinID, opts ...grpc.CallOption) (*commonpb.StandardResponse, error)
 	// ===== ENUM TABLES =====
 	ListCountries(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*commonpb.StandardResponse, error)
 	ListStationTypes(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*commonpb.StandardResponse, error)
@@ -135,10 +147,60 @@ func (c *stationServiceClient) DisableStation(ctx context.Context, in *StationID
 	return out, nil
 }
 
+func (c *stationServiceClient) GetParametersByTarget(ctx context.Context, in *TargetSelector, opts ...grpc.CallOption) (*commonpb.StandardResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(commonpb.StandardResponse)
+	err := c.cc.Invoke(ctx, StationService_GetParametersByTarget_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *stationServiceClient) GetStationAttachments(ctx context.Context, in *StationID, opts ...grpc.CallOption) (*commonpb.StandardResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(commonpb.StandardResponse)
+	err := c.cc.Invoke(ctx, StationService_GetStationAttachments_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *stationServiceClient) UploadStationData(ctx context.Context, in *UploadRequest, opts ...grpc.CallOption) (*commonpb.StandardResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(commonpb.StandardResponse)
 	err := c.cc.Invoke(ctx, StationService_UploadStationData_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *stationServiceClient) QueryWaterBodies(ctx context.Context, in *WaterBodyQuery, opts ...grpc.CallOption) (*commonpb.StandardResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(commonpb.StandardResponse)
+	err := c.cc.Invoke(ctx, StationService_QueryWaterBodies_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *stationServiceClient) QueryCatchments(ctx context.Context, in *CatchmentQuery, opts ...grpc.CallOption) (*commonpb.StandardResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(commonpb.StandardResponse)
+	err := c.cc.Invoke(ctx, StationService_QueryCatchments_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *stationServiceClient) QueryRiverBasins(ctx context.Context, in *RiverBasinQuery, opts ...grpc.CallOption) (*commonpb.StandardResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(commonpb.StandardResponse)
+	err := c.cc.Invoke(ctx, StationService_QueryRiverBasins_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -165,7 +227,7 @@ func (c *stationServiceClient) CreateWaterBody(ctx context.Context, in *WaterBod
 	return out, nil
 }
 
-func (c *stationServiceClient) DeleteWaterBody(ctx context.Context, in *wrappers.Int32Value, opts ...grpc.CallOption) (*commonpb.StandardResponse, error) {
+func (c *stationServiceClient) DeleteWaterBody(ctx context.Context, in *WaterBodyID, opts ...grpc.CallOption) (*commonpb.StandardResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(commonpb.StandardResponse)
 	err := c.cc.Invoke(ctx, StationService_DeleteWaterBody_FullMethodName, in, out, cOpts...)
@@ -175,17 +237,17 @@ func (c *stationServiceClient) DeleteWaterBody(ctx context.Context, in *wrappers
 	return out, nil
 }
 
-func (c *stationServiceClient) GetWaterBody(ctx context.Context, in *wrappers.Int32Value, opts ...grpc.CallOption) (*commonpb.StandardResponse, error) {
+func (c *stationServiceClient) GetWaterBodyByID(ctx context.Context, in *WaterBodyID, opts ...grpc.CallOption) (*commonpb.StandardResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(commonpb.StandardResponse)
-	err := c.cc.Invoke(ctx, StationService_GetWaterBody_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, StationService_GetWaterBodyByID_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *stationServiceClient) ListCatchments(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*commonpb.StandardResponse, error) {
+func (c *stationServiceClient) ListCatchments(ctx context.Context, in *CatchmentQuery, opts ...grpc.CallOption) (*commonpb.StandardResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(commonpb.StandardResponse)
 	err := c.cc.Invoke(ctx, StationService_ListCatchments_FullMethodName, in, out, cOpts...)
@@ -205,7 +267,7 @@ func (c *stationServiceClient) CreateCatchment(ctx context.Context, in *Catchmen
 	return out, nil
 }
 
-func (c *stationServiceClient) DeleteCatchment(ctx context.Context, in *wrappers.Int32Value, opts ...grpc.CallOption) (*commonpb.StandardResponse, error) {
+func (c *stationServiceClient) DeleteCatchment(ctx context.Context, in *CatchmentID, opts ...grpc.CallOption) (*commonpb.StandardResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(commonpb.StandardResponse)
 	err := c.cc.Invoke(ctx, StationService_DeleteCatchment_FullMethodName, in, out, cOpts...)
@@ -215,7 +277,7 @@ func (c *stationServiceClient) DeleteCatchment(ctx context.Context, in *wrappers
 	return out, nil
 }
 
-func (c *stationServiceClient) GetCatchment(ctx context.Context, in *wrappers.Int32Value, opts ...grpc.CallOption) (*commonpb.StandardResponse, error) {
+func (c *stationServiceClient) GetCatchment(ctx context.Context, in *CatchmentID, opts ...grpc.CallOption) (*commonpb.StandardResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(commonpb.StandardResponse)
 	err := c.cc.Invoke(ctx, StationService_GetCatchment_FullMethodName, in, out, cOpts...)
@@ -245,7 +307,7 @@ func (c *stationServiceClient) CreateRiverBasin(ctx context.Context, in *RiverBa
 	return out, nil
 }
 
-func (c *stationServiceClient) DeleteRiverBasin(ctx context.Context, in *wrappers.Int32Value, opts ...grpc.CallOption) (*commonpb.StandardResponse, error) {
+func (c *stationServiceClient) DeleteRiverBasin(ctx context.Context, in *RiverBasinID, opts ...grpc.CallOption) (*commonpb.StandardResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(commonpb.StandardResponse)
 	err := c.cc.Invoke(ctx, StationService_DeleteRiverBasin_FullMethodName, in, out, cOpts...)
@@ -255,10 +317,10 @@ func (c *stationServiceClient) DeleteRiverBasin(ctx context.Context, in *wrapper
 	return out, nil
 }
 
-func (c *stationServiceClient) GetRiverBasin(ctx context.Context, in *wrappers.Int32Value, opts ...grpc.CallOption) (*commonpb.StandardResponse, error) {
+func (c *stationServiceClient) GetRiverBasinByID(ctx context.Context, in *RiverBasinID, opts ...grpc.CallOption) (*commonpb.StandardResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(commonpb.StandardResponse)
-	err := c.cc.Invoke(ctx, StationService_GetRiverBasin_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, StationService_GetRiverBasinByID_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -305,22 +367,30 @@ type StationServiceServer interface {
 	GetStationsByTarget(context.Context, *TargetSelector) (*commonpb.StandardResponse, error)
 	GetStation(context.Context, *StationID) (*commonpb.StandardResponse, error)
 	DisableStation(context.Context, *StationID) (*commonpb.StandardResponse, error)
+	GetParametersByTarget(context.Context, *TargetSelector) (*commonpb.StandardResponse, error)
+	GetStationAttachments(context.Context, *StationID) (*commonpb.StandardResponse, error)
 	UploadStationData(context.Context, *UploadRequest) (*commonpb.StandardResponse, error)
+	// ===== WATER BODY QUERY =====
+	QueryWaterBodies(context.Context, *WaterBodyQuery) (*commonpb.StandardResponse, error)
+	// ===== CATCHMENT QUERY =====
+	QueryCatchments(context.Context, *CatchmentQuery) (*commonpb.StandardResponse, error)
+	// ===== RIVER BASIN QUERY =====
+	QueryRiverBasins(context.Context, *RiverBasinQuery) (*commonpb.StandardResponse, error)
 	// ===== WATER BODY =====
 	ListWaterBodies(context.Context, *empty.Empty) (*commonpb.StandardResponse, error)
 	CreateWaterBody(context.Context, *WaterBody) (*commonpb.StandardResponse, error)
-	DeleteWaterBody(context.Context, *wrappers.Int32Value) (*commonpb.StandardResponse, error)
-	GetWaterBody(context.Context, *wrappers.Int32Value) (*commonpb.StandardResponse, error)
+	DeleteWaterBody(context.Context, *WaterBodyID) (*commonpb.StandardResponse, error)
+	GetWaterBodyByID(context.Context, *WaterBodyID) (*commonpb.StandardResponse, error)
 	// ===== CATCHMENT =====
-	ListCatchments(context.Context, *empty.Empty) (*commonpb.StandardResponse, error)
+	ListCatchments(context.Context, *CatchmentQuery) (*commonpb.StandardResponse, error)
 	CreateCatchment(context.Context, *Catchment) (*commonpb.StandardResponse, error)
-	DeleteCatchment(context.Context, *wrappers.Int32Value) (*commonpb.StandardResponse, error)
-	GetCatchment(context.Context, *wrappers.Int32Value) (*commonpb.StandardResponse, error)
+	DeleteCatchment(context.Context, *CatchmentID) (*commonpb.StandardResponse, error)
+	GetCatchment(context.Context, *CatchmentID) (*commonpb.StandardResponse, error)
 	// ===== RIVER BASIN =====
 	ListRiverBasins(context.Context, *empty.Empty) (*commonpb.StandardResponse, error)
 	CreateRiverBasin(context.Context, *RiverBasin) (*commonpb.StandardResponse, error)
-	DeleteRiverBasin(context.Context, *wrappers.Int32Value) (*commonpb.StandardResponse, error)
-	GetRiverBasin(context.Context, *wrappers.Int32Value) (*commonpb.StandardResponse, error)
+	DeleteRiverBasin(context.Context, *RiverBasinID) (*commonpb.StandardResponse, error)
+	GetRiverBasinByID(context.Context, *RiverBasinID) (*commonpb.StandardResponse, error)
 	// ===== ENUM TABLES =====
 	ListCountries(context.Context, *empty.Empty) (*commonpb.StandardResponse, error)
 	ListStationTypes(context.Context, *empty.Empty) (*commonpb.StandardResponse, error)
@@ -350,8 +420,23 @@ func (UnimplementedStationServiceServer) GetStation(context.Context, *StationID)
 func (UnimplementedStationServiceServer) DisableStation(context.Context, *StationID) (*commonpb.StandardResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DisableStation not implemented")
 }
+func (UnimplementedStationServiceServer) GetParametersByTarget(context.Context, *TargetSelector) (*commonpb.StandardResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetParametersByTarget not implemented")
+}
+func (UnimplementedStationServiceServer) GetStationAttachments(context.Context, *StationID) (*commonpb.StandardResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetStationAttachments not implemented")
+}
 func (UnimplementedStationServiceServer) UploadStationData(context.Context, *UploadRequest) (*commonpb.StandardResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UploadStationData not implemented")
+}
+func (UnimplementedStationServiceServer) QueryWaterBodies(context.Context, *WaterBodyQuery) (*commonpb.StandardResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method QueryWaterBodies not implemented")
+}
+func (UnimplementedStationServiceServer) QueryCatchments(context.Context, *CatchmentQuery) (*commonpb.StandardResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method QueryCatchments not implemented")
+}
+func (UnimplementedStationServiceServer) QueryRiverBasins(context.Context, *RiverBasinQuery) (*commonpb.StandardResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method QueryRiverBasins not implemented")
 }
 func (UnimplementedStationServiceServer) ListWaterBodies(context.Context, *empty.Empty) (*commonpb.StandardResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListWaterBodies not implemented")
@@ -359,22 +444,22 @@ func (UnimplementedStationServiceServer) ListWaterBodies(context.Context, *empty
 func (UnimplementedStationServiceServer) CreateWaterBody(context.Context, *WaterBody) (*commonpb.StandardResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateWaterBody not implemented")
 }
-func (UnimplementedStationServiceServer) DeleteWaterBody(context.Context, *wrappers.Int32Value) (*commonpb.StandardResponse, error) {
+func (UnimplementedStationServiceServer) DeleteWaterBody(context.Context, *WaterBodyID) (*commonpb.StandardResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteWaterBody not implemented")
 }
-func (UnimplementedStationServiceServer) GetWaterBody(context.Context, *wrappers.Int32Value) (*commonpb.StandardResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetWaterBody not implemented")
+func (UnimplementedStationServiceServer) GetWaterBodyByID(context.Context, *WaterBodyID) (*commonpb.StandardResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetWaterBodyByID not implemented")
 }
-func (UnimplementedStationServiceServer) ListCatchments(context.Context, *empty.Empty) (*commonpb.StandardResponse, error) {
+func (UnimplementedStationServiceServer) ListCatchments(context.Context, *CatchmentQuery) (*commonpb.StandardResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListCatchments not implemented")
 }
 func (UnimplementedStationServiceServer) CreateCatchment(context.Context, *Catchment) (*commonpb.StandardResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateCatchment not implemented")
 }
-func (UnimplementedStationServiceServer) DeleteCatchment(context.Context, *wrappers.Int32Value) (*commonpb.StandardResponse, error) {
+func (UnimplementedStationServiceServer) DeleteCatchment(context.Context, *CatchmentID) (*commonpb.StandardResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteCatchment not implemented")
 }
-func (UnimplementedStationServiceServer) GetCatchment(context.Context, *wrappers.Int32Value) (*commonpb.StandardResponse, error) {
+func (UnimplementedStationServiceServer) GetCatchment(context.Context, *CatchmentID) (*commonpb.StandardResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetCatchment not implemented")
 }
 func (UnimplementedStationServiceServer) ListRiverBasins(context.Context, *empty.Empty) (*commonpb.StandardResponse, error) {
@@ -383,11 +468,11 @@ func (UnimplementedStationServiceServer) ListRiverBasins(context.Context, *empty
 func (UnimplementedStationServiceServer) CreateRiverBasin(context.Context, *RiverBasin) (*commonpb.StandardResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateRiverBasin not implemented")
 }
-func (UnimplementedStationServiceServer) DeleteRiverBasin(context.Context, *wrappers.Int32Value) (*commonpb.StandardResponse, error) {
+func (UnimplementedStationServiceServer) DeleteRiverBasin(context.Context, *RiverBasinID) (*commonpb.StandardResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteRiverBasin not implemented")
 }
-func (UnimplementedStationServiceServer) GetRiverBasin(context.Context, *wrappers.Int32Value) (*commonpb.StandardResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetRiverBasin not implemented")
+func (UnimplementedStationServiceServer) GetRiverBasinByID(context.Context, *RiverBasinID) (*commonpb.StandardResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetRiverBasinByID not implemented")
 }
 func (UnimplementedStationServiceServer) ListCountries(context.Context, *empty.Empty) (*commonpb.StandardResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListCountries not implemented")
@@ -509,6 +594,42 @@ func _StationService_DisableStation_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _StationService_GetParametersByTarget_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TargetSelector)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(StationServiceServer).GetParametersByTarget(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: StationService_GetParametersByTarget_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(StationServiceServer).GetParametersByTarget(ctx, req.(*TargetSelector))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _StationService_GetStationAttachments_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(StationID)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(StationServiceServer).GetStationAttachments(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: StationService_GetStationAttachments_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(StationServiceServer).GetStationAttachments(ctx, req.(*StationID))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _StationService_UploadStationData_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(UploadRequest)
 	if err := dec(in); err != nil {
@@ -523,6 +644,60 @@ func _StationService_UploadStationData_Handler(srv interface{}, ctx context.Cont
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(StationServiceServer).UploadStationData(ctx, req.(*UploadRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _StationService_QueryWaterBodies_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(WaterBodyQuery)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(StationServiceServer).QueryWaterBodies(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: StationService_QueryWaterBodies_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(StationServiceServer).QueryWaterBodies(ctx, req.(*WaterBodyQuery))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _StationService_QueryCatchments_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CatchmentQuery)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(StationServiceServer).QueryCatchments(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: StationService_QueryCatchments_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(StationServiceServer).QueryCatchments(ctx, req.(*CatchmentQuery))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _StationService_QueryRiverBasins_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RiverBasinQuery)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(StationServiceServer).QueryRiverBasins(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: StationService_QueryRiverBasins_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(StationServiceServer).QueryRiverBasins(ctx, req.(*RiverBasinQuery))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -564,7 +739,7 @@ func _StationService_CreateWaterBody_Handler(srv interface{}, ctx context.Contex
 }
 
 func _StationService_DeleteWaterBody_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(wrappers.Int32Value)
+	in := new(WaterBodyID)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -576,31 +751,31 @@ func _StationService_DeleteWaterBody_Handler(srv interface{}, ctx context.Contex
 		FullMethod: StationService_DeleteWaterBody_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(StationServiceServer).DeleteWaterBody(ctx, req.(*wrappers.Int32Value))
+		return srv.(StationServiceServer).DeleteWaterBody(ctx, req.(*WaterBodyID))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _StationService_GetWaterBody_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(wrappers.Int32Value)
+func _StationService_GetWaterBodyByID_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(WaterBodyID)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(StationServiceServer).GetWaterBody(ctx, in)
+		return srv.(StationServiceServer).GetWaterBodyByID(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: StationService_GetWaterBody_FullMethodName,
+		FullMethod: StationService_GetWaterBodyByID_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(StationServiceServer).GetWaterBody(ctx, req.(*wrappers.Int32Value))
+		return srv.(StationServiceServer).GetWaterBodyByID(ctx, req.(*WaterBodyID))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _StationService_ListCatchments_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(empty.Empty)
+	in := new(CatchmentQuery)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -612,7 +787,7 @@ func _StationService_ListCatchments_Handler(srv interface{}, ctx context.Context
 		FullMethod: StationService_ListCatchments_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(StationServiceServer).ListCatchments(ctx, req.(*empty.Empty))
+		return srv.(StationServiceServer).ListCatchments(ctx, req.(*CatchmentQuery))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -636,7 +811,7 @@ func _StationService_CreateCatchment_Handler(srv interface{}, ctx context.Contex
 }
 
 func _StationService_DeleteCatchment_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(wrappers.Int32Value)
+	in := new(CatchmentID)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -648,13 +823,13 @@ func _StationService_DeleteCatchment_Handler(srv interface{}, ctx context.Contex
 		FullMethod: StationService_DeleteCatchment_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(StationServiceServer).DeleteCatchment(ctx, req.(*wrappers.Int32Value))
+		return srv.(StationServiceServer).DeleteCatchment(ctx, req.(*CatchmentID))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _StationService_GetCatchment_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(wrappers.Int32Value)
+	in := new(CatchmentID)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -666,7 +841,7 @@ func _StationService_GetCatchment_Handler(srv interface{}, ctx context.Context, 
 		FullMethod: StationService_GetCatchment_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(StationServiceServer).GetCatchment(ctx, req.(*wrappers.Int32Value))
+		return srv.(StationServiceServer).GetCatchment(ctx, req.(*CatchmentID))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -708,7 +883,7 @@ func _StationService_CreateRiverBasin_Handler(srv interface{}, ctx context.Conte
 }
 
 func _StationService_DeleteRiverBasin_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(wrappers.Int32Value)
+	in := new(RiverBasinID)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -720,25 +895,25 @@ func _StationService_DeleteRiverBasin_Handler(srv interface{}, ctx context.Conte
 		FullMethod: StationService_DeleteRiverBasin_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(StationServiceServer).DeleteRiverBasin(ctx, req.(*wrappers.Int32Value))
+		return srv.(StationServiceServer).DeleteRiverBasin(ctx, req.(*RiverBasinID))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _StationService_GetRiverBasin_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(wrappers.Int32Value)
+func _StationService_GetRiverBasinByID_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RiverBasinID)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(StationServiceServer).GetRiverBasin(ctx, in)
+		return srv.(StationServiceServer).GetRiverBasinByID(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: StationService_GetRiverBasin_FullMethodName,
+		FullMethod: StationService_GetRiverBasinByID_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(StationServiceServer).GetRiverBasin(ctx, req.(*wrappers.Int32Value))
+		return srv.(StationServiceServer).GetRiverBasinByID(ctx, req.(*RiverBasinID))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -825,8 +1000,28 @@ var StationService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _StationService_DisableStation_Handler,
 		},
 		{
+			MethodName: "GetParametersByTarget",
+			Handler:    _StationService_GetParametersByTarget_Handler,
+		},
+		{
+			MethodName: "GetStationAttachments",
+			Handler:    _StationService_GetStationAttachments_Handler,
+		},
+		{
 			MethodName: "UploadStationData",
 			Handler:    _StationService_UploadStationData_Handler,
+		},
+		{
+			MethodName: "QueryWaterBodies",
+			Handler:    _StationService_QueryWaterBodies_Handler,
+		},
+		{
+			MethodName: "QueryCatchments",
+			Handler:    _StationService_QueryCatchments_Handler,
+		},
+		{
+			MethodName: "QueryRiverBasins",
+			Handler:    _StationService_QueryRiverBasins_Handler,
 		},
 		{
 			MethodName: "ListWaterBodies",
@@ -841,8 +1036,8 @@ var StationService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _StationService_DeleteWaterBody_Handler,
 		},
 		{
-			MethodName: "GetWaterBody",
-			Handler:    _StationService_GetWaterBody_Handler,
+			MethodName: "GetWaterBodyByID",
+			Handler:    _StationService_GetWaterBodyByID_Handler,
 		},
 		{
 			MethodName: "ListCatchments",
@@ -873,8 +1068,8 @@ var StationService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _StationService_DeleteRiverBasin_Handler,
 		},
 		{
-			MethodName: "GetRiverBasin",
-			Handler:    _StationService_GetRiverBasin_Handler,
+			MethodName: "GetRiverBasinByID",
+			Handler:    _StationService_GetRiverBasinByID_Handler,
 		},
 		{
 			MethodName: "ListCountries",

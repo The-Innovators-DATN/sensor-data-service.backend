@@ -9,4 +9,5 @@ type WaterBody struct {
 	CatchmentID int32     `json:"catchment_id"`
 	Description string    `json:"description"`
 	UpdatedAt   time.Time `json:"updated_at"`
+	Status      string    `json:"status"`
 }

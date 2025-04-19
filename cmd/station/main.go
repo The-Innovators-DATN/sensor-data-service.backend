@@ -43,7 +43,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to connect to Postgres: %v", err)
 	}
-	defer postgresDB.Close(ctx)
+	defer postgresDB.Close()
 
 	PGStore := db.NewPostgresStore(postgresDB)
 
