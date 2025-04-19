@@ -1,0 +1,61 @@
+syntax = "proto3";
+
+package dashboard;
+
+import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+import "commonpb/common.proto";
+
+option go_package = "sensor-data-service.backend/api/pb/dashboardpb;dashboardpb";
+
+
+message Dashboard {
+  int32 id = 1;
+  string name = 2;
+  string description = 3;
+  string layout_json = 4; // full config của dashboard (panel, layout)
+  int32 created_by = 5;
+  string created_at = 6;
+  string updated_at = 7;
+  int32 version = 8;
+  string status = 9;
+}
+
+message DashboardID {
+  int32 id = 1;
+}
+
+message DashboardList {
+  repeated Dashboard dashboards = 1;
+}
+
+message SaveDashboardRequest {
+  Dashboard dashboard = 1;
+}
+
+service DashboardService {
+  rpc GetDashboard(DashboardID) returns (common.StandardResponse) {
+    option (google.api.http) = {
+      get: "/v0/dashboards/{id}"
+    };
+  }
+
+  rpc ListDashboards(google.protobuf.Empty) returns (common.StandardResponse) {
+    option (google.api.http) = {
+      get: "/v0/dashboards"
+    };
+  }
+
+  rpc SaveDashboard(SaveDashboardRequest) returns (common.StandardResponse) {
+    option (google.api.http) = {
+      post: "/v0/dashboards"
+      body: "*"
+    };
+  }
+
+  rpc DeleteDashboard(DashboardID) returns (common.StandardResponse) {
+    option (google.api.http) = {
+      delete: "/v0/dashboards/{id}"
+    };
+  }
+}

@@ -103,7 +103,8 @@ protoc \
   api/proto/commonpb/common.proto \
   api/proto/metricdatapb/metricdata.proto \
   api/proto/parameterpb/parameter.proto \
-  api/proto/stationpb/station.proto
+  api/proto/stationpb/station.proto \
+  api/proto/dashboardpb/dashboard.proto
 ```
 
 ```
