@@ -15,4 +15,5 @@ message StandardResponse {
 // ENUM WRAPPER
 message EnumValue {
   string name = 1;
+  string type = 2;
 }

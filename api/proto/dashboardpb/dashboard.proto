@@ -3,17 +3,16 @@ syntax = "proto3";
 package dashboard;
 
 import "google/api/annotations.proto";
-import "google/protobuf/empty.proto";
 import "commonpb/common.proto";
+import "google/protobuf/struct.proto";
 
 option go_package = "sensor-data-service.backend/api/pb/dashboardpb;dashboardpb";
 
-
 message Dashboard {
-  int32 id = 1;
+  string uid = 1;
   string name = 2;
   string description = 3;
-  string layout_json = 4; // full config của dashboard (panel, layout)
+  google.protobuf.Struct layout_configuration = 4;
   int32 created_by = 5;
   string created_at = 6;
   string updated_at = 7;
@@ -22,40 +21,83 @@ message Dashboard {
 }
 
 message DashboardID {
-  int32 id = 1;
+  string uid = 1;
+}
+
+message CreatedBy {
+  int32 created_by = 1;
 }
 
 message DashboardList {
   repeated Dashboard dashboards = 1;
 }
+message GetDashboardRequest {
+  string uid = 1;
+  int32 created_by = 2;
+}
 
-message SaveDashboardRequest {
+message CreateDashboardRequest {
   Dashboard dashboard = 1;
 }
 
+message UpdateDashboardRequest {
+  string uid = 1;
+  Dashboard dashboard = 2;
+  int32 created_by = 3;
+}
+
+message DeleteDashboardRequest {
+  string uid = 1;
+  int32 created_by = 2;
+}
+
+
+message PatchDashboardRequest {
+  string uid = 1;
+  string name = 2;
+  string description = 3;
+  string layout_configuration = 4;
+  string status = 5;
+  int32 created_by = 6;
+}
+
 service DashboardService {
-  rpc GetDashboard(DashboardID) returns (common.StandardResponse) {
+  rpc GetDashboard(GetDashboardRequest) returns (common.StandardResponse) {
     option (google.api.http) = {
-      get: "/v0/dashboards/{id}"
+      get: "/v0/dashboards/{uid}"
     };
   }
 
-  rpc ListDashboards(google.protobuf.Empty) returns (common.StandardResponse) {
+  rpc ListDashboards(CreatedBy) returns (common.StandardResponse) {
     option (google.api.http) = {
       get: "/v0/dashboards"
     };
   }
 
-  rpc SaveDashboard(SaveDashboardRequest) returns (common.StandardResponse) {
+  rpc CreateDashboard(CreateDashboardRequest) returns (common.StandardResponse) {
     option (google.api.http) = {
       post: "/v0/dashboards"
       body: "*"
     };
   }
 
-  rpc DeleteDashboard(DashboardID) returns (common.StandardResponse) {
+  rpc UpdateDashboard(UpdateDashboardRequest) returns (common.StandardResponse) {
     option (google.api.http) = {
-      delete: "/v0/dashboards/{id}"
+      put: "/v0/dashboards/{uid}"
+      body: "*"
+    };
+  }
+
+  rpc PatchDashboard(PatchDashboardRequest) returns (common.StandardResponse) {
+    option (google.api.http) = {
+      patch: "/v0/dashboards/{uid}"
+      body: "*"
+    };
+  }
+
+  rpc DeleteDashboard(DeleteDashboardRequest) returns (common.StandardResponse) {
+    option (google.api.http) = {
+      delete: "/v0/dashboards/{uid}"
     };
   }
 }

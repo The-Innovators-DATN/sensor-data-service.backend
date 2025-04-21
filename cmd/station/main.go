@@ -27,6 +27,11 @@ import (
 	"sensor-data-service.backend/internal/station/repository"
 	"sensor-data-service.backend/internal/station/service"
 	"sensor-data-service.backend/internal/station/transport"
+
+	dashboardpb "sensor-data-service.backend/api/pb/dashboardpb"
+	dashboard_repository "sensor-data-service.backend/internal/dashboard/repository"
+	dashboard_service "sensor-data-service.backend/internal/dashboard/service"
+	dashboard_transport "sensor-data-service.backend/internal/dashboard/transport"
 )
 
 func main() {
@@ -147,6 +152,11 @@ func main() {
 	stationGrpcHandler := transport.NewStationHandler(stationService)
 	stationpb.RegisterStationServiceServer(grpcServer, stationGrpcHandler)
 
+	dashboardRepo := dashboard_repository.NewDashboardDataRepository(PGStore, RedisStore)
+	dashboardService := dashboard_service.NewDashboardService(dashboardRepo)
+	dashboardGrpcHandler := dashboard_transport.NewDashboardHandler(dashboardService)
+	dashboardpb.RegisterDashboardServiceServer(grpcServer, dashboardGrpcHandler)
+
 	// (Optional) enable reflection để dùng grpcurl debug
 	reflection.Register(grpcServer)
 
@@ -179,6 +189,11 @@ func main() {
 			log.Fatalf("Failed to start HTTP gateway: %v", err)
 		}
 		log.Println("REST gateway listening on :8081")
+
+		err = dashboardpb.RegisterDashboardServiceHandlerFromEndpoint(ctx, mux, "localhost:8080", opts)
+		if err != nil {
+			log.Fatalf("Failed to start HTTP gateway: %v", err)
+		}
 		if err := http.ListenAndServe(":8081", mux); err != nil {
 			log.Fatalf("Failed to serve HTTP gateway: %v", err)
 		}

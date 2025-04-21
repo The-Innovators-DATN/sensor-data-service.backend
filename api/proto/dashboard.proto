@@ -42,7 +42,7 @@ message StarDashboard {
 
 service DashboardService {
   rpc GetDashboard(DashboardRequest) returns (DashboardConfig);
-  rpc SaveDashboard(DashboardConfig) returns (SaveResult);
+  rpc CreateDashboard(DashboardConfig) returns (SaveResult);
   rpc ListStarredDashboards(UserRequest) returns (StarredDashboards);
   rpc StarDashboard(StarDashboard) returns (SaveResult);
 }

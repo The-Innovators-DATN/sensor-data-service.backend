@@ -1,13 +1,19 @@
 package domain
 
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
+
 type Dashboard struct {
-	ID          int32
-	Name        string
-	Description string
-	LayoutJSON  string
-	CreatedBy   int32
-	CreatedAt   string
-	UpdatedAt   string
-	Version     int32
-	Status      string
+	UID                 uuid.UUID `json:"uid"`
+	Name                string    `json:"name"`
+	Description         string    `json:"description"`
+	LayoutConfiguration string    `json:"layout_configuration"`
+	CreatedBy           int32     `json:"created_by"`
+	CreatedAt           time.Time `json:"created_at"`
+	UpdatedAt           time.Time `json:"updated_at"`
+	Version             int32     `json:"version"`
+	Status              string    `json:"status"`
 }

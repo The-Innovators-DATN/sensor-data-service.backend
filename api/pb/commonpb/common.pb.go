@@ -86,6 +86,7 @@ func (x *StandardResponse) GetData() *any1.Any {
 type EnumValue struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Type          string                 `protobuf:"bytes,2,opt,name=type,proto3" json:"type,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -127,6 +128,13 @@ func (x *EnumValue) GetName() string {
 	return ""
 }
 
+func (x *EnumValue) GetType() string {
+	if x != nil {
+		return x.Type
+	}
+	return ""
+}
+
 var File_commonpb_common_proto protoreflect.FileDescriptor
 
 const file_commonpb_common_proto_rawDesc = "" +
@@ -135,9 +143,10 @@ const file_commonpb_common_proto_rawDesc = "" +
 	"\x10StandardResponse\x12\x16\n" +
 	"\x06status\x18\x01 \x01(\tR\x06status\x12\x18\n" +
 	"\amessage\x18\x02 \x01(\tR\amessage\x12(\n" +
-	"\x04data\x18\x03 \x01(\v2\x14.google.protobuf.AnyR\x04data\"\x1f\n" +
+	"\x04data\x18\x03 \x01(\v2\x14.google.protobuf.AnyR\x04data\"3\n" +
 	"\tEnumValue\x12\x12\n" +
-	"\x04name\x18\x01 \x01(\tR\x04nameB6Z4sensor-data-service.backend/api/pb/commonpb;commonpbb\x06proto3"
+	"\x04name\x18\x01 \x01(\tR\x04name\x12\x12\n" +
+	"\x04type\x18\x02 \x01(\tR\x04typeB6Z4sensor-data-service.backend/api/pb/commonpb;commonpbb\x06proto3"
 
 var (
 	file_commonpb_common_proto_rawDescOnce sync.Once

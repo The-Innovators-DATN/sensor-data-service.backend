@@ -1,6 +1,8 @@
 -- ========================
 -- ENUM TABLES (dùng name làm PRIMARY KEY)
 -- ========================
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
 
 DROP TABLE IF EXISTS unit CASCADE;
 CREATE TABLE unit (
@@ -20,7 +22,8 @@ CREATE TABLE parameter_group (
 -- Bảng cho status của station (ví dụ: active, inactive, deleted)
 DROP TABLE IF EXISTS status CASCADE;
 CREATE TABLE status (
-    name VARCHAR(50) PRIMARY KEY
+    name VARCHAR(50) PRIMARY KEY,
+    type VARCHAR(50) NOT NULL DEFAULT 'status' -- and progress
 );
 
 
@@ -111,14 +114,16 @@ CREATE TABLE "station_parameter" (
 );
 
 -- 7. Star Dashboard (tham chiếu: status)
-DROP TABLE IF EXISTS "star_dashboard" CASCADE;
-CREATE TABLE "star_dashboard" (
-    "id" UUID PRIMARY KEY,
-    "user_id" INTEGER NOT NULL,
+DROP TABLE IF EXISTS "dashboard" CASCADE;
+CREATE TABLE "dashboard" (
+    "uid" UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    "created_by" INTEGER NOT NULL,
     "created_at" TIMESTAMP NOT NULL,
-    "update_at" TIMESTAMP NOT NULL,
-    "version" INTEGER NOT NULL,
+    "updated_at" TIMESTAMP NOT NULL,
     "layout_configuration" TEXT NOT NULL,
+    "name" VARCHAR(255) NOT NULL,
+    "description" TEXT,
+    "version" INTEGER NOT NULL default 1,
     "status" VARCHAR(50) NOT NULL DEFAULT 'active'
 );
 
@@ -138,7 +143,7 @@ CREATE TABLE "station_key" (
 -- 9. Station Upload Status (tham chiếu: status)
 DROP TABLE IF EXISTS "station_upload_status" CASCADE;
 CREATE TABLE "station_upload_status" (
-    "uid" SERIAL PRIMARY KEY,
+    "uid" UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     "attachment_id" INTEGER NOT NULL,
     "created_at" TIMESTAMP NOT NULL,
     "updated_at" TIMESTAMP NOT NULL,
@@ -149,7 +154,7 @@ CREATE TABLE "station_upload_status" (
 -- 10. Station Attachments (tham chiếu: station)
 DROP TABLE IF EXISTS "station_attachments" CASCADE;
 CREATE TABLE "station_attachments" (
-    "uid" UUID PRIMARY KEY,
+    "uid" UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     "size" INTEGER NOT NULL,
     "filename" TEXT NOT NULL,
     "content_type" VARCHAR(255) NOT NULL,
@@ -229,9 +234,9 @@ ALTER TABLE "station_parameter"
   ADD CONSTRAINT fk_station_parameter_status FOREIGN KEY ("status")
   REFERENCES status(name) ON UPDATE CASCADE ON DELETE SET NULL;
 
--- TABLE star_dashboard
-ALTER TABLE "star_dashboard"
-  ADD CONSTRAINT fk_star_dashboard_status FOREIGN KEY ("status")
+-- TABLE dashboard
+ALTER TABLE "dashboard"
+  ADD CONSTRAINT fk_dashboard_status FOREIGN KEY ("status")
   REFERENCES status(name) ON UPDATE CASCADE ON DELETE SET NULL;
 
 -- TABLE station_key
@@ -319,9 +324,14 @@ FOR EACH ROW
 EXECUTE FUNCTION update_updated_at_column();
 
 
--- Trigger for table: star_dashboard
-CREATE TRIGGER update_star_dashboard_updated_at
-BEFORE UPDATE OR INSERT ON "star_dashboard"
+-- Trigger for table: dashboard
+CREATE TRIGGER dashboard_created_at
+BEFORE INSERT ON "dashboard"
+FOR EACH ROW
+EXECUTE FUNCTION update_created_at_column();
+
+CREATE TRIGGER update_dashboard_updated_at
+BEFORE UPDATE OR INSERT ON "dashboard"
 FOR EACH ROW
 EXECUTE FUNCTION update_updated_at_column();
 
@@ -360,16 +370,17 @@ INSERT INTO parameter_group (name) VALUES
 ('Metals');
 
 -- Upload status
-INSERT INTO status (name) VALUES
-('success'),
-('error'),
-('pending');
+INSERT INTO status (name, type) VALUES
+('success', 'progress'),
+('error', 'progress'),
+('pending', 'progress');
 
 -- Station status
-INSERT INTO status (name) VALUES
-('active'),
-('inactive'),
-('deleted');
+INSERT INTO status (name, type) VALUES
+('active', 'status'),
+('inactive', 'status'),
+('deleted', 'status');
+
 
 INSERT INTO country (name) VALUES
 ('Afghanistan'),
@@ -566,6 +577,146 @@ INSERT INTO country (name) VALUES
 ('Yemen'),
 ('Zambia'),
 ('Zimbabwe');
+
+-- Layout configuration
+-- {
+--     "uid": "dashboard-ho-tay",
+--     "title": "Monitoring Hồ Tây",
+--     "time": {
+--       "from": "now-7d",
+--       "to": "now"
+--     },
+--     "refresh": "300s",
+--     "panels": [
+--       {
+--         "id": 1,
+--         "title": "Nhiệt độ theo thời gian",
+--         "type": "line_chart",
+--         "gridPos": { "x": 0, "y": 0, "w": 6, "h": 4 },
+--         "targets": [
+--           {
+--             "refId": "A",
+--             "target_type": "station",
+--             "target_id": "1",
+--             "metric_id": "1",
+--             "display_name": "Nhiệt độ trạm A",
+--             "color": "#ff5733"
+--           },
+--           {
+--             "refId": "B",
+--             "target_type": "water_body",
+--             "target_id": "2",
+--             "metric_id": "1",
+--             "display_name": "Nhiệt độ hồ Tây",
+--             "color": "#33c1ff"
+--           }
+--         ],
+--         "options": {
+--           "forecast": {
+--             "enabled": true,
+--             "time_step": "1h",
+--             "horizon": 24
+--           },
+--           "anomaly_detection": {
+--             "enabled": true,
+--             "mode": "point",
+--             "threshold": 0.8,
+--             "anomaly_color": "#ff0000"
+--           }
+--         }
+--       },
+--       {
+--         "id": 2,
+--         "title": "Phân bố độ pH theo ngày",
+--         "type": "box_plot",
+--         "gridPos": { "x": 6, "y": 0, "w": 6, "h": 4 },
+--         "targets": [
+--           {
+--             "refId": "C",
+--             "target_type": "catchment",
+--             "target_id": "1",
+--             "metric_id": "2",
+--             "display_name": "pH lưu vực X",
+--             "color": "#8e44ad",
+--             "api": "/api/metrics/distribution?target_type=catchment&target_id=1&metric_id=2"
+--           }
+--         ],
+--         "options": {
+--           "group_by": "day",
+--           "show_outliers": true
+--         }
+--       }
+--     ]
+--   }
+insert into dashboard (created_by, layout_configuration, name, description) VALUES
+(2, '{
+    "uid": "dashboard-ho-tay",
+    "title": "Monitoring Hồ Tây",
+    "time": {
+      "from": "now-7d",
+      "to": "now"
+    },
+    "refresh": "300s",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Nhiệt độ theo thời gian",
+        "type": "line_chart",
+        "gridPos": { "x": 0, "y": 0, "w": 6, "h": 4 },
+        "targets": [
+          {
+            "refId": "A",
+            "target_type": "station",
+            "target_id": "1",
+            "metric_id": "1",
+            "display_name": "Nhiệt độ trạm A",
+            "color": "#ff5733"
+          },
+          {
+            "refId": "B",
+            "target_type": "water_body",
+            "target_id": "2",
+            "metric_id": "1",
+            "display_name": "Nhiệt độ hồ Tây",
+            "color": "#33c1ff"
+          }
+        ],
+        "options": {
+          "forecast": {
+            "enabled": true,
+            "time_step": 1,
+            "horizon": 3600
+          },
+          anomaly_detection: {
+            enabled: true,
+            mode: point,
+            threshold: 0.8,
+            anomaly_color: #ff0000
+          }
+        }
+      },
+      {
+        id: 2,
+        title: Phân bố độ pH theo ngày,
+        type: box_plot,
+        gridPos: { x: 6, y: 0, w: 6, h: 4 },
+        targets: [
+          {
+            refId: C,
+            target_type: catchment,
+            target_id: 1,
+            metric_id: 2,
+            display_name: pH lưu vực X,
+            color: #8e44ad
+          }
+        ],
+        options: {
+          group_by: day,
+          show_outliers: true
+        }
+      }
+    ]
+}', 'Monitoring Hồ Tây', 'lorem ipsum dolor sit amet');
 
 INSERT INTO river_basin (id, name, description) VALUES (1, 'Humber', 'lorem');
 

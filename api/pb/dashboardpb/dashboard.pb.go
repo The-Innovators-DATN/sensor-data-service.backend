@@ -7,7 +7,7 @@
 package dashboardpb
 
 import (
-	empty "github.com/golang/protobuf/ptypes/empty"
+	_struct "github.com/golang/protobuf/ptypes/struct"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
@@ -25,18 +25,18 @@ const (
 )
 
 type Dashboard struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            int32                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
-	Description   string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
-	LayoutJson    string                 `protobuf:"bytes,4,opt,name=layout_json,json=layoutJson,proto3" json:"layout_json,omitempty"` // full config của dashboard (panel, layout)
-	CreatedBy     int32                  `protobuf:"varint,5,opt,name=created_by,json=createdBy,proto3" json:"created_by,omitempty"`
-	CreatedAt     string                 `protobuf:"bytes,6,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	UpdatedAt     string                 `protobuf:"bytes,7,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
-	Version       int32                  `protobuf:"varint,8,opt,name=version,proto3" json:"version,omitempty"`
-	Status        string                 `protobuf:"bytes,9,opt,name=status,proto3" json:"status,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state               protoimpl.MessageState `protogen:"open.v1"`
+	Uid                 string                 `protobuf:"bytes,1,opt,name=uid,proto3" json:"uid,omitempty"`
+	Name                string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	Description         string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
+	LayoutConfiguration *_struct.Struct        `protobuf:"bytes,4,opt,name=layout_configuration,json=layoutConfiguration,proto3" json:"layout_configuration,omitempty"`
+	CreatedBy           int32                  `protobuf:"varint,5,opt,name=created_by,json=createdBy,proto3" json:"created_by,omitempty"`
+	CreatedAt           string                 `protobuf:"bytes,6,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	UpdatedAt           string                 `protobuf:"bytes,7,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	Version             int32                  `protobuf:"varint,8,opt,name=version,proto3" json:"version,omitempty"`
+	Status              string                 `protobuf:"bytes,9,opt,name=status,proto3" json:"status,omitempty"`
+	unknownFields       protoimpl.UnknownFields
+	sizeCache           protoimpl.SizeCache
 }
 
 func (x *Dashboard) Reset() {
@@ -69,11 +69,11 @@ func (*Dashboard) Descriptor() ([]byte, []int) {
 	return file_dashboardpb_dashboard_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *Dashboard) GetId() int32 {
+func (x *Dashboard) GetUid() string {
 	if x != nil {
-		return x.Id
+		return x.Uid
 	}
-	return 0
+	return ""
 }
 
 func (x *Dashboard) GetName() string {
@@ -90,11 +90,11 @@ func (x *Dashboard) GetDescription() string {
 	return ""
 }
 
-func (x *Dashboard) GetLayoutJson() string {
+func (x *Dashboard) GetLayoutConfiguration() *_struct.Struct {
 	if x != nil {
-		return x.LayoutJson
+		return x.LayoutConfiguration
 	}
-	return ""
+	return nil
 }
 
 func (x *Dashboard) GetCreatedBy() int32 {
@@ -134,7 +134,7 @@ func (x *Dashboard) GetStatus() string {
 
 type DashboardID struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            int32                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	Uid           string                 `protobuf:"bytes,1,opt,name=uid,proto3" json:"uid,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -169,9 +169,53 @@ func (*DashboardID) Descriptor() ([]byte, []int) {
 	return file_dashboardpb_dashboard_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *DashboardID) GetId() int32 {
+func (x *DashboardID) GetUid() string {
 	if x != nil {
-		return x.Id
+		return x.Uid
+	}
+	return ""
+}
+
+type CreatedBy struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	CreatedBy     int32                  `protobuf:"varint,1,opt,name=created_by,json=createdBy,proto3" json:"created_by,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreatedBy) Reset() {
+	*x = CreatedBy{}
+	mi := &file_dashboardpb_dashboard_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreatedBy) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreatedBy) ProtoMessage() {}
+
+func (x *CreatedBy) ProtoReflect() protoreflect.Message {
+	mi := &file_dashboardpb_dashboard_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreatedBy.ProtoReflect.Descriptor instead.
+func (*CreatedBy) Descriptor() ([]byte, []int) {
+	return file_dashboardpb_dashboard_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *CreatedBy) GetCreatedBy() int32 {
+	if x != nil {
+		return x.CreatedBy
 	}
 	return 0
 }
@@ -185,7 +229,7 @@ type DashboardList struct {
 
 func (x *DashboardList) Reset() {
 	*x = DashboardList{}
-	mi := &file_dashboardpb_dashboard_proto_msgTypes[2]
+	mi := &file_dashboardpb_dashboard_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -197,7 +241,7 @@ func (x *DashboardList) String() string {
 func (*DashboardList) ProtoMessage() {}
 
 func (x *DashboardList) ProtoReflect() protoreflect.Message {
-	mi := &file_dashboardpb_dashboard_proto_msgTypes[2]
+	mi := &file_dashboardpb_dashboard_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -210,7 +254,7 @@ func (x *DashboardList) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DashboardList.ProtoReflect.Descriptor instead.
 func (*DashboardList) Descriptor() ([]byte, []int) {
-	return file_dashboardpb_dashboard_proto_rawDescGZIP(), []int{2}
+	return file_dashboardpb_dashboard_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *DashboardList) GetDashboards() []*Dashboard {
@@ -220,28 +264,29 @@ func (x *DashboardList) GetDashboards() []*Dashboard {
 	return nil
 }
 
-type SaveDashboardRequest struct {
+type GetDashboardRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Dashboard     *Dashboard             `protobuf:"bytes,1,opt,name=dashboard,proto3" json:"dashboard,omitempty"`
+	Uid           string                 `protobuf:"bytes,1,opt,name=uid,proto3" json:"uid,omitempty"`
+	CreatedBy     int32                  `protobuf:"varint,2,opt,name=created_by,json=createdBy,proto3" json:"created_by,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *SaveDashboardRequest) Reset() {
-	*x = SaveDashboardRequest{}
-	mi := &file_dashboardpb_dashboard_proto_msgTypes[3]
+func (x *GetDashboardRequest) Reset() {
+	*x = GetDashboardRequest{}
+	mi := &file_dashboardpb_dashboard_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *SaveDashboardRequest) String() string {
+func (x *GetDashboardRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*SaveDashboardRequest) ProtoMessage() {}
+func (*GetDashboardRequest) ProtoMessage() {}
 
-func (x *SaveDashboardRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_dashboardpb_dashboard_proto_msgTypes[3]
+func (x *GetDashboardRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_dashboardpb_dashboard_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -252,29 +297,275 @@ func (x *SaveDashboardRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use SaveDashboardRequest.ProtoReflect.Descriptor instead.
-func (*SaveDashboardRequest) Descriptor() ([]byte, []int) {
-	return file_dashboardpb_dashboard_proto_rawDescGZIP(), []int{3}
+// Deprecated: Use GetDashboardRequest.ProtoReflect.Descriptor instead.
+func (*GetDashboardRequest) Descriptor() ([]byte, []int) {
+	return file_dashboardpb_dashboard_proto_rawDescGZIP(), []int{4}
 }
 
-func (x *SaveDashboardRequest) GetDashboard() *Dashboard {
+func (x *GetDashboardRequest) GetUid() string {
+	if x != nil {
+		return x.Uid
+	}
+	return ""
+}
+
+func (x *GetDashboardRequest) GetCreatedBy() int32 {
+	if x != nil {
+		return x.CreatedBy
+	}
+	return 0
+}
+
+type CreateDashboardRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Dashboard     *Dashboard             `protobuf:"bytes,1,opt,name=dashboard,proto3" json:"dashboard,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateDashboardRequest) Reset() {
+	*x = CreateDashboardRequest{}
+	mi := &file_dashboardpb_dashboard_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateDashboardRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateDashboardRequest) ProtoMessage() {}
+
+func (x *CreateDashboardRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_dashboardpb_dashboard_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateDashboardRequest.ProtoReflect.Descriptor instead.
+func (*CreateDashboardRequest) Descriptor() ([]byte, []int) {
+	return file_dashboardpb_dashboard_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *CreateDashboardRequest) GetDashboard() *Dashboard {
 	if x != nil {
 		return x.Dashboard
 	}
 	return nil
 }
 
+type UpdateDashboardRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Uid           string                 `protobuf:"bytes,1,opt,name=uid,proto3" json:"uid,omitempty"`
+	Dashboard     *Dashboard             `protobuf:"bytes,2,opt,name=dashboard,proto3" json:"dashboard,omitempty"`
+	CreatedBy     int32                  `protobuf:"varint,3,opt,name=created_by,json=createdBy,proto3" json:"created_by,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateDashboardRequest) Reset() {
+	*x = UpdateDashboardRequest{}
+	mi := &file_dashboardpb_dashboard_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateDashboardRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateDashboardRequest) ProtoMessage() {}
+
+func (x *UpdateDashboardRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_dashboardpb_dashboard_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateDashboardRequest.ProtoReflect.Descriptor instead.
+func (*UpdateDashboardRequest) Descriptor() ([]byte, []int) {
+	return file_dashboardpb_dashboard_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *UpdateDashboardRequest) GetUid() string {
+	if x != nil {
+		return x.Uid
+	}
+	return ""
+}
+
+func (x *UpdateDashboardRequest) GetDashboard() *Dashboard {
+	if x != nil {
+		return x.Dashboard
+	}
+	return nil
+}
+
+func (x *UpdateDashboardRequest) GetCreatedBy() int32 {
+	if x != nil {
+		return x.CreatedBy
+	}
+	return 0
+}
+
+type DeleteDashboardRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Uid           string                 `protobuf:"bytes,1,opt,name=uid,proto3" json:"uid,omitempty"`
+	CreatedBy     int32                  `protobuf:"varint,2,opt,name=created_by,json=createdBy,proto3" json:"created_by,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteDashboardRequest) Reset() {
+	*x = DeleteDashboardRequest{}
+	mi := &file_dashboardpb_dashboard_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteDashboardRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteDashboardRequest) ProtoMessage() {}
+
+func (x *DeleteDashboardRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_dashboardpb_dashboard_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteDashboardRequest.ProtoReflect.Descriptor instead.
+func (*DeleteDashboardRequest) Descriptor() ([]byte, []int) {
+	return file_dashboardpb_dashboard_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *DeleteDashboardRequest) GetUid() string {
+	if x != nil {
+		return x.Uid
+	}
+	return ""
+}
+
+func (x *DeleteDashboardRequest) GetCreatedBy() int32 {
+	if x != nil {
+		return x.CreatedBy
+	}
+	return 0
+}
+
+type PatchDashboardRequest struct {
+	state               protoimpl.MessageState `protogen:"open.v1"`
+	Uid                 string                 `protobuf:"bytes,1,opt,name=uid,proto3" json:"uid,omitempty"`
+	Name                string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	Description         string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
+	LayoutConfiguration string                 `protobuf:"bytes,4,opt,name=layout_configuration,json=layoutConfiguration,proto3" json:"layout_configuration,omitempty"`
+	Status              string                 `protobuf:"bytes,5,opt,name=status,proto3" json:"status,omitempty"`
+	CreatedBy           int32                  `protobuf:"varint,6,opt,name=created_by,json=createdBy,proto3" json:"created_by,omitempty"`
+	unknownFields       protoimpl.UnknownFields
+	sizeCache           protoimpl.SizeCache
+}
+
+func (x *PatchDashboardRequest) Reset() {
+	*x = PatchDashboardRequest{}
+	mi := &file_dashboardpb_dashboard_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PatchDashboardRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PatchDashboardRequest) ProtoMessage() {}
+
+func (x *PatchDashboardRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_dashboardpb_dashboard_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PatchDashboardRequest.ProtoReflect.Descriptor instead.
+func (*PatchDashboardRequest) Descriptor() ([]byte, []int) {
+	return file_dashboardpb_dashboard_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *PatchDashboardRequest) GetUid() string {
+	if x != nil {
+		return x.Uid
+	}
+	return ""
+}
+
+func (x *PatchDashboardRequest) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *PatchDashboardRequest) GetDescription() string {
+	if x != nil {
+		return x.Description
+	}
+	return ""
+}
+
+func (x *PatchDashboardRequest) GetLayoutConfiguration() string {
+	if x != nil {
+		return x.LayoutConfiguration
+	}
+	return ""
+}
+
+func (x *PatchDashboardRequest) GetStatus() string {
+	if x != nil {
+		return x.Status
+	}
+	return ""
+}
+
+func (x *PatchDashboardRequest) GetCreatedBy() int32 {
+	if x != nil {
+		return x.CreatedBy
+	}
+	return 0
+}
+
 var File_dashboardpb_dashboard_proto protoreflect.FileDescriptor
 
 const file_dashboardpb_dashboard_proto_rawDesc = "" +
 	"\n" +
-	"\x1bdashboardpb/dashboard.proto\x12\tdashboard\x1a\x1cgoogle/api/annotations.proto\x1a\x1bgoogle/protobuf/empty.proto\x1a\x15commonpb/common.proto\"\x81\x02\n" +
-	"\tDashboard\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\x05R\x02id\x12\x12\n" +
+	"\x1bdashboardpb/dashboard.proto\x12\tdashboard\x1a\x1cgoogle/api/annotations.proto\x1a\x15commonpb/common.proto\x1a\x1cgoogle/protobuf/struct.proto\"\xae\x02\n" +
+	"\tDashboard\x12\x10\n" +
+	"\x03uid\x18\x01 \x01(\tR\x03uid\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12 \n" +
-	"\vdescription\x18\x03 \x01(\tR\vdescription\x12\x1f\n" +
-	"\vlayout_json\x18\x04 \x01(\tR\n" +
-	"layoutJson\x12\x1d\n" +
+	"\vdescription\x18\x03 \x01(\tR\vdescription\x12J\n" +
+	"\x14layout_configuration\x18\x04 \x01(\v2\x17.google.protobuf.StructR\x13layoutConfiguration\x12\x1d\n" +
 	"\n" +
 	"created_by\x18\x05 \x01(\x05R\tcreatedBy\x12\x1d\n" +
 	"\n" +
@@ -282,20 +573,46 @@ const file_dashboardpb_dashboard_proto_rawDesc = "" +
 	"\n" +
 	"updated_at\x18\a \x01(\tR\tupdatedAt\x12\x18\n" +
 	"\aversion\x18\b \x01(\x05R\aversion\x12\x16\n" +
-	"\x06status\x18\t \x01(\tR\x06status\"\x1d\n" +
-	"\vDashboardID\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\x05R\x02id\"E\n" +
+	"\x06status\x18\t \x01(\tR\x06status\"\x1f\n" +
+	"\vDashboardID\x12\x10\n" +
+	"\x03uid\x18\x01 \x01(\tR\x03uid\"*\n" +
+	"\tCreatedBy\x12\x1d\n" +
+	"\n" +
+	"created_by\x18\x01 \x01(\x05R\tcreatedBy\"E\n" +
 	"\rDashboardList\x124\n" +
 	"\n" +
 	"dashboards\x18\x01 \x03(\v2\x14.dashboard.DashboardR\n" +
-	"dashboards\"J\n" +
-	"\x14SaveDashboardRequest\x122\n" +
-	"\tdashboard\x18\x01 \x01(\v2\x14.dashboard.DashboardR\tdashboard2\x96\x03\n" +
-	"\x10DashboardService\x12]\n" +
-	"\fGetDashboard\x12\x16.dashboard.DashboardID\x1a\x18.common.StandardResponse\"\x1b\x82\xd3\xe4\x93\x02\x15\x12\x13/v0/dashboards/{id}\x12Z\n" +
-	"\x0eListDashboards\x12\x16.google.protobuf.Empty\x1a\x18.common.StandardResponse\"\x16\x82\xd3\xe4\x93\x02\x10\x12\x0e/v0/dashboards\x12e\n" +
-	"\rSaveDashboard\x12\x1f.dashboard.SaveDashboardRequest\x1a\x18.common.StandardResponse\"\x19\x82\xd3\xe4\x93\x02\x13:\x01*\"\x0e/v0/dashboards\x12`\n" +
-	"\x0fDeleteDashboard\x12\x16.dashboard.DashboardID\x1a\x18.common.StandardResponse\"\x1b\x82\xd3\xe4\x93\x02\x15*\x13/v0/dashboards/{id}B<Z:sensor-data-service.backend/api/pb/dashboardpb;dashboardpbb\x06proto3"
+	"dashboards\"F\n" +
+	"\x13GetDashboardRequest\x12\x10\n" +
+	"\x03uid\x18\x01 \x01(\tR\x03uid\x12\x1d\n" +
+	"\n" +
+	"created_by\x18\x02 \x01(\x05R\tcreatedBy\"L\n" +
+	"\x16CreateDashboardRequest\x122\n" +
+	"\tdashboard\x18\x01 \x01(\v2\x14.dashboard.DashboardR\tdashboard\"}\n" +
+	"\x16UpdateDashboardRequest\x12\x10\n" +
+	"\x03uid\x18\x01 \x01(\tR\x03uid\x122\n" +
+	"\tdashboard\x18\x02 \x01(\v2\x14.dashboard.DashboardR\tdashboard\x12\x1d\n" +
+	"\n" +
+	"created_by\x18\x03 \x01(\x05R\tcreatedBy\"I\n" +
+	"\x16DeleteDashboardRequest\x12\x10\n" +
+	"\x03uid\x18\x01 \x01(\tR\x03uid\x12\x1d\n" +
+	"\n" +
+	"created_by\x18\x02 \x01(\x05R\tcreatedBy\"\xc9\x01\n" +
+	"\x15PatchDashboardRequest\x12\x10\n" +
+	"\x03uid\x18\x01 \x01(\tR\x03uid\x12\x12\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\x12 \n" +
+	"\vdescription\x18\x03 \x01(\tR\vdescription\x121\n" +
+	"\x14layout_configuration\x18\x04 \x01(\tR\x13layoutConfiguration\x12\x16\n" +
+	"\x06status\x18\x05 \x01(\tR\x06status\x12\x1d\n" +
+	"\n" +
+	"created_by\x18\x06 \x01(\x05R\tcreatedBy2\x8d\x05\n" +
+	"\x10DashboardService\x12f\n" +
+	"\fGetDashboard\x12\x1e.dashboard.GetDashboardRequest\x1a\x18.common.StandardResponse\"\x1c\x82\xd3\xe4\x93\x02\x16\x12\x14/v0/dashboards/{uid}\x12X\n" +
+	"\x0eListDashboards\x12\x14.dashboard.CreatedBy\x1a\x18.common.StandardResponse\"\x16\x82\xd3\xe4\x93\x02\x10\x12\x0e/v0/dashboards\x12i\n" +
+	"\x0fCreateDashboard\x12!.dashboard.CreateDashboardRequest\x1a\x18.common.StandardResponse\"\x19\x82\xd3\xe4\x93\x02\x13:\x01*\"\x0e/v0/dashboards\x12o\n" +
+	"\x0fUpdateDashboard\x12!.dashboard.UpdateDashboardRequest\x1a\x18.common.StandardResponse\"\x1f\x82\xd3\xe4\x93\x02\x19:\x01*\x1a\x14/v0/dashboards/{uid}\x12m\n" +
+	"\x0ePatchDashboard\x12 .dashboard.PatchDashboardRequest\x1a\x18.common.StandardResponse\"\x1f\x82\xd3\xe4\x93\x02\x19:\x01*2\x14/v0/dashboards/{uid}\x12l\n" +
+	"\x0fDeleteDashboard\x12!.dashboard.DeleteDashboardRequest\x1a\x18.common.StandardResponse\"\x1c\x82\xd3\xe4\x93\x02\x16*\x14/v0/dashboards/{uid}B<Z:sensor-data-service.backend/api/pb/dashboardpb;dashboardpbb\x06proto3"
 
 var (
 	file_dashboardpb_dashboard_proto_rawDescOnce sync.Once
@@ -309,31 +626,42 @@ func file_dashboardpb_dashboard_proto_rawDescGZIP() []byte {
 	return file_dashboardpb_dashboard_proto_rawDescData
 }
 
-var file_dashboardpb_dashboard_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_dashboardpb_dashboard_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
 var file_dashboardpb_dashboard_proto_goTypes = []any{
 	(*Dashboard)(nil),                 // 0: dashboard.Dashboard
 	(*DashboardID)(nil),               // 1: dashboard.DashboardID
-	(*DashboardList)(nil),             // 2: dashboard.DashboardList
-	(*SaveDashboardRequest)(nil),      // 3: dashboard.SaveDashboardRequest
-	(*empty.Empty)(nil),               // 4: google.protobuf.Empty
-	(*commonpb.StandardResponse)(nil), // 5: common.StandardResponse
+	(*CreatedBy)(nil),                 // 2: dashboard.CreatedBy
+	(*DashboardList)(nil),             // 3: dashboard.DashboardList
+	(*GetDashboardRequest)(nil),       // 4: dashboard.GetDashboardRequest
+	(*CreateDashboardRequest)(nil),    // 5: dashboard.CreateDashboardRequest
+	(*UpdateDashboardRequest)(nil),    // 6: dashboard.UpdateDashboardRequest
+	(*DeleteDashboardRequest)(nil),    // 7: dashboard.DeleteDashboardRequest
+	(*PatchDashboardRequest)(nil),     // 8: dashboard.PatchDashboardRequest
+	(*_struct.Struct)(nil),            // 9: google.protobuf.Struct
+	(*commonpb.StandardResponse)(nil), // 10: common.StandardResponse
 }
 var file_dashboardpb_dashboard_proto_depIdxs = []int32{
-	0, // 0: dashboard.DashboardList.dashboards:type_name -> dashboard.Dashboard
-	0, // 1: dashboard.SaveDashboardRequest.dashboard:type_name -> dashboard.Dashboard
-	1, // 2: dashboard.DashboardService.GetDashboard:input_type -> dashboard.DashboardID
-	4, // 3: dashboard.DashboardService.ListDashboards:input_type -> google.protobuf.Empty
-	3, // 4: dashboard.DashboardService.SaveDashboard:input_type -> dashboard.SaveDashboardRequest
-	1, // 5: dashboard.DashboardService.DeleteDashboard:input_type -> dashboard.DashboardID
-	5, // 6: dashboard.DashboardService.GetDashboard:output_type -> common.StandardResponse
-	5, // 7: dashboard.DashboardService.ListDashboards:output_type -> common.StandardResponse
-	5, // 8: dashboard.DashboardService.SaveDashboard:output_type -> common.StandardResponse
-	5, // 9: dashboard.DashboardService.DeleteDashboard:output_type -> common.StandardResponse
-	6, // [6:10] is the sub-list for method output_type
-	2, // [2:6] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	9,  // 0: dashboard.Dashboard.layout_configuration:type_name -> google.protobuf.Struct
+	0,  // 1: dashboard.DashboardList.dashboards:type_name -> dashboard.Dashboard
+	0,  // 2: dashboard.CreateDashboardRequest.dashboard:type_name -> dashboard.Dashboard
+	0,  // 3: dashboard.UpdateDashboardRequest.dashboard:type_name -> dashboard.Dashboard
+	4,  // 4: dashboard.DashboardService.GetDashboard:input_type -> dashboard.GetDashboardRequest
+	2,  // 5: dashboard.DashboardService.ListDashboards:input_type -> dashboard.CreatedBy
+	5,  // 6: dashboard.DashboardService.CreateDashboard:input_type -> dashboard.CreateDashboardRequest
+	6,  // 7: dashboard.DashboardService.UpdateDashboard:input_type -> dashboard.UpdateDashboardRequest
+	8,  // 8: dashboard.DashboardService.PatchDashboard:input_type -> dashboard.PatchDashboardRequest
+	7,  // 9: dashboard.DashboardService.DeleteDashboard:input_type -> dashboard.DeleteDashboardRequest
+	10, // 10: dashboard.DashboardService.GetDashboard:output_type -> common.StandardResponse
+	10, // 11: dashboard.DashboardService.ListDashboards:output_type -> common.StandardResponse
+	10, // 12: dashboard.DashboardService.CreateDashboard:output_type -> common.StandardResponse
+	10, // 13: dashboard.DashboardService.UpdateDashboard:output_type -> common.StandardResponse
+	10, // 14: dashboard.DashboardService.PatchDashboard:output_type -> common.StandardResponse
+	10, // 15: dashboard.DashboardService.DeleteDashboard:output_type -> common.StandardResponse
+	10, // [10:16] is the sub-list for method output_type
+	4,  // [4:10] is the sub-list for method input_type
+	4,  // [4:4] is the sub-list for extension type_name
+	4,  // [4:4] is the sub-list for extension extendee
+	0,  // [0:4] is the sub-list for field type_name
 }
 
 func init() { file_dashboardpb_dashboard_proto_init() }
@@ -347,7 +675,7 @@ func file_dashboardpb_dashboard_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_dashboardpb_dashboard_proto_rawDesc), len(file_dashboardpb_dashboard_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   4,
+			NumMessages:   9,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

@@ -1,8 +1,11 @@
 package castutil
 
 import (
+	"fmt"
+	"log"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgtype"
 )
 
@@ -117,4 +120,47 @@ func ToInt32Array(ids []int32) pgtype.Int4Array {
 	arr := pgtype.Int4Array{}
 	_ = arr.Set(ids) // convert slice to pg-compatible array
 	return arr
+}
+
+func ParseUUID(val interface{}) (uuid.UUID, error) {
+	switch v := val.(type) {
+	case string:
+		return uuid.Parse(v)
+	case []byte:
+		return uuid.FromBytes(v)
+	case uuid.UUID:
+		return v, nil
+	default:
+		return uuid.Nil, fmt.Errorf("unexpected type for UUID: %T", val)
+	}
+}
+
+// Không trả error, panic nếu có lỗi (cho nhanh gọn)
+func MustParseUUID(val interface{}) uuid.UUID {
+	u, err := ParseUUID(val)
+	if err != nil {
+		panic(err)
+	}
+	return u
+}
+
+func ToUUID(val interface{}) uuid.UUID {
+	switch v := val.(type) {
+	case uuid.UUID:
+		return v
+	case [16]byte:
+		return uuid.UUID(v)
+	case []byte:
+		u, err := uuid.FromBytes(v)
+		if err == nil {
+			return u
+		}
+	case string:
+		u, err := uuid.Parse(v)
+		if err == nil {
+			return u
+		}
+	}
+	log.Printf("ToUUID: unsupported type or invalid UUID: %T → returning uuid.Nil", val)
+	return uuid.Nil
 }

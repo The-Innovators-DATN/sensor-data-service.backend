@@ -8,7 +8,6 @@ package dashboardpb
 
 import (
 	context "context"
-	empty "github.com/golang/protobuf/ptypes/empty"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -23,7 +22,9 @@ const _ = grpc.SupportPackageIsVersion9
 const (
 	DashboardService_GetDashboard_FullMethodName    = "/dashboard.DashboardService/GetDashboard"
 	DashboardService_ListDashboards_FullMethodName  = "/dashboard.DashboardService/ListDashboards"
-	DashboardService_SaveDashboard_FullMethodName   = "/dashboard.DashboardService/SaveDashboard"
+	DashboardService_CreateDashboard_FullMethodName = "/dashboard.DashboardService/CreateDashboard"
+	DashboardService_UpdateDashboard_FullMethodName = "/dashboard.DashboardService/UpdateDashboard"
+	DashboardService_PatchDashboard_FullMethodName  = "/dashboard.DashboardService/PatchDashboard"
 	DashboardService_DeleteDashboard_FullMethodName = "/dashboard.DashboardService/DeleteDashboard"
 )
 
@@ -31,10 +32,12 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type DashboardServiceClient interface {
-	GetDashboard(ctx context.Context, in *DashboardID, opts ...grpc.CallOption) (*commonpb.StandardResponse, error)
-	ListDashboards(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*commonpb.StandardResponse, error)
-	SaveDashboard(ctx context.Context, in *SaveDashboardRequest, opts ...grpc.CallOption) (*commonpb.StandardResponse, error)
-	DeleteDashboard(ctx context.Context, in *DashboardID, opts ...grpc.CallOption) (*commonpb.StandardResponse, error)
+	GetDashboard(ctx context.Context, in *GetDashboardRequest, opts ...grpc.CallOption) (*commonpb.StandardResponse, error)
+	ListDashboards(ctx context.Context, in *CreatedBy, opts ...grpc.CallOption) (*commonpb.StandardResponse, error)
+	CreateDashboard(ctx context.Context, in *CreateDashboardRequest, opts ...grpc.CallOption) (*commonpb.StandardResponse, error)
+	UpdateDashboard(ctx context.Context, in *UpdateDashboardRequest, opts ...grpc.CallOption) (*commonpb.StandardResponse, error)
+	PatchDashboard(ctx context.Context, in *PatchDashboardRequest, opts ...grpc.CallOption) (*commonpb.StandardResponse, error)
+	DeleteDashboard(ctx context.Context, in *DeleteDashboardRequest, opts ...grpc.CallOption) (*commonpb.StandardResponse, error)
 }
 
 type dashboardServiceClient struct {
@@ -45,7 +48,7 @@ func NewDashboardServiceClient(cc grpc.ClientConnInterface) DashboardServiceClie
 	return &dashboardServiceClient{cc}
 }
 
-func (c *dashboardServiceClient) GetDashboard(ctx context.Context, in *DashboardID, opts ...grpc.CallOption) (*commonpb.StandardResponse, error) {
+func (c *dashboardServiceClient) GetDashboard(ctx context.Context, in *GetDashboardRequest, opts ...grpc.CallOption) (*commonpb.StandardResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(commonpb.StandardResponse)
 	err := c.cc.Invoke(ctx, DashboardService_GetDashboard_FullMethodName, in, out, cOpts...)
@@ -55,7 +58,7 @@ func (c *dashboardServiceClient) GetDashboard(ctx context.Context, in *Dashboard
 	return out, nil
 }
 
-func (c *dashboardServiceClient) ListDashboards(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*commonpb.StandardResponse, error) {
+func (c *dashboardServiceClient) ListDashboards(ctx context.Context, in *CreatedBy, opts ...grpc.CallOption) (*commonpb.StandardResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(commonpb.StandardResponse)
 	err := c.cc.Invoke(ctx, DashboardService_ListDashboards_FullMethodName, in, out, cOpts...)
@@ -65,17 +68,37 @@ func (c *dashboardServiceClient) ListDashboards(ctx context.Context, in *empty.E
 	return out, nil
 }
 
-func (c *dashboardServiceClient) SaveDashboard(ctx context.Context, in *SaveDashboardRequest, opts ...grpc.CallOption) (*commonpb.StandardResponse, error) {
+func (c *dashboardServiceClient) CreateDashboard(ctx context.Context, in *CreateDashboardRequest, opts ...grpc.CallOption) (*commonpb.StandardResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(commonpb.StandardResponse)
-	err := c.cc.Invoke(ctx, DashboardService_SaveDashboard_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, DashboardService_CreateDashboard_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *dashboardServiceClient) DeleteDashboard(ctx context.Context, in *DashboardID, opts ...grpc.CallOption) (*commonpb.StandardResponse, error) {
+func (c *dashboardServiceClient) UpdateDashboard(ctx context.Context, in *UpdateDashboardRequest, opts ...grpc.CallOption) (*commonpb.StandardResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(commonpb.StandardResponse)
+	err := c.cc.Invoke(ctx, DashboardService_UpdateDashboard_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dashboardServiceClient) PatchDashboard(ctx context.Context, in *PatchDashboardRequest, opts ...grpc.CallOption) (*commonpb.StandardResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(commonpb.StandardResponse)
+	err := c.cc.Invoke(ctx, DashboardService_PatchDashboard_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dashboardServiceClient) DeleteDashboard(ctx context.Context, in *DeleteDashboardRequest, opts ...grpc.CallOption) (*commonpb.StandardResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(commonpb.StandardResponse)
 	err := c.cc.Invoke(ctx, DashboardService_DeleteDashboard_FullMethodName, in, out, cOpts...)
@@ -89,10 +112,12 @@ func (c *dashboardServiceClient) DeleteDashboard(ctx context.Context, in *Dashbo
 // All implementations must embed UnimplementedDashboardServiceServer
 // for forward compatibility.
 type DashboardServiceServer interface {
-	GetDashboard(context.Context, *DashboardID) (*commonpb.StandardResponse, error)
-	ListDashboards(context.Context, *empty.Empty) (*commonpb.StandardResponse, error)
-	SaveDashboard(context.Context, *SaveDashboardRequest) (*commonpb.StandardResponse, error)
-	DeleteDashboard(context.Context, *DashboardID) (*commonpb.StandardResponse, error)
+	GetDashboard(context.Context, *GetDashboardRequest) (*commonpb.StandardResponse, error)
+	ListDashboards(context.Context, *CreatedBy) (*commonpb.StandardResponse, error)
+	CreateDashboard(context.Context, *CreateDashboardRequest) (*commonpb.StandardResponse, error)
+	UpdateDashboard(context.Context, *UpdateDashboardRequest) (*commonpb.StandardResponse, error)
+	PatchDashboard(context.Context, *PatchDashboardRequest) (*commonpb.StandardResponse, error)
+	DeleteDashboard(context.Context, *DeleteDashboardRequest) (*commonpb.StandardResponse, error)
 	mustEmbedUnimplementedDashboardServiceServer()
 }
 
@@ -103,16 +128,22 @@ type DashboardServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedDashboardServiceServer struct{}
 
-func (UnimplementedDashboardServiceServer) GetDashboard(context.Context, *DashboardID) (*commonpb.StandardResponse, error) {
+func (UnimplementedDashboardServiceServer) GetDashboard(context.Context, *GetDashboardRequest) (*commonpb.StandardResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetDashboard not implemented")
 }
-func (UnimplementedDashboardServiceServer) ListDashboards(context.Context, *empty.Empty) (*commonpb.StandardResponse, error) {
+func (UnimplementedDashboardServiceServer) ListDashboards(context.Context, *CreatedBy) (*commonpb.StandardResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListDashboards not implemented")
 }
-func (UnimplementedDashboardServiceServer) SaveDashboard(context.Context, *SaveDashboardRequest) (*commonpb.StandardResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SaveDashboard not implemented")
+func (UnimplementedDashboardServiceServer) CreateDashboard(context.Context, *CreateDashboardRequest) (*commonpb.StandardResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateDashboard not implemented")
 }
-func (UnimplementedDashboardServiceServer) DeleteDashboard(context.Context, *DashboardID) (*commonpb.StandardResponse, error) {
+func (UnimplementedDashboardServiceServer) UpdateDashboard(context.Context, *UpdateDashboardRequest) (*commonpb.StandardResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateDashboard not implemented")
+}
+func (UnimplementedDashboardServiceServer) PatchDashboard(context.Context, *PatchDashboardRequest) (*commonpb.StandardResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PatchDashboard not implemented")
+}
+func (UnimplementedDashboardServiceServer) DeleteDashboard(context.Context, *DeleteDashboardRequest) (*commonpb.StandardResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteDashboard not implemented")
 }
 func (UnimplementedDashboardServiceServer) mustEmbedUnimplementedDashboardServiceServer() {}
@@ -137,7 +168,7 @@ func RegisterDashboardServiceServer(s grpc.ServiceRegistrar, srv DashboardServic
 }
 
 func _DashboardService_GetDashboard_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DashboardID)
+	in := new(GetDashboardRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -149,13 +180,13 @@ func _DashboardService_GetDashboard_Handler(srv interface{}, ctx context.Context
 		FullMethod: DashboardService_GetDashboard_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DashboardServiceServer).GetDashboard(ctx, req.(*DashboardID))
+		return srv.(DashboardServiceServer).GetDashboard(ctx, req.(*GetDashboardRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _DashboardService_ListDashboards_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(empty.Empty)
+	in := new(CreatedBy)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -167,31 +198,67 @@ func _DashboardService_ListDashboards_Handler(srv interface{}, ctx context.Conte
 		FullMethod: DashboardService_ListDashboards_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DashboardServiceServer).ListDashboards(ctx, req.(*empty.Empty))
+		return srv.(DashboardServiceServer).ListDashboards(ctx, req.(*CreatedBy))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _DashboardService_SaveDashboard_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SaveDashboardRequest)
+func _DashboardService_CreateDashboard_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateDashboardRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(DashboardServiceServer).SaveDashboard(ctx, in)
+		return srv.(DashboardServiceServer).CreateDashboard(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: DashboardService_SaveDashboard_FullMethodName,
+		FullMethod: DashboardService_CreateDashboard_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DashboardServiceServer).SaveDashboard(ctx, req.(*SaveDashboardRequest))
+		return srv.(DashboardServiceServer).CreateDashboard(ctx, req.(*CreateDashboardRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _DashboardService_UpdateDashboard_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateDashboardRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DashboardServiceServer).UpdateDashboard(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: DashboardService_UpdateDashboard_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DashboardServiceServer).UpdateDashboard(ctx, req.(*UpdateDashboardRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _DashboardService_PatchDashboard_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PatchDashboardRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DashboardServiceServer).PatchDashboard(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: DashboardService_PatchDashboard_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DashboardServiceServer).PatchDashboard(ctx, req.(*PatchDashboardRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _DashboardService_DeleteDashboard_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DashboardID)
+	in := new(DeleteDashboardRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -203,7 +270,7 @@ func _DashboardService_DeleteDashboard_Handler(srv interface{}, ctx context.Cont
 		FullMethod: DashboardService_DeleteDashboard_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DashboardServiceServer).DeleteDashboard(ctx, req.(*DashboardID))
+		return srv.(DashboardServiceServer).DeleteDashboard(ctx, req.(*DeleteDashboardRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -224,8 +291,16 @@ var DashboardService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _DashboardService_ListDashboards_Handler,
 		},
 		{
-			MethodName: "SaveDashboard",
-			Handler:    _DashboardService_SaveDashboard_Handler,
+			MethodName: "CreateDashboard",
+			Handler:    _DashboardService_CreateDashboard_Handler,
+		},
+		{
+			MethodName: "UpdateDashboard",
+			Handler:    _DashboardService_UpdateDashboard_Handler,
+		},
+		{
+			MethodName: "PatchDashboard",
+			Handler:    _DashboardService_PatchDashboard_Handler,
 		},
 		{
 			MethodName: "DeleteDashboard",

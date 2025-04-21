@@ -83,6 +83,7 @@ func (TargetType) EnumDescriptor() ([]byte, []int) {
 type EnumValue struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Type          string                 `protobuf:"bytes,2,opt,name=type,proto3" json:"type,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -120,6 +121,13 @@ func (*EnumValue) Descriptor() ([]byte, []int) {
 func (x *EnumValue) GetName() string {
 	if x != nil {
 		return x.Name
+	}
+	return ""
+}
+
+func (x *EnumValue) GetType() string {
+	if x != nil {
+		return x.Type
 	}
 	return ""
 }
@@ -2032,9 +2040,10 @@ var File_stationpb_station_proto protoreflect.FileDescriptor
 
 const file_stationpb_station_proto_rawDesc = "" +
 	"\n" +
-	"\x17stationpb/station.proto\x12\astation\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x15commonpb/common.proto\"\x1f\n" +
+	"\x17stationpb/station.proto\x12\astation\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x15commonpb/common.proto\"3\n" +
 	"\tEnumValue\x12\x12\n" +
-	"\x04name\x18\x01 \x01(\tR\x04name\"\xd5\x02\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x12\x12\n" +
+	"\x04type\x18\x02 \x01(\tR\x04type\"\xd5\x02\n" +
 	"\aStation\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x05R\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12 \n" +
