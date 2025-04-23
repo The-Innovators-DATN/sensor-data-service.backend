@@ -18,20 +18,16 @@ import (
 	paramterpb "sensor-data-service.backend/api/pb/parameterpb"
 	stationpb "sensor-data-service.backend/api/pb/stationpb"
 	"sensor-data-service.backend/config"
+	"sensor-data-service.backend/pkg/logger"
 
-	"sensor-data-service.backend/infrastructure/cache"
-	"sensor-data-service.backend/infrastructure/db"
-	"sensor-data-service.backend/infrastructure/metric"
-	"sensor-data-service.backend/internal/metricdata"
-	"sensor-data-service.backend/internal/parameter"
-	"sensor-data-service.backend/internal/station/repository"
-	"sensor-data-service.backend/internal/station/service"
-	"sensor-data-service.backend/internal/station/transport"
+	"sensor-data-service.backend/internal/domain/repository"
+	"sensor-data-service.backend/internal/domain/service"
+	"sensor-data-service.backend/internal/infrastructure/cache"
+	"sensor-data-service.backend/internal/infrastructure/db"
+	"sensor-data-service.backend/internal/infrastructure/metric"
+	"sensor-data-service.backend/internal/transport/handler"
 
 	dashboardpb "sensor-data-service.backend/api/pb/dashboardpb"
-	dashboard_repository "sensor-data-service.backend/internal/dashboard/repository"
-	dashboard_service "sensor-data-service.backend/internal/dashboard/service"
-	dashboard_transport "sensor-data-service.backend/internal/dashboard/transport"
 )
 
 func main() {
@@ -39,14 +35,17 @@ func main() {
 	ctx := context.Background()
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 	cfg, err := config.LoadAllConfigs("config")
-	if err != nil {
-		log.Fatalf("failed to load config: %v", err)
-	}
+	// if err != nil {
+	// 	logger.Fatalf("failed to load config: ", err)
+	// }
+	log.Printf("Config loaded: %+v", cfg)
+	logger := logger.New(cfg.Log)
+	logger.Info("⇢ initializing backend...")
 
 	// Init Postgres
 	postgresDB, err := db.InitDB(ctx, cfg.DB)
 	if err != nil {
-		log.Fatalf("failed to connect to Postgres: %v", err)
+		logger.Fatalf("failed to connect to Postgres:", err)
 	}
 	defer postgresDB.Close()
 
@@ -54,7 +53,7 @@ func main() {
 
 	rows, err := PGStore.ExecQuery(ctx, "SELECT * FROM station LIMIT 5")
 	if err != nil {
-		log.Fatal("Query failed:", err)
+		logger.Fatal("Query failed:", err)
 	}
 
 	for _, row := range rows {
@@ -64,7 +63,7 @@ func main() {
 	// Init ClickHouse
 	clickhouseDB, err := metric.InitClickHouse(cfg.Clickhouse)
 	if err != nil {
-		log.Fatalf("failed to connect to ClickHouse: %v", err)
+		logger.Fatalf("failed to connect to ClickHouse: %v", err)
 	}
 	defer clickhouseDB.Close()
 
@@ -82,7 +81,7 @@ func main() {
 	// Init Redis
 	redisClient, err := cache.InitRedis(cfg.Redis)
 	if err != nil {
-		log.Fatalf("failed to connect to Redis: %v", err)
+		logger.Fatalf("failed to connect to Redis: %v", err)
 	}
 	defer redisClient.Close()
 
@@ -127,34 +126,34 @@ func main() {
 	// TCP listener cho gRPC
 	grpcListener, err := net.Listen("tcp", cfg.App.HostPort)
 	if err != nil {
-		log.Fatalf("failed to listen on %s: %v", cfg.App.HostPort, err)
+		logger.Fatalf("failed to listen on %s: %v", cfg.App.HostPort, err)
 	}
 	defer grpcListener.Close()
 
 	grpcServer := grpc.NewServer()
 
 	// Tạo repository & service & handler cho parameter
-	paramRepo := parameter.NewRepository(PGStore, RedisStore)
+	paramRepo := repository.NewParameterRepository(PGStore, RedisStore)
 
-	paramService := parameter.NewService(paramRepo)
-	paramGrpcHandler := parameter.NewGrpcHandler(paramService)
+	paramService := service.NewParameterService(paramRepo)
+	paramGrpcHandler := handler.NewGrpcParameterHandler(paramService)
 	// Register gRPC server
 	paramterpb.RegisterParameterServiceServer(grpcServer, paramGrpcHandler)
 
-	metricRepo := metricdata.NewMetricDataRepository(CHStore, PGStore, RedisStore)
-	metricService := metricdata.NewMetricDataService(metricRepo)
-	metricGrpcHandler := metricdata.NewMetricDataHandler(metricService)
+	metricRepo := repository.NewMetricDataRepository(CHStore, PGStore, RedisStore)
+	metricService := service.NewMetricDataService(metricRepo)
+	metricGrpcHandler := handler.NewMetricDataHandler(metricService)
 	metricpb.RegisterMetricDataServiceServer(grpcServer, metricGrpcHandler)
 
 	stationRepo := repository.NewStationDataRepository(PGStore, RedisStore)
 	stationService := service.NewStationService(stationRepo)
 
-	stationGrpcHandler := transport.NewStationHandler(stationService)
+	stationGrpcHandler := handler.NewStationHandler(stationService)
 	stationpb.RegisterStationServiceServer(grpcServer, stationGrpcHandler)
 
-	dashboardRepo := dashboard_repository.NewDashboardDataRepository(PGStore, RedisStore)
-	dashboardService := dashboard_service.NewDashboardService(dashboardRepo)
-	dashboardGrpcHandler := dashboard_transport.NewDashboardHandler(dashboardService)
+	dashboardRepo := repository.NewDashboardDataRepository(PGStore, RedisStore)
+	dashboardService := service.NewDashboardService(dashboardRepo)
+	dashboardGrpcHandler := handler.NewDashboardHandler(dashboardService)
 	dashboardpb.RegisterDashboardServiceServer(grpcServer, dashboardGrpcHandler)
 
 	// (Optional) enable reflection để dùng grpcurl debug
@@ -164,7 +163,7 @@ func main() {
 	go func() {
 		log.Printf("gRPC server listening at %s", cfg.App.HostPort)
 		if err := grpcServer.Serve(grpcListener); err != nil {
-			log.Fatalf("failed to serve gRPC server: %v", err)
+			logger.Fatalf("failed to serve gRPC server: %v", err)
 		}
 	}()
 
@@ -178,25 +177,39 @@ func main() {
 
 		err := paramterpb.RegisterParameterServiceHandlerFromEndpoint(ctx, mux, "localhost:8080", opts)
 		if err != nil {
-			log.Fatalf("Failed to start HTTP gateway: %v", err)
+			logger.Fatalf("Failed to start HTTP gateway: %v", err)
 		}
 		err = metricpb.RegisterMetricDataServiceHandlerFromEndpoint(ctx, mux, "localhost:8080", opts)
 		if err != nil {
-			log.Fatalf("Failed to start HTTP gateway: %v", err)
+			logger.Fatalf("Failed to start HTTP gateway: %v", err)
 		}
 		err = stationpb.RegisterStationServiceHandlerFromEndpoint(ctx, mux, "localhost:8080", opts)
 		if err != nil {
-			log.Fatalf("Failed to start HTTP gateway: %v", err)
+			logger.Fatalf("Failed to start HTTP gateway: %v", err)
 		}
-		log.Println("REST gateway listening on :8081")
 
 		err = dashboardpb.RegisterDashboardServiceHandlerFromEndpoint(ctx, mux, "localhost:8080", opts)
 		if err != nil {
-			log.Fatalf("Failed to start HTTP gateway: %v", err)
+			logger.Fatalf("Failed to start HTTP gateway: %v", err)
 		}
-		if err := http.ListenAndServe(":8081", mux); err != nil {
-			log.Fatalf("Failed to serve HTTP gateway: %v", err)
+		httpMux := http.NewServeMux()
+
+		httpMux.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			log.Printf("[HTTP] %s %s", r.Method, r.URL.Path)
+			mux.ServeHTTP(w, r)
+		}))
+
+		httpMux.HandleFunc("/ping", func(w http.ResponseWriter, r *http.Request) {
+			log.Printf("Received ping: %s %s", r.Method, r.URL.Path)
+			w.WriteHeader(http.StatusOK)
+			fmt.Fprintln(w, "pong")
+		})
+
+		log.Println("REST gateway listening on :8081")
+		if err := http.ListenAndServe(":8081", httpMux); err != nil {
+			logger.Fatalf("Failed to serve HTTP gateway: %v", err)
 		}
+
 	}()
 
 	// Graceful shutdown handling

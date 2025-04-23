@@ -1,6 +1,6 @@
 # redis config
 
-add: localhost:6379
+addr: localhost:6379
 # password: secret
 db: 0
 protocol: 2
