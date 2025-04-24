@@ -117,6 +117,30 @@ func local_request_StationService_GetStationsByTarget_0(ctx context.Context, mar
 	return msg, metadata, err
 }
 
+func request_StationService_GetStationBysByStationType_0(ctx context.Context, marshaler runtime.Marshaler, client StationServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq StationType
+		metadata runtime.ServerMetadata
+	)
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	msg, err := client.GetStationBysByStationType(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+}
+
+func local_request_StationService_GetStationBysByStationType_0(ctx context.Context, marshaler runtime.Marshaler, server StationServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq StationType
+		metadata runtime.ServerMetadata
+	)
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	msg, err := server.GetStationBysByStationType(ctx, &protoReq)
+	return msg, metadata, err
+}
+
 func request_StationService_GetStation_0(ctx context.Context, marshaler runtime.Marshaler, client StationServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
 		protoReq StationID
@@ -365,6 +389,43 @@ func local_request_StationService_QueryCatchments_0(ctx context.Context, marshal
 	return msg, metadata, err
 }
 
+func request_StationService_ListCatchmentByRiverBasin_0(ctx context.Context, marshaler runtime.Marshaler, client StationServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq RiverBasinID
+		metadata runtime.ServerMetadata
+		err      error
+	)
+	io.Copy(io.Discard, req.Body)
+	val, ok := pathParams["id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "id")
+	}
+	protoReq.Id, err = runtime.Int32(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "id", err)
+	}
+	msg, err := client.ListCatchmentByRiverBasin(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+}
+
+func local_request_StationService_ListCatchmentByRiverBasin_0(ctx context.Context, marshaler runtime.Marshaler, server StationServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq RiverBasinID
+		metadata runtime.ServerMetadata
+		err      error
+	)
+	val, ok := pathParams["id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "id")
+	}
+	protoReq.Id, err = runtime.Int32(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "id", err)
+	}
+	msg, err := server.ListCatchmentByRiverBasin(ctx, &protoReq)
+	return msg, metadata, err
+}
+
 var filter_StationService_QueryRiverBasins_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
 
 func request_StationService_QueryRiverBasins_0(ctx context.Context, marshaler runtime.Marshaler, client StationServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
@@ -414,6 +475,43 @@ func local_request_StationService_ListWaterBodies_0(ctx context.Context, marshal
 		metadata runtime.ServerMetadata
 	)
 	msg, err := server.ListWaterBodies(ctx, &protoReq)
+	return msg, metadata, err
+}
+
+func request_StationService_ListWaterBodyByCatchment_0(ctx context.Context, marshaler runtime.Marshaler, client StationServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq CatchmentID
+		metadata runtime.ServerMetadata
+		err      error
+	)
+	io.Copy(io.Discard, req.Body)
+	val, ok := pathParams["id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "id")
+	}
+	protoReq.Id, err = runtime.Int32(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "id", err)
+	}
+	msg, err := client.ListWaterBodyByCatchment(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+}
+
+func local_request_StationService_ListWaterBodyByCatchment_0(ctx context.Context, marshaler runtime.Marshaler, server StationServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq CatchmentID
+		metadata runtime.ServerMetadata
+		err      error
+	)
+	val, ok := pathParams["id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "id")
+	}
+	protoReq.Id, err = runtime.Int32(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "id", err)
+	}
+	msg, err := server.ListWaterBodyByCatchment(ctx, &protoReq)
 	return msg, metadata, err
 }
 
@@ -886,6 +984,26 @@ func RegisterStationServiceHandlerServer(ctx context.Context, mux *runtime.Serve
 		}
 		forward_StationService_GetStationsByTarget_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
+	mux.Handle(http.MethodPost, pattern_StationService_GetStationBysByStationType_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/station.StationService/GetStationBysByStationType", runtime.WithHTTPPathPattern("/v0/stations/by_type"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_StationService_GetStationBysByStationType_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_StationService_GetStationBysByStationType_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
 	mux.Handle(http.MethodGet, pattern_StationService_GetStation_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -1026,6 +1144,26 @@ func RegisterStationServiceHandlerServer(ctx context.Context, mux *runtime.Serve
 		}
 		forward_StationService_QueryCatchments_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
+	mux.Handle(http.MethodGet, pattern_StationService_ListCatchmentByRiverBasin_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/station.StationService/ListCatchmentByRiverBasin", runtime.WithHTTPPathPattern("/v0/catchments/by_river_basin/{id}"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_StationService_ListCatchmentByRiverBasin_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_StationService_ListCatchmentByRiverBasin_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
 	mux.Handle(http.MethodGet, pattern_StationService_QueryRiverBasins_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -1065,6 +1203,26 @@ func RegisterStationServiceHandlerServer(ctx context.Context, mux *runtime.Serve
 			return
 		}
 		forward_StationService_ListWaterBodies_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
+	mux.Handle(http.MethodGet, pattern_StationService_ListWaterBodyByCatchment_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/station.StationService/ListWaterBodyByCatchment", runtime.WithHTTPPathPattern("/v0/water_bodies/by_catchment/{id}"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_StationService_ListWaterBodyByCatchment_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_StationService_ListWaterBodyByCatchment_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
 	mux.Handle(http.MethodPost, pattern_StationService_CreateWaterBody_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
@@ -1437,6 +1595,23 @@ func RegisterStationServiceHandlerClient(ctx context.Context, mux *runtime.Serve
 		}
 		forward_StationService_GetStationsByTarget_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
+	mux.Handle(http.MethodPost, pattern_StationService_GetStationBysByStationType_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/station.StationService/GetStationBysByStationType", runtime.WithHTTPPathPattern("/v0/stations/by_type"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_StationService_GetStationBysByStationType_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_StationService_GetStationBysByStationType_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
 	mux.Handle(http.MethodGet, pattern_StationService_GetStation_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -1556,6 +1731,23 @@ func RegisterStationServiceHandlerClient(ctx context.Context, mux *runtime.Serve
 		}
 		forward_StationService_QueryCatchments_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
+	mux.Handle(http.MethodGet, pattern_StationService_ListCatchmentByRiverBasin_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/station.StationService/ListCatchmentByRiverBasin", runtime.WithHTTPPathPattern("/v0/catchments/by_river_basin/{id}"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_StationService_ListCatchmentByRiverBasin_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_StationService_ListCatchmentByRiverBasin_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
 	mux.Handle(http.MethodGet, pattern_StationService_QueryRiverBasins_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -1589,6 +1781,23 @@ func RegisterStationServiceHandlerClient(ctx context.Context, mux *runtime.Serve
 			return
 		}
 		forward_StationService_ListWaterBodies_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
+	mux.Handle(http.MethodGet, pattern_StationService_ListWaterBodyByCatchment_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/station.StationService/ListWaterBodyByCatchment", runtime.WithHTTPPathPattern("/v0/water_bodies/by_catchment/{id}"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_StationService_ListWaterBodyByCatchment_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_StationService_ListWaterBodyByCatchment_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
 	mux.Handle(http.MethodPost, pattern_StationService_CreateWaterBody_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
@@ -1832,59 +2041,65 @@ func RegisterStationServiceHandlerClient(ctx context.Context, mux *runtime.Serve
 }
 
 var (
-	pattern_StationService_ListStations_0          = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v0", "stations"}, ""))
-	pattern_StationService_CreateStation_0         = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v0", "stations"}, ""))
-	pattern_StationService_GetStationsByTarget_0   = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v0", "stations_target", "filter"}, ""))
-	pattern_StationService_GetStation_0            = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "stations", "id"}, ""))
-	pattern_StationService_DisableStation_0        = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v0", "stations", "id", "disable"}, ""))
-	pattern_StationService_GetParametersByTarget_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v0", "station_parameters", "by_target"}, ""))
-	pattern_StationService_GetStationAttachments_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v0", "stations", "id", "attachments"}, ""))
-	pattern_StationService_UploadStationData_0     = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v0", "stations", "station_id", "upload"}, ""))
-	pattern_StationService_QueryWaterBodies_0      = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v0", "water_bodies", "query"}, ""))
-	pattern_StationService_QueryCatchments_0       = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v0", "catchments", "query"}, ""))
-	pattern_StationService_QueryRiverBasins_0      = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v0", "river_basins", "query"}, ""))
-	pattern_StationService_ListWaterBodies_0       = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v0", "water_bodies"}, ""))
-	pattern_StationService_CreateWaterBody_0       = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v0", "water_bodies"}, ""))
-	pattern_StationService_DeleteWaterBody_0       = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "water_bodies", "id"}, ""))
-	pattern_StationService_GetWaterBodyByID_0      = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "water_bodies", "id"}, ""))
-	pattern_StationService_ListCatchments_0        = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v0", "catchments"}, ""))
-	pattern_StationService_CreateCatchment_0       = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v0", "catchments"}, ""))
-	pattern_StationService_DeleteCatchment_0       = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "catchments", "id"}, ""))
-	pattern_StationService_GetCatchment_0          = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "catchments", "id"}, ""))
-	pattern_StationService_ListRiverBasins_0       = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v0", "river_basins"}, ""))
-	pattern_StationService_CreateRiverBasin_0      = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v0", "river_basins"}, ""))
-	pattern_StationService_DeleteRiverBasin_0      = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "river_basins", "id"}, ""))
-	pattern_StationService_GetRiverBasinByID_0     = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "river_basins", "id"}, ""))
-	pattern_StationService_ListCountries_0         = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v0", "enum", "countries"}, ""))
-	pattern_StationService_ListStationTypes_0      = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v0", "enum", "station_types"}, ""))
-	pattern_StationService_ListStatus_0            = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v0", "enum", "status"}, ""))
+	pattern_StationService_ListStations_0               = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v0", "stations"}, ""))
+	pattern_StationService_CreateStation_0              = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v0", "stations"}, ""))
+	pattern_StationService_GetStationsByTarget_0        = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v0", "stations_target", "filter"}, ""))
+	pattern_StationService_GetStationBysByStationType_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v0", "stations", "by_type"}, ""))
+	pattern_StationService_GetStation_0                 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "stations", "id"}, ""))
+	pattern_StationService_DisableStation_0             = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v0", "stations", "id", "disable"}, ""))
+	pattern_StationService_GetParametersByTarget_0      = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v0", "station_parameters", "by_target"}, ""))
+	pattern_StationService_GetStationAttachments_0      = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v0", "stations", "id", "attachments"}, ""))
+	pattern_StationService_UploadStationData_0          = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v0", "stations", "station_id", "upload"}, ""))
+	pattern_StationService_QueryWaterBodies_0           = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v0", "water_bodies", "query"}, ""))
+	pattern_StationService_QueryCatchments_0            = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v0", "catchments", "query"}, ""))
+	pattern_StationService_ListCatchmentByRiverBasin_0  = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"v0", "catchments", "by_river_basin", "id"}, ""))
+	pattern_StationService_QueryRiverBasins_0           = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v0", "river_basins", "query"}, ""))
+	pattern_StationService_ListWaterBodies_0            = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v0", "water_bodies"}, ""))
+	pattern_StationService_ListWaterBodyByCatchment_0   = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"v0", "water_bodies", "by_catchment", "id"}, ""))
+	pattern_StationService_CreateWaterBody_0            = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v0", "water_bodies"}, ""))
+	pattern_StationService_DeleteWaterBody_0            = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "water_bodies", "id"}, ""))
+	pattern_StationService_GetWaterBodyByID_0           = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "water_bodies", "id"}, ""))
+	pattern_StationService_ListCatchments_0             = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v0", "catchments"}, ""))
+	pattern_StationService_CreateCatchment_0            = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v0", "catchments"}, ""))
+	pattern_StationService_DeleteCatchment_0            = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "catchments", "id"}, ""))
+	pattern_StationService_GetCatchment_0               = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "catchments", "id"}, ""))
+	pattern_StationService_ListRiverBasins_0            = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v0", "river_basins"}, ""))
+	pattern_StationService_CreateRiverBasin_0           = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v0", "river_basins"}, ""))
+	pattern_StationService_DeleteRiverBasin_0           = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "river_basins", "id"}, ""))
+	pattern_StationService_GetRiverBasinByID_0          = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v0", "river_basins", "id"}, ""))
+	pattern_StationService_ListCountries_0              = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v0", "enum", "countries"}, ""))
+	pattern_StationService_ListStationTypes_0           = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v0", "enum", "station_types"}, ""))
+	pattern_StationService_ListStatus_0                 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v0", "enum", "status"}, ""))
 )
 
 var (
-	forward_StationService_ListStations_0          = runtime.ForwardResponseMessage
-	forward_StationService_CreateStation_0         = runtime.ForwardResponseMessage
-	forward_StationService_GetStationsByTarget_0   = runtime.ForwardResponseMessage
-	forward_StationService_GetStation_0            = runtime.ForwardResponseMessage
-	forward_StationService_DisableStation_0        = runtime.ForwardResponseMessage
-	forward_StationService_GetParametersByTarget_0 = runtime.ForwardResponseMessage
-	forward_StationService_GetStationAttachments_0 = runtime.ForwardResponseMessage
-	forward_StationService_UploadStationData_0     = runtime.ForwardResponseMessage
-	forward_StationService_QueryWaterBodies_0      = runtime.ForwardResponseMessage
-	forward_StationService_QueryCatchments_0       = runtime.ForwardResponseMessage
-	forward_StationService_QueryRiverBasins_0      = runtime.ForwardResponseMessage
-	forward_StationService_ListWaterBodies_0       = runtime.ForwardResponseMessage
-	forward_StationService_CreateWaterBody_0       = runtime.ForwardResponseMessage
-	forward_StationService_DeleteWaterBody_0       = runtime.ForwardResponseMessage
-	forward_StationService_GetWaterBodyByID_0      = runtime.ForwardResponseMessage
-	forward_StationService_ListCatchments_0        = runtime.ForwardResponseMessage
-	forward_StationService_CreateCatchment_0       = runtime.ForwardResponseMessage
-	forward_StationService_DeleteCatchment_0       = runtime.ForwardResponseMessage
-	forward_StationService_GetCatchment_0          = runtime.ForwardResponseMessage
-	forward_StationService_ListRiverBasins_0       = runtime.ForwardResponseMessage
-	forward_StationService_CreateRiverBasin_0      = runtime.ForwardResponseMessage
-	forward_StationService_DeleteRiverBasin_0      = runtime.ForwardResponseMessage
-	forward_StationService_GetRiverBasinByID_0     = runtime.ForwardResponseMessage
-	forward_StationService_ListCountries_0         = runtime.ForwardResponseMessage
-	forward_StationService_ListStationTypes_0      = runtime.ForwardResponseMessage
-	forward_StationService_ListStatus_0            = runtime.ForwardResponseMessage
+	forward_StationService_ListStations_0               = runtime.ForwardResponseMessage
+	forward_StationService_CreateStation_0              = runtime.ForwardResponseMessage
+	forward_StationService_GetStationsByTarget_0        = runtime.ForwardResponseMessage
+	forward_StationService_GetStationBysByStationType_0 = runtime.ForwardResponseMessage
+	forward_StationService_GetStation_0                 = runtime.ForwardResponseMessage
+	forward_StationService_DisableStation_0             = runtime.ForwardResponseMessage
+	forward_StationService_GetParametersByTarget_0      = runtime.ForwardResponseMessage
+	forward_StationService_GetStationAttachments_0      = runtime.ForwardResponseMessage
+	forward_StationService_UploadStationData_0          = runtime.ForwardResponseMessage
+	forward_StationService_QueryWaterBodies_0           = runtime.ForwardResponseMessage
+	forward_StationService_QueryCatchments_0            = runtime.ForwardResponseMessage
+	forward_StationService_ListCatchmentByRiverBasin_0  = runtime.ForwardResponseMessage
+	forward_StationService_QueryRiverBasins_0           = runtime.ForwardResponseMessage
+	forward_StationService_ListWaterBodies_0            = runtime.ForwardResponseMessage
+	forward_StationService_ListWaterBodyByCatchment_0   = runtime.ForwardResponseMessage
+	forward_StationService_CreateWaterBody_0            = runtime.ForwardResponseMessage
+	forward_StationService_DeleteWaterBody_0            = runtime.ForwardResponseMessage
+	forward_StationService_GetWaterBodyByID_0           = runtime.ForwardResponseMessage
+	forward_StationService_ListCatchments_0             = runtime.ForwardResponseMessage
+	forward_StationService_CreateCatchment_0            = runtime.ForwardResponseMessage
+	forward_StationService_DeleteCatchment_0            = runtime.ForwardResponseMessage
+	forward_StationService_GetCatchment_0               = runtime.ForwardResponseMessage
+	forward_StationService_ListRiverBasins_0            = runtime.ForwardResponseMessage
+	forward_StationService_CreateRiverBasin_0           = runtime.ForwardResponseMessage
+	forward_StationService_DeleteRiverBasin_0           = runtime.ForwardResponseMessage
+	forward_StationService_GetRiverBasinByID_0          = runtime.ForwardResponseMessage
+	forward_StationService_ListCountries_0              = runtime.ForwardResponseMessage
+	forward_StationService_ListStationTypes_0           = runtime.ForwardResponseMessage
+	forward_StationService_ListStatus_0                 = runtime.ForwardResponseMessage
 )

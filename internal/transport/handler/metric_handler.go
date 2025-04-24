@@ -7,7 +7,7 @@ import (
 
 	commonpb "sensor-data-service.backend/api/pb/commonpb"
 	metricdatapb "sensor-data-service.backend/api/pb/metricdatapb"
-	common "sensor-data-service.backend/internal/common"
+	"sensor-data-service.backend/internal/common/response"
 	"sensor-data-service.backend/internal/domain/service"
 )
 
@@ -26,11 +26,9 @@ func (h *MetricDataHandler) GetMetricSeries(
 	ctx context.Context,
 	req *metricdatapb.MetricSeriesRequest,
 ) (*commonpb.StandardResponse, error) {
-
 	data, err := h.service.GetMetricSeries(ctx, req)
 	if err != nil {
-		return common.WrapError(fmt.Sprintf("get metric failed: %v", err)), nil
+		return response.WrapError(fmt.Sprintf("get metric failed: %v", err), nil)
 	}
-
-	return common.WrapSuccess("retrieved successfully", data)
+	return response.WrapSuccess("retrieved successfully", data)
 }

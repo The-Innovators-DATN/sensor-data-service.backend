@@ -62,14 +62,43 @@ func (r *DashboardDataRepository) FindByNameAndUser(ctx context.Context, name st
 	return mapRowToDashboard(rows[0]), nil
 }
 
-func (r *DashboardDataRepository) ListByUser(ctx context.Context, userID int32) ([]*model.Dashboard, error) {
+func (r *DashboardDataRepository) ListByUser(ctx context.Context, userID int32, offset, limit int32) ([]*model.Dashboard, error) {
 	log.Printf("[repo] ListByUser: user=%d", userID)
-	query := `SELECT uid, name, description, layout_configuration, created_by, created_at, updated_at, version, status FROM dashboard WHERE created_by = $1 ORDER BY uid DESC`
-	rows, err := r.store.ExecQuery(ctx, query, userID)
+	query := `
+		SELECT uid, name, description, layout_configuration, created_by,
+		       created_at, updated_at, version, status
+		FROM dashboard
+		WHERE created_by = $1
+		ORDER BY updated_at DESC
+		LIMIT $2 OFFSET $3
+	`
+	rows, err := r.store.ExecQuery(ctx, query, userID, limit, offset)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("query dashboards paged: %w", err)
+	}
+	if len(rows) == 0 {
+		log.Printf("[repo][warn] No dashboards found for user_id=%d", userID)
+		return nil, fmt.Errorf("no dashboards found")
 	}
 	return mapRowsToDashboards(rows), nil
+}
+func (r *DashboardDataRepository) CountDashboardsByUser(ctx context.Context, createdBy int32) (int32, error) {
+	query := `SELECT COUNT(*) AS total FROM dashboard WHERE created_by = $1`
+
+	rows, err := r.store.ExecQuery(ctx, query, createdBy)
+	if err != nil {
+		return 0, fmt.Errorf("query dashboard count: %w", err)
+	}
+	if len(rows) == 0 {
+		return 0, fmt.Errorf("no result returned for count")
+	}
+
+	totalVal := rows[0]["total"]
+	total, ok := totalVal.(int64) // pgx returns int64 for COUNT(*)
+	if !ok {
+		return 0, fmt.Errorf("invalid type for count: %T", totalVal)
+	}
+	return int32(total), nil
 }
 
 func (r *DashboardDataRepository) ListAll(ctx context.Context) ([]*model.Dashboard, error) {
@@ -82,14 +111,15 @@ func (r *DashboardDataRepository) ListAll(ctx context.Context) ([]*model.Dashboa
 	return mapRowsToDashboards(rows), nil
 }
 
-func (r *DashboardDataRepository) Create(ctx context.Context, d *model.Dashboard) error {
-
+func (r *DashboardDataRepository) Create(ctx context.Context, d *model.Dashboard) (string, error) {
 	log.Printf("[repo] Create: uid=%s user_id=%d", d.UID, d.CreatedBy)
 	query := `
 		INSERT INTO dashboard (uid, name, description, layout_configuration, created_by, created_at, updated_at, version, status)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+		RETURNING uid
 	`
-	return r.store.Exec(ctx, query,
+	// var uid string
+	rows, err := r.store.ExecQuery(ctx, query,
 		d.UID,
 		d.Name,
 		d.Description,
@@ -100,6 +130,21 @@ func (r *DashboardDataRepository) Create(ctx context.Context, d *model.Dashboard
 		d.Version,
 		d.Status,
 	)
+	if err != nil {
+		log.Printf("[repo][error] Create query failed: %v", err)
+		return "", err
+	}
+	if len(rows) == 0 {
+		log.Printf("[repo][warn] No uid returned for dashboard creation")
+		return "", fmt.Errorf("no uid returned for dashboard creation")
+	}
+	uidVal := castutil.ToUUID(rows[0]["uid"])
+	// uid, ok := uidVal.(string)
+	// if !ok {
+	// 	log.Printf("[repo][error] Invalid type for uid: %T", uidVal)
+	// 	return "", fmt.Errorf("invalid type for uid: %T", uidVal)
+	// }
+	return uidVal.String(), nil
 }
 
 func (r *DashboardDataRepository) Update(ctx context.Context, d *model.Dashboard) error {

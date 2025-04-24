@@ -1,27 +1,35 @@
 {
-  "chart_type": "line_chart",
-  "time_range": {
-    "from": "2000-12-01T00:00:00Z",
-    "to": "2014-12-31T23:59:59Z"
-  },
-  "step_seconds": 3600,
-  "forecast": {
-    "enabled": true,
-    "time_step": 3600,
-    "horizon": 5
-  },
-  "series": [
-    {
-      "ref_id": "A",
-      "target_type": 1,
-      "target_id": 432,
-      "metric_id": 2
+  "dashboard": {
+    "name": "Test 1",
+    "description": "Mô tả bảng điều khiển",
+    "layout_configuration": {
+      "time": {
+        "from": "2025-04-24T15:43:30.543Z",
+        "to": "2025-04-24T15:43:30.543Z"
+      },
+      "refresh": "0s",
+      "panels": [
+        {
+          "id": 1,
+          "title": "Biểu đồ mới",
+          "type": "line_chart",
+          "gridPos": {
+            "x": 0,
+            "y": 0,
+            "w": 6,
+            "h": 4
+          },
+          "targets": [],
+          "options": {
+            "forecast": {
+              "enabled": true,
+              "time_step": 3600
+            }
+          }
+        }
+      ]
     },
-    {
-      "ref_id": "B",
-      "target_type": 3,
-      "target_id": 2,
-      "metric_id": 2
-    }
-  ]
+    "status": "active",
+    "created_by": 11
+  }
 }

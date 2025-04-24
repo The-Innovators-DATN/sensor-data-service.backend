@@ -7,9 +7,21 @@ import "google/protobuf/any.proto";
 option go_package = "sensor-data-service.backend/api/pb/commonpb;commonpb";
 
 message StandardResponse {
-  string status = 1;     // "success" | "error"
-  string message = 2;    // Thông báo kèm theo
-  google.protobuf.Any data = 3;  // Payload thực sự
+  string status = 1;                  // "success" | "error"
+  string message = 2;
+  google.protobuf.Any data = 3;
+  google.protobuf.Any error_detail = 4;
+}
+
+message PaginationMeta {
+  int32 page = 1;
+  int32 limit = 2;
+  int32 total = 3;
+}
+
+message PaginatedData {
+  google.protobuf.Any items = 1;
+  PaginationMeta pagination = 2;
 }
 
 // ENUM WRAPPER

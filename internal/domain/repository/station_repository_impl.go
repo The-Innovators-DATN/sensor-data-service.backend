@@ -276,6 +276,39 @@ func (r *StationDataRepository) GetStationsByTarget(ctx context.Context, targetT
 	_ = r.cache.SetJSON(ctx, cacheKey, ids, int64(time.Hour.Seconds()))
 	return ids, nil
 }
+
+func (r *StationDataRepository) GetStationBysByStationType(ctx context.Context, stationType string) ([]*model.Station, error) {
+	log.Printf("[debug] GetStationBysByStationType called with stationType: %s", stationType)
+	query := `
+		SELECT id, name, description, lat, long, status, station_type, country, water_body_id, station_manager, created_at, updated_at
+		FROM station
+		WHERE station_type = $1 AND status != 'deleted'
+	`
+	rows, err := r.store.ExecQuery(ctx, query, stationType)
+	if err != nil {
+		return nil, err
+	}
+
+	var stations []*model.Station
+	for _, row := range rows {
+		stations = append(stations, &model.Station{
+			ID:             int32(castutil.ToInt(row["id"])),
+			Name:           castutil.ToString(row["name"]),
+			Description:    castutil.ToString(row["description"]),
+			Lat:            float32(castutil.MustToFloat(row["lat"])),
+			Long:           float32(castutil.MustToFloat(row["long"])),
+			Status:         castutil.ToString(row["status"]),
+			StationType:    castutil.ToString(row["station_type"]),
+			Country:        castutil.ToString(row["country"]),
+			WaterBodyID:    int32(castutil.ToInt(row["water_body_id"])),
+			StationManager: int32(castutil.ToInt(row["station_manager"])),
+			CreatedAt:      castutil.ToTime(row["created_at"]),
+			UpdatedAt:      castutil.ToTime(row["updated_at"]),
+		})
+	}
+	return stations, nil
+}
+
 func (r *StationDataRepository) GetParametersByStationIDs(ctx context.Context, stationIDs []int32) ([]*model.StationParameter, error) {
 	log.Printf("[debug] GetParametersByStationIDs called with stationIDs: %v", stationIDs)
 	if len(stationIDs) == 0 {
@@ -471,6 +504,59 @@ func (r *StationDataRepository) UpdateWaterBody(ctx context.Context, wb model.Wa
 	`
 	return r.store.Exec(ctx, query, wb.Name, wb.Type, wb.Description, wb.Status, wb.CatchmentID, wb.ID)
 }
+func (r *StationDataRepository) GetWaterBodyByCatchmentID(ctx context.Context, catchmentID int32) ([]*model.WaterBody, error) {
+	log.Printf("[debug] GetWaterBodyByCatchmentID called with catchmentID: %d", catchmentID)
+	query := `
+		SELECT id, name, type, description, status, catchment_id, updated_at
+		FROM water_body
+		WHERE catchment_id = $1
+	`
+	rows, err := r.store.ExecQuery(ctx, query, catchmentID)
+	if err != nil {
+		return nil, err
+	}
+	var res []*model.WaterBody
+	for _, row := range rows {
+		res = append(res, &model.WaterBody{
+			ID:          int32(castutil.ToInt(row["id"])),
+			Name:        castutil.ToString(row["name"]),
+			Type:        castutil.ToString(row["type"]),
+			Description: castutil.ToString(row["description"]),
+			Status:      castutil.ToString(row["status"]),
+			CatchmentID: int32(castutil.ToInt(row["catchment_id"])),
+			UpdatedAt:   castutil.ToTime(row["updated_at"]),
+		})
+	}
+	return res, nil
+}
+
+func (r *StationDataRepository) GetWaterBodyByRiverBasinID(ctx context.Context, riverBasinID int32) ([]*model.WaterBody, error) {
+	log.Printf("[debug] GetWaterBodyByRiverBasinID called with riverBasinID: %d", riverBasinID)
+	query := `
+		SELECT wb.id, wb.name, wb.type, wb.description, wb.status, wb.catchment_id, wb.updated_at
+		FROM water_body wb
+		JOIN catchment c ON wb.catchment_id = c.id
+		WHERE c.river_basin_id = $1
+	`
+	rows, err := r.store.ExecQuery(ctx, query, riverBasinID)
+	if err != nil {
+		return nil, err
+	}
+
+	var res []*model.WaterBody
+	for _, row := range rows {
+		res = append(res, &model.WaterBody{
+			ID:          int32(castutil.ToInt(row["id"])),
+			Name:        castutil.ToString(row["name"]),
+			Type:        castutil.ToString(row["type"]),
+			Description: castutil.ToString(row["description"]),
+			Status:      castutil.ToString(row["status"]),
+			CatchmentID: int32(castutil.ToInt(row["catchment_id"])),
+			UpdatedAt:   castutil.ToTime(row["updated_at"]),
+		})
+	}
+	return res, nil
+}
 
 // ========== CATCHMENT CRUD ==========
 func (r *StationDataRepository) ListCatchments(ctx context.Context) ([]*model.Catchment, error) {
@@ -488,7 +574,7 @@ func (r *StationDataRepository) ListCatchments(ctx context.Context) ([]*model.Ca
 			Name:         castutil.ToString(row["name"]),
 			Description:  castutil.ToString(row["description"]),
 			Status:       castutil.ToString(row["status"]),
-			RiverBasinID: castutil.ToString(row["river_basin_id"]),
+			RiverBasinID: int32(castutil.ToInt(row["river_basin_id"])),
 			Country:      castutil.ToString(row["country"]),
 			UpdatedAt:    castutil.ToTime(row["updated_at"]),
 		})
@@ -509,7 +595,7 @@ func (r *StationDataRepository) GetCatchmentByID(ctx context.Context, id int32) 
 		Name:         castutil.ToString(row["name"]),
 		Description:  castutil.ToString(row["description"]),
 		Status:       castutil.ToString(row["status"]),
-		RiverBasinID: castutil.ToString(row["river_basin_id"]),
+		RiverBasinID: int32(castutil.ToInt(row["river_basin_id"])),
 		Country:      castutil.ToString(row["country"]),
 		UpdatedAt:    castutil.ToTime(row["updated_at"]),
 	}, nil
@@ -530,7 +616,41 @@ func (r *StationDataRepository) DeleteCatchment(ctx context.Context, id int32) e
 	return r.store.Exec(ctx, query, id)
 }
 
-// ========== ENUM VALUE LOADER ==========
+func (r *StationDataRepository) UpdateCatchment(ctx context.Context, c model.Catchment) error {
+	log.Printf("[debug] UpdateCatchment called with catchment: %+v", c)
+	query := `
+		UPDATE catchment 
+		SET name = $1, description = $2, status = $3, river_basin_id = $4, country = $5
+		WHERE id = $6
+	`
+	return r.store.Exec(ctx, query, c.Name, c.Description, c.Status, c.RiverBasinID, c.Country, c.ID)
+}
+
+func (r *StationDataRepository) GetCatchmentsByRiverBasinID(ctx context.Context, riverBasinID int32) ([]*model.Catchment, error) {
+	log.Printf("[debug] GetCatchmentsByRiverBasinID called with riverBasinID: %d", riverBasinID)
+	query := `
+		SELECT id, name, description, status, river_basin_id, country, updated_at
+		FROM catchment
+		WHERE river_basin_id = $1
+	`
+	rows, err := r.store.ExecQuery(ctx, query, riverBasinID)
+	if err != nil {
+		return nil, err
+	}
+	var res []*model.Catchment
+	for _, row := range rows {
+		res = append(res, &model.Catchment{
+			ID:           int32(castutil.ToInt(row["id"])),
+			Name:         castutil.ToString(row["name"]),
+			Description:  castutil.ToString(row["description"]),
+			Status:       castutil.ToString(row["status"]),
+			RiverBasinID: int32(castutil.ToInt(row["river_basin_id"])),
+			Country:      castutil.ToString(row["country"]),
+			UpdatedAt:    castutil.ToTime(row["updated_at"]),
+		})
+	}
+	return res, nil
+}
 
 func (r *StationDataRepository) ListEnumValues(table string) ([]*common.EnumValue, error) {
 	log.Printf("[debug] ListEnumValues called with table: %s", table)

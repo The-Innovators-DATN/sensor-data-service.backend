@@ -61,6 +61,19 @@ func (s *stationService) GetStationsByTarget(ctx context.Context, targetType sta
 		return nil, errors.New("unsupported target type")
 	}
 }
+
+func (s *stationService) GetStationBysByStationType(ctx context.Context, stationType string) ([]*model.Station, error) {
+	log.Printf("GetStationBysByStationType: stationType=%s", stationType)
+	stations, err := s.repo.GetStationBysByStationType(ctx, stationType)
+	if err != nil {
+		return nil, fmt.Errorf("get stations by station type failed: %w", err)
+	}
+	log.Printf("GetStationBysByStationType: stations=%v", stations)
+	if len(stations) == 0 {
+		return nil, fmt.Errorf("no stations found for station type: %s", stationType)
+	}
+	return stations, nil
+}
 func (s *stationService) GetParametersByTarget(ctx context.Context, targetType stationpb.TargetType, targetID int32) ([]*model.StationParameter, error) {
 	log.Printf("GetParametersByTarget: targetType=%v, targetID=%d", targetType, targetID)
 	stationIDs, err := s.GetStationsByTarget(ctx, targetType, targetID)
@@ -126,6 +139,14 @@ func (s *stationService) UpdateWaterBody(ctx context.Context, wb model.WaterBody
 // Catchments  CRUD
 func (s *stationService) ListCatchments(ctx context.Context) ([]*model.Catchment, error) {
 	return s.repo.ListCatchments(ctx)
+}
+
+func (s *stationService) ListCatchmentByRiverBasin(ctx context.Context, riverBasinID int32) ([]*model.Catchment, error) {
+	return s.repo.GetCatchmentsByRiverBasinID(ctx, riverBasinID)
+}
+
+func (s *stationService) ListWaterBodyByCatchment(ctx context.Context, catchmentID int32) ([]*model.WaterBody, error) {
+	return s.repo.GetWaterBodyByCatchmentID(ctx, catchmentID)
 }
 
 func (s *stationService) GetCatchmentByID(ctx context.Context, id int32) (*model.Catchment, error) {

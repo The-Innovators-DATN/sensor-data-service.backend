@@ -90,7 +90,7 @@ var filter_DashboardService_ListDashboards_0 = &utilities.DoubleArray{Encoding: 
 
 func request_DashboardService_ListDashboards_0(ctx context.Context, marshaler runtime.Marshaler, client DashboardServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq CreatedBy
+		protoReq PaginateDashboardsRequest
 		metadata runtime.ServerMetadata
 	)
 	io.Copy(io.Discard, req.Body)
@@ -106,7 +106,7 @@ func request_DashboardService_ListDashboards_0(ctx context.Context, marshaler ru
 
 func local_request_DashboardService_ListDashboards_0(ctx context.Context, marshaler runtime.Marshaler, server DashboardServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq CreatedBy
+		protoReq PaginateDashboardsRequest
 		metadata runtime.ServerMetadata
 	)
 	if err := req.ParseForm(); err != nil {

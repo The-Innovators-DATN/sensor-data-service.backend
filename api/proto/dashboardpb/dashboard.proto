@@ -27,6 +27,11 @@ message DashboardID {
 message CreatedBy {
   int32 created_by = 1;
 }
+message PaginateDashboardsRequest {
+  int32 page = 1;
+  int32 limit = 2;
+  int32 created_by = 3;
+}
 
 message DashboardList {
   repeated Dashboard dashboards = 1;
@@ -68,7 +73,7 @@ service DashboardService {
     };
   }
 
-  rpc ListDashboards(CreatedBy) returns (common.StandardResponse) {
+  rpc ListDashboards(PaginateDashboardsRequest) returns (common.StandardResponse) {
     option (google.api.http) = {
       get: "/v0/dashboards"
     };

@@ -14,6 +14,7 @@ type StationService interface {
 	CreateStation(ctx context.Context, st model.Station) error
 	DisableStation(ctx context.Context, id int32) error
 
+	GetStationBysByStationType(ctx context.Context, stationType string) ([]*model.Station, error)
 	GetStationsByTarget(ctx context.Context, targetType stationpb.TargetType, targetID int32) ([]int32, error)
 	GetParametersByTarget(ctx context.Context, targetType stationpb.TargetType, targetID int32) ([]*model.StationParameter, error)
 	GetDistinctParametersByTarget(ctx context.Context, targetType stationpb.TargetType, targetID int32) ([]*model.Parameter, error)
@@ -39,6 +40,8 @@ type StationService interface {
 
 	// GetRiverBasin(ctx context.Context, id int32) (*model.RiverBasin, error)
 	GetCatchmentByID(ctx context.Context, id int32) (*model.Catchment, error)
+	ListCatchmentByRiverBasin(ctx context.Context, riverBasinID int32) ([]*model.Catchment, error)
+	ListWaterBodyByCatchment(ctx context.Context, catchmentID int32) ([]*model.WaterBody, error)
 	// GetWaterBody(ctx context.Context, id int32) (*model.WaterBody, error)
 	ListEnum(table string) ([]*common.EnumValue, error)
 }

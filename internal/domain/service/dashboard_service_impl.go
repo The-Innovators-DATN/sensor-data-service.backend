@@ -30,15 +30,25 @@ func (s *dashboardServiceImpl) GetDashboardByID(ctx context.Context, uid string,
 	return d, nil
 }
 
-func (s *dashboardServiceImpl) ListDashboardsByUser(ctx context.Context, userID int32) ([]*model.Dashboard, error) {
-	return s.repo.ListByUser(ctx, userID)
+func (s *dashboardServiceImpl) ListDashboardsByUser(ctx context.Context, userID int32, page, limit int32) ([]*model.Dashboard, error) {
+	offset := (page - 1) * limit
+	items, err := s.repo.ListByUser(ctx, userID, offset, limit)
+	if err != nil {
+		return nil, err
+	}
+	// total, err := s.repo.CountDashboardsByUser(ctx, userID)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	return items, nil
+
 }
 
 func (s *dashboardServiceImpl) ListDashboards(ctx context.Context) ([]*model.Dashboard, error) {
 	return s.repo.ListAll(ctx)
 }
 
-func (s *dashboardServiceImpl) CreateDashboard(ctx context.Context, d *model.Dashboard) error {
+func (s *dashboardServiceImpl) CreateDashboard(ctx context.Context, d *model.Dashboard) (string, error) {
 	// Sinh UID nếu chưa có
 	if d.UID == uuid.Nil {
 		log.Printf("[info] CreateDashboard: generating new UID")
@@ -54,7 +64,12 @@ func (s *dashboardServiceImpl) CreateDashboard(ctx context.Context, d *model.Das
 		d.Status = "active"
 	}
 	log.Printf("[info] CreateDashboard: uid=%s by user_id=%d", d.UID, d.CreatedBy)
-	return s.repo.Create(ctx, d)
+	uid, err := s.repo.Create(ctx, d)
+	if err != nil {
+		return "", fmt.Errorf("CreateDashboard: %w", err)
+	}
+	log.Printf("[info] CreateDashboard: created uid=%s", uid)
+	return uid, err
 }
 
 func (s *dashboardServiceImpl) UpdateDashboard(ctx context.Context, d *model.Dashboard, userID int32) error {

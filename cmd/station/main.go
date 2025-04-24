@@ -20,6 +20,7 @@ import (
 	"sensor-data-service.backend/config"
 	"sensor-data-service.backend/pkg/logger"
 
+	"sensor-data-service.backend/internal/common/middleware"
 	"sensor-data-service.backend/internal/domain/repository"
 	"sensor-data-service.backend/internal/domain/service"
 	"sensor-data-service.backend/internal/infrastructure/cache"
@@ -130,7 +131,9 @@ func main() {
 	}
 	defer grpcListener.Close()
 
-	grpcServer := grpc.NewServer()
+	grpcServer := grpc.NewServer(
+		grpc.UnaryInterceptor(middleware.AuthInterceptor()),
+	)
 
 	// Tạo repository & service & handler cho parameter
 	paramRepo := repository.NewParameterRepository(PGStore, RedisStore)

@@ -8,8 +8,8 @@ import (
 
 type DashboardService interface {
 	GetDashboardByID(ctx context.Context, uid string, userID int32) (*model.Dashboard, error)
-	ListDashboardsByUser(ctx context.Context, userID int32) ([]*model.Dashboard, error)
-	CreateDashboard(ctx context.Context, d *model.Dashboard) error
+	ListDashboardsByUser(ctx context.Context, userID int32, page, limit int32) ([]*model.Dashboard, error)
+	CreateDashboard(ctx context.Context, d *model.Dashboard) (string, error)
 	UpdateDashboard(ctx context.Context, d *model.Dashboard, userID int32) error
 	DeleteDashboard(ctx context.Context, uid string, userID int32) error
 	PatchDashboard(ctx context.Context, d *model.Dashboard, userID int32) error

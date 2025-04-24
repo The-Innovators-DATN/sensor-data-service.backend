@@ -33,7 +33,18 @@ func NewMetricDataRepository(ch metric.Store, s db.Store, c cache.Store) *Metric
 
 func (r *MetricDataRepository) GetMetricSeriesData(ctx context.Context, req *metricpb.MetricSeriesRequest) ([]*metricpb.SeriesData, error) {
 	log.Print("[debug] GetMetricSeriesData called")
-
+	if req == nil {
+		return nil, fmt.Errorf("request is nil")
+	}
+	if len(req.Series) == 0 {
+		return nil, fmt.Errorf("no series requested")
+	}
+	if req.TimeRange == nil {
+		return nil, fmt.Errorf("no time range specified")
+	}
+	if req.TimeRange.From == "" || req.TimeRange.To == "" {
+		return nil, fmt.Errorf("invalid time range")
+	}
 	step := req.StepSeconds
 	if step <= 0 {
 		step = 3600 // default 1 h

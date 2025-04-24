@@ -126,7 +126,7 @@ message WaterBodyResponse {
 message Catchment {
   int32 id = 1;
   string name = 2;
-  string river_basin_id = 3;
+  int32 river_basin_id = 3;
   string country = 4;
   string description = 5;
   string status = 6;
@@ -136,6 +136,10 @@ message CatchmentQuery {
   string keyword = 1;
   int32 river_basin_id = 2;
   string country = 3;
+}
+
+message StationType {
+  string type = 1;
 }
 
 message CatchmentList {
@@ -233,6 +237,13 @@ service StationService {
       body: "*"
     };
   }
+
+  rpc GetStationBysByStationType(StationType) returns (common.StandardResponse) {
+    option (google.api.http) = {
+      post: "/v0/stations/by_type"
+      body: "*"
+    };
+  }
   rpc GetStation(StationID) returns (common.StandardResponse) {
     option (google.api.http) = {
       get: "/v0/stations/{id}"
@@ -276,6 +287,11 @@ rpc QueryCatchments(CatchmentQuery) returns (common.StandardResponse) {
     get: "/v0/catchments/query"
   };
 }
+rpc ListCatchmentByRiverBasin(RiverBasinID) returns (common.StandardResponse) {
+  option (google.api.http) = {
+    get: "/v0/catchments/by_river_basin/{id}"
+  };
+}
 
 // ===== RIVER BASIN QUERY =====
 rpc QueryRiverBasins(RiverBasinQuery) returns (common.StandardResponse) {
@@ -290,6 +306,11 @@ rpc QueryRiverBasins(RiverBasinQuery) returns (common.StandardResponse) {
       get: "/v0/water_bodies"
     };
   }
+rpc ListWaterBodyByCatchment(CatchmentID) returns (common.StandardResponse) {
+  option (google.api.http) = {
+    get: "/v0/water_bodies/by_catchment/{id}"
+  };
+}
 
   rpc CreateWaterBody(WaterBody) returns (common.StandardResponse) {
     option (google.api.http) = {

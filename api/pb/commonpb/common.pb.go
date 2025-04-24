@@ -24,9 +24,10 @@ const (
 
 type StandardResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Status        string                 `protobuf:"bytes,1,opt,name=status,proto3" json:"status,omitempty"`   // "success" | "error"
-	Message       string                 `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"` // Thông báo kèm theo
-	Data          *any1.Any              `protobuf:"bytes,3,opt,name=data,proto3" json:"data,omitempty"`       // Payload thực sự
+	Status        string                 `protobuf:"bytes,1,opt,name=status,proto3" json:"status,omitempty"` // "success" | "error"
+	Message       string                 `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
+	Data          *any1.Any              `protobuf:"bytes,3,opt,name=data,proto3" json:"data,omitempty"`
+	ErrorDetail   *any1.Any              `protobuf:"bytes,4,opt,name=error_detail,json=errorDetail,proto3" json:"error_detail,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -82,6 +83,125 @@ func (x *StandardResponse) GetData() *any1.Any {
 	return nil
 }
 
+func (x *StandardResponse) GetErrorDetail() *any1.Any {
+	if x != nil {
+		return x.ErrorDetail
+	}
+	return nil
+}
+
+type PaginationMeta struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Page          int32                  `protobuf:"varint,1,opt,name=page,proto3" json:"page,omitempty"`
+	Limit         int32                  `protobuf:"varint,2,opt,name=limit,proto3" json:"limit,omitempty"`
+	Total         int32                  `protobuf:"varint,3,opt,name=total,proto3" json:"total,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *PaginationMeta) Reset() {
+	*x = PaginationMeta{}
+	mi := &file_commonpb_common_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PaginationMeta) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PaginationMeta) ProtoMessage() {}
+
+func (x *PaginationMeta) ProtoReflect() protoreflect.Message {
+	mi := &file_commonpb_common_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PaginationMeta.ProtoReflect.Descriptor instead.
+func (*PaginationMeta) Descriptor() ([]byte, []int) {
+	return file_commonpb_common_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *PaginationMeta) GetPage() int32 {
+	if x != nil {
+		return x.Page
+	}
+	return 0
+}
+
+func (x *PaginationMeta) GetLimit() int32 {
+	if x != nil {
+		return x.Limit
+	}
+	return 0
+}
+
+func (x *PaginationMeta) GetTotal() int32 {
+	if x != nil {
+		return x.Total
+	}
+	return 0
+}
+
+type PaginatedData struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Items         *any1.Any              `protobuf:"bytes,1,opt,name=items,proto3" json:"items,omitempty"`
+	Pagination    *PaginationMeta        `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *PaginatedData) Reset() {
+	*x = PaginatedData{}
+	mi := &file_commonpb_common_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PaginatedData) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PaginatedData) ProtoMessage() {}
+
+func (x *PaginatedData) ProtoReflect() protoreflect.Message {
+	mi := &file_commonpb_common_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PaginatedData.ProtoReflect.Descriptor instead.
+func (*PaginatedData) Descriptor() ([]byte, []int) {
+	return file_commonpb_common_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *PaginatedData) GetItems() *any1.Any {
+	if x != nil {
+		return x.Items
+	}
+	return nil
+}
+
+func (x *PaginatedData) GetPagination() *PaginationMeta {
+	if x != nil {
+		return x.Pagination
+	}
+	return nil
+}
+
 // ENUM WRAPPER
 type EnumValue struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -93,7 +213,7 @@ type EnumValue struct {
 
 func (x *EnumValue) Reset() {
 	*x = EnumValue{}
-	mi := &file_commonpb_common_proto_msgTypes[1]
+	mi := &file_commonpb_common_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -105,7 +225,7 @@ func (x *EnumValue) String() string {
 func (*EnumValue) ProtoMessage() {}
 
 func (x *EnumValue) ProtoReflect() protoreflect.Message {
-	mi := &file_commonpb_common_proto_msgTypes[1]
+	mi := &file_commonpb_common_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -118,7 +238,7 @@ func (x *EnumValue) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use EnumValue.ProtoReflect.Descriptor instead.
 func (*EnumValue) Descriptor() ([]byte, []int) {
-	return file_commonpb_common_proto_rawDescGZIP(), []int{1}
+	return file_commonpb_common_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *EnumValue) GetName() string {
@@ -139,11 +259,21 @@ var File_commonpb_common_proto protoreflect.FileDescriptor
 
 const file_commonpb_common_proto_rawDesc = "" +
 	"\n" +
-	"\x15commonpb/common.proto\x12\x06common\x1a\x19google/protobuf/any.proto\"n\n" +
+	"\x15commonpb/common.proto\x12\x06common\x1a\x19google/protobuf/any.proto\"\xa7\x01\n" +
 	"\x10StandardResponse\x12\x16\n" +
 	"\x06status\x18\x01 \x01(\tR\x06status\x12\x18\n" +
 	"\amessage\x18\x02 \x01(\tR\amessage\x12(\n" +
-	"\x04data\x18\x03 \x01(\v2\x14.google.protobuf.AnyR\x04data\"3\n" +
+	"\x04data\x18\x03 \x01(\v2\x14.google.protobuf.AnyR\x04data\x127\n" +
+	"\ferror_detail\x18\x04 \x01(\v2\x14.google.protobuf.AnyR\verrorDetail\"P\n" +
+	"\x0ePaginationMeta\x12\x12\n" +
+	"\x04page\x18\x01 \x01(\x05R\x04page\x12\x14\n" +
+	"\x05limit\x18\x02 \x01(\x05R\x05limit\x12\x14\n" +
+	"\x05total\x18\x03 \x01(\x05R\x05total\"s\n" +
+	"\rPaginatedData\x12*\n" +
+	"\x05items\x18\x01 \x01(\v2\x14.google.protobuf.AnyR\x05items\x126\n" +
+	"\n" +
+	"pagination\x18\x02 \x01(\v2\x16.common.PaginationMetaR\n" +
+	"pagination\"3\n" +
 	"\tEnumValue\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x12\n" +
 	"\x04type\x18\x02 \x01(\tR\x04typeB6Z4sensor-data-service.backend/api/pb/commonpb;commonpbb\x06proto3"
@@ -160,19 +290,24 @@ func file_commonpb_common_proto_rawDescGZIP() []byte {
 	return file_commonpb_common_proto_rawDescData
 }
 
-var file_commonpb_common_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_commonpb_common_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
 var file_commonpb_common_proto_goTypes = []any{
 	(*StandardResponse)(nil), // 0: common.StandardResponse
-	(*EnumValue)(nil),        // 1: common.EnumValue
-	(*any1.Any)(nil),         // 2: google.protobuf.Any
+	(*PaginationMeta)(nil),   // 1: common.PaginationMeta
+	(*PaginatedData)(nil),    // 2: common.PaginatedData
+	(*EnumValue)(nil),        // 3: common.EnumValue
+	(*any1.Any)(nil),         // 4: google.protobuf.Any
 }
 var file_commonpb_common_proto_depIdxs = []int32{
-	2, // 0: common.StandardResponse.data:type_name -> google.protobuf.Any
-	1, // [1:1] is the sub-list for method output_type
-	1, // [1:1] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	4, // 0: common.StandardResponse.data:type_name -> google.protobuf.Any
+	4, // 1: common.StandardResponse.error_detail:type_name -> google.protobuf.Any
+	4, // 2: common.PaginatedData.items:type_name -> google.protobuf.Any
+	1, // 3: common.PaginatedData.pagination:type_name -> common.PaginationMeta
+	4, // [4:4] is the sub-list for method output_type
+	4, // [4:4] is the sub-list for method input_type
+	4, // [4:4] is the sub-list for extension type_name
+	4, // [4:4] is the sub-list for extension extendee
+	0, // [0:4] is the sub-list for field type_name
 }
 
 func init() { file_commonpb_common_proto_init() }
@@ -186,7 +321,7 @@ func file_commonpb_common_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_commonpb_common_proto_rawDesc), len(file_commonpb_common_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   2,
+			NumMessages:   4,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

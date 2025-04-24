@@ -17,3 +17,8 @@ type Dashboard struct {
 	Version             int32     `json:"version"`
 	Status              string    `json:"status"`
 }
+
+type PaginatedDashboards struct {
+	Items []*Dashboard
+	Total int32
+}

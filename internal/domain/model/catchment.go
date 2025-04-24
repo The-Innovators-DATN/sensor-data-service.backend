@@ -5,7 +5,7 @@ import "time"
 type Catchment struct {
 	ID           int32     `json:"id"`
 	Name         string    `json:"name"`
-	RiverBasinID string    `json:"river_basin_id"` // giữ nguyên là string vì DB để varchar
+	RiverBasinID int32     `json:"river_basin_id"` // giữ nguyên là string vì DB để varchar
 	Country      string    `json:"country"`
 	Description  string    `json:"description"`
 	Status       string    `json:"status"`

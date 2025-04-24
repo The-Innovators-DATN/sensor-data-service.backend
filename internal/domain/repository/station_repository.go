@@ -13,6 +13,8 @@ type StationRepository interface {
 	InsertStation(ctx context.Context, st model.Station) error
 	UpdateStationStatus(ctx context.Context, id int32, status string) error
 
+	GetStationBysByStationType(ctx context.Context, stationType string) ([]*model.Station, error)
+
 	GetParametersByStationIDs(ctx context.Context, stationIDs []int32) ([]*model.StationParameter, error)
 	GetDistinctParametersByStationIDs(ctx context.Context, stationIDs []int32) ([]*model.Parameter, error)
 
@@ -32,11 +34,14 @@ type StationRepository interface {
 	CreateWaterBody(ctx context.Context, wb model.WaterBody) error
 	DeleteWaterBody(ctx context.Context, id int32) error
 	UpdateWaterBody(ctx context.Context, wb model.WaterBody) error
+	GetWaterBodyByCatchmentID(ctx context.Context, catchmentID int32) ([]*model.WaterBody, error)
+	GetWaterBodyByRiverBasinID(ctx context.Context, riverBasinID int32) ([]*model.WaterBody, error)
 	// ========== CATCHMENT CRUD ==========
 	ListCatchments(ctx context.Context) ([]*model.Catchment, error)
 	GetCatchmentByID(ctx context.Context, id int32) (*model.Catchment, error)
 	CreateCatchment(ctx context.Context, c model.Catchment) error
 	DeleteCatchment(ctx context.Context, id int32) error
-
+	GetCatchmentsByRiverBasinID(ctx context.Context, riverBasinID int32) ([]*model.Catchment, error)
+	UpdateCatchment(ctx context.Context, c model.Catchment) error
 	ListEnumValues(table string) ([]*common.EnumValue, error)
 }
