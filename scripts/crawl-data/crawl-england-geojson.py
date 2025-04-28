@@ -193,8 +193,6 @@ def crawl_england_basins(out_path="river_basins.geojson"):
 
         gtype = catch_dict.get("^4", "MultiPolygon")
         raw_coords = catch_dict.get("^5", [])
-        with open(f"basin_coords_{i}.json", "w") as f:
-            json.dump(raw_coords, f, indent=2)
         print(f"Saved raw coords for {name} to basin_coords_{i}.json")
 
         try:

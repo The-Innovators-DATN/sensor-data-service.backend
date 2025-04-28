@@ -124,6 +124,9 @@ func toProto(d *model.Dashboard) *dashboardpb.Dashboard {
 func fromProto(d *dashboardpb.Dashboard) *model.Dashboard {
 	if d.LayoutConfiguration == nil {
 		log.Printf("[info] fromProto: layout_configuration is nil")
+		// Print createdBy and type of createdBy
+		log.Printf("[info] fromProto: createdBy=%d", d.CreatedBy)
+		log.Printf("[info] fromProto: type of createdBy=%T", d.CreatedBy)
 		return &model.Dashboard{
 			UID:                 uuid.New(),
 			Name:                d.Name,
