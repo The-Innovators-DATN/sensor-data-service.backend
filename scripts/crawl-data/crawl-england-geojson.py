@@ -3,9 +3,58 @@ import requests, json, geopandas as gpd
 from bs4 import BeautifulSoup
 from edn_format import loads as edn_loads
 from shapely.geometry import shape
+import psycopg2
+import os
+from dotenv import find_dotenv, load_dotenv
 
 
-# ── helpers (same as before, trimmed) ──────────────────────────
+# Load environment variables from ../../config/.env
+load_dotenv(find_dotenv("../../config/.env"))
+
+
+def postgresql_connect():
+    """
+    Connects to a PostgreSQL database and provides a function to map IDs by finding rows with a WHERE condition.
+    """
+    try:
+        # Update these parameters with your PostgreSQL credentials
+        conn = psycopg2.connect(
+            dbname=os.environ.get("DATABASE_NAME"),
+            user=os.environ.get("DATABASE_USER"),
+            password=os.environ.get("DATABASE_PASSWORD"),
+            host=os.environ.get("DATABASE_HOST"),
+            port=os.environ.get("DATABASE_PORT"),
+        )
+        print("Connected to PostgreSQL database.")
+        return conn
+    except Exception as e:
+        print(f"Failed to connect to PostgreSQL: {e}")
+        return None
+
+def map_id_by_condition(conn, table_name, column_name, condition):
+    """
+    Maps IDs by finding rows in the specified table with a WHERE condition.
+
+    Args:
+        conn: The PostgreSQL connection object.
+        table_name (str): The name of the table to query.
+        column_name (str): The column to retrieve.
+        condition (str): The WHERE condition for filtering rows.
+
+    Returns:
+        list: A list of IDs matching the condition.
+    """
+    try:
+        with conn.cursor() as cursor:
+            query = f"SELECT {column_name} FROM {table_name} WHERE {condition};"
+            cursor.execute(query)
+            results = cursor.fetchall()
+            return [row[0] for row in results]
+    except Exception as e:
+        print(f"Error querying database: {e}")
+        return []
+
+# ── helpers (sIame as before, trimmed) ──────────────────────────
 def edn_to_native(obj):
     from edn_format.immutable_list import ImmutableList
     from edn_format.immutable_dict import ImmutableDict
@@ -184,6 +233,109 @@ def crawl_england_basins(out_path="river_basins.geojson"):
     gdf.to_file(out_path, driver="GeoJSON")
     print(f"Saved {len(gdf)} basins → {out_path}")
 
+def crawl_england_catchements(out_path="england_catchments.geojson", river_basin_id=4):  # Default is Humber
+    url = f"https://environment.data.gov.uk/catchment-planning/RiverBasinDistrict/{river_basin_id}"
+    soup = BeautifulSoup(requests.get(url, timeout=30).content, "html.parser")
+    edn_root = edn_loads(soup.select_one("div.cljc-component")["data-init"])
+
+    # Convert to native Python structure
+    native_edn_root = edn_to_native(edn_root)
+
+    # Extract catchment data
+    catchment_data = native_edn_root[8][1]
+
+    features = []
+    for i, raw in enumerate(catchment_data):
+        if isinstance(raw, list) and raw and raw[0] == "^ ":
+            raw = raw[1:]  # Unwrap
+        if not raw:
+            continue
+
+        # 1️⃣ Kiểm tra: dạng "Simple" hay "Key-Value"
+        if isinstance(raw, list) and isinstance(raw[0], str) and not raw[0].startswith("^"):
+            # Dạng 1: Đơn giản (name, url, geometry)
+            try:
+                name = raw[0]
+                page_url = "https://environment.data.gov.uk" + raw[1]
+                catchment_id = page_url.rsplit("/", 1)[-1]
+                catch_blk = raw[2]
+
+            except (IndexError, ValueError) as e:
+                print(f"Invalid simple catchment structure: {e}")
+                continue
+        elif isinstance(raw, list) and all(isinstance(x, (str, list)) for x in raw):
+            # with open(f"catchment_{i}.json", "w") as f:
+            #     json.dump(raw, f, indent=2)
+            try:
+
+                if raw[0] == "^@":
+                    # Start new catchment object
+                    name = raw[1]
+                    current = {"name": name}
+                    page_url = "https://environment.data.gov.uk" + raw[4]
+                    catchment_id = page_url.rsplit("/", 1)[-1]
+                    catch_blk = raw[6]
+
+                with open(f"catchment_coords_{i}.json", "w") as f:
+                    json.dump(catch_blk, f, indent=2)
+
+                print(f"Name: {name}, page-url: {page_url}, id: {catchment_id}")
+            except Exception as e:
+                print(f"Invalid key-value catchment structure: {e}")
+                continue
+
+        if isinstance(catch_blk, list):
+            if catch_blk[0] == "^ ":
+                catch_blk = catch_blk[1:]
+            if len(catch_blk) % 2 == 0:
+                catch_blk = {catch_blk[j]: catch_blk[j+1] for j in range(0, len(catch_blk), 2)}
+            else:
+
+                raise ValueError(f"Catchment block does not have key-value pairs: {len(catch_blk)}")
+
+        gtype = catch_blk.get("^:", "MultiPolygon")
+        raw_coords = catch_blk.get("^;", [])
+
+        try:
+            unwrapped = unwrap_coords(edn_to_native(raw_coords))
+            coords = truncate_coords(unwrapped)
+
+            geom = shape({"type": gtype, "coordinates": coords})
+            print(f"Parsed geometry for {name}")
+        except Exception as e:
+            print(f"Error parsing geometry for {name}: {e}")
+            continue
+
+        if not catchment_id.isdigit():
+            print(f"Skipped catchment {name} due to invalid ID: {catchment_id}")
+            continue
+        
+        conn = postgresql_connect()
+        if conn:
+            # Check if the catchment ID exists in the database
+            existing_ids = map_id_by_condition(conn, "catchment", "id", f"name = '{name}'")
+            if existing_ids:
+                catchment_id = int(existing_ids[0])
+                print(f"Catchment ID {existing_ids} already exists in the database.")
+            else:
+                catchment_id = 0
+                print(f"Catchment ID {catchment_id} does not exist in the database.")
+            conn.close()
+        features.append({
+            "geometry": geom,
+            "id": int(catchment_id),
+            "name": name,
+            "url": page_url
+        })
+    if not features:
+        raise RuntimeError("No valid basin features extracted.")
+
+    gdf = gpd.GeoDataFrame(features, geometry="geometry", crs="EPSG:4326")
+    gdf.to_file(out_path, driver="GeoJSON")
+    print(f"Saved {len(gdf)} basins → {out_path}")
+
+
 
 if __name__ == "__main__":
-    crawl_england_basins()
+    # crawl_england_basins()
+    crawl_england_catchements()
