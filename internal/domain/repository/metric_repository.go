@@ -2,9 +2,12 @@
 package repository
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
+	"net/http"
 	"sort"
 	"strings"
 	"time"
@@ -30,6 +33,78 @@ func NewMetricDataRepository(ch metric.Store, s db.Store, c cache.Store) *Metric
 }
 
 // -------------------------------------------------- public entry --------------------------------------------------
+
+func (r *MetricDataRepository) getForecastSeries(
+	ctx context.Context,
+	stationID int32,
+	metricID int32,
+	horizon int32,
+	timeStep int32,
+) ([]*metricpb.MetricPoint, error) {
+	// Lấy last data từ bảng station_parameter
+	sql := `
+		SELECT sp.last_value, sp.last_receiv_at, p.unit
+		FROM station_parameter sp
+		JOIN parameter p ON sp.parameter_id = p.id
+		WHERE sp.station_id = $1 AND sp.parameter_id = $2
+	`
+	rows, err := r.store.ExecQuery(ctx, sql, stationID, metricID)
+
+	if err != nil {
+		return nil, fmt.Errorf("getForecastSeries: db query failed: %w", err)
+	}
+	if len(rows) == 0 {
+		return nil, fmt.Errorf("getForecastSeries: no last data found")
+	}
+	lastValue := castutil.MustToFloat(rows[0]["last_value"])
+	// rows[0]["last_receiv_at"] is datetime format
+	unit := castutil.ToString(rows[0]["unit"])
+
+	// Gọi API predict_future
+	payload := map[string]interface{}{
+		"last_raw_data": map[string]interface{}{
+			"sensor_id":  stationID, // hoặc sensor id nếu bạn có
+			"value":      lastValue,
+			"station_id": stationID,
+			"datetime":   rows[0]["last_receiv_at"],
+			"unit":       unit, // thêm unit vào payload
+		},
+		"horizon":   horizon,
+		"time_step": timeStep,
+	}
+
+	jsonPayload, _ := json.Marshal(payload)
+
+	req, _ := http.NewRequest("POST", "http://103.172.79.28:8000/api/model/predict_future", bytes.NewReader(jsonPayload))
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{Timeout: 10 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("getForecastSeries: predict_future api error: %w", err)
+	}
+	defer resp.Body.Close()
+	var result struct {
+		Predictions []struct {
+			Datetime string  `json:"datetime"`
+			Value    float32 `json:"value"`
+		} `json:"predictions"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, fmt.Errorf("getForecastSeries: decode response failed: %w", err)
+	}
+
+	var forecast []*metricpb.MetricPoint
+	for _, p := range result.Predictions {
+		forecast = append(forecast, &metricpb.MetricPoint{
+			Datetime: p.Datetime,
+			Value:    p.Value,
+			// TrendAnomaly không cần cho forecast
+		})
+	}
+
+	return forecast, nil
+}
 
 func (r *MetricDataRepository) GetMetricSeriesData(ctx context.Context, req *metricpb.MetricSeriesRequest) ([]*metricpb.SeriesData, error) {
 	log.Print("[debug] GetMetricSeriesData called")
@@ -93,12 +168,22 @@ func (r *MetricDataRepository) GetMetricSeriesData(ctx context.Context, req *met
 			return nil, err
 		}
 
+		var forecast []*metricpb.MetricPoint
+		if req.Forecast != nil && req.Forecast.Enabled {
+			// Chỉ forecast nếu user yêu cầu
+			forecast, err = r.getForecastSeries(ctx, stations[0], sel.MetricId, req.Forecast.Horizon, req.Forecast.TimeStep)
+			if err != nil {
+				log.Printf("[warn] getForecastSeries failed: %v", err)
+			}
+		}
+
 		out = append(out, &metricpb.SeriesData{
 			RefId:      sel.RefId,
 			TargetType: sel.TargetType,
 			TargetId:   sel.TargetId,
 			MetricId:   sel.MetricId,
 			Series:     points,
+			Forecast:   forecast, // <-- chỗ này
 		})
 	}
 	return out, nil
