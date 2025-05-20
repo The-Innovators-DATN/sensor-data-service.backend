@@ -148,7 +148,7 @@ func (r *DashboardDataRepository) Create(ctx context.Context, d *model.Dashboard
 }
 
 func (r *DashboardDataRepository) Update(ctx context.Context, d *model.Dashboard) error {
-	log.Printf("[repo] Update: uid=%s user_id=%d", d.UID, d.CreatedBy)
+	log.Printf("Raw dashboard: %v", d)
 	// log.Printf(d.LayoutConfiguration)
 	query := `
 		UPDATE dashboard

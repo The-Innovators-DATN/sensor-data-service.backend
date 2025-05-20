@@ -63,7 +63,7 @@ func (r *MetricDataRepository) getForecastSeries(
 	// Gọi API predict_future
 	payload := map[string]interface{}{
 		"last_raw_data": map[string]interface{}{
-			"sensor_id":  stationID, // hoặc sensor id nếu bạn có
+			"sensor_id":  metricID,
 			"value":      lastValue,
 			"station_id": stationID,
 			"datetime":   rows[0]["last_receiv_at"],
@@ -134,7 +134,7 @@ func (r *MetricDataRepository) GetMetricSeriesData(ctx context.Context, req *met
 		return nil, fmt.Errorf("invalid time_range.to: %w", err)
 	}
 
-	cutoff := time.Now().UTC().Add(-RedisRetention)
+	// cutoff := time.Now().UTC().Add(-RedisRetention)
 	var out []*metricpb.SeriesData
 
 	for _, sel := range req.Series {
@@ -146,27 +146,25 @@ func (r *MetricDataRepository) GetMetricSeriesData(ctx context.Context, req *met
 			log.Printf("[warn] no station for target=%v:%d", sel.TargetType, sel.TargetId)
 			continue
 		}
-
 		var points []*metricpb.MetricPoint
-		switch {
-		case to.Before(cutoff):
+
+		// Anomaly detection with 2 field enabled and local_error_threshold
+		if req.Anomaly != nil && req.Anomaly.Enabled {
+			log.Printf("[debug] Anomaly detection enabled")
+			local_threshold := req.Anomaly.LocalErrorThreshold
+			// log.Printf("[debug] local_error_threshold: %v", local_threshold)
+			points, err = r.queryAggregatorCHWithAnomaly(ctx, stations, sel.MetricId, local_threshold, from, to, step)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			log.Printf("[debug] Anomaly detection disabled")
 			points, err = r.queryAggregatorCH(ctx, stations, sel.MetricId, from, to, step)
-		case from.After(cutoff):
-			points, err = r.queryAggregatorRedis(ctx, stations, sel.MetricId, from, to, step)
-		default:
-			oldPt, err1 := r.queryAggregatorCH(ctx, stations, sel.MetricId, from, cutoff, step)
-			if err1 != nil {
-				return nil, err1
+			if err != nil {
+				return nil, err
 			}
-			newPt, err2 := r.queryAggregatorRedis(ctx, stations, sel.MetricId, cutoff, to, step)
-			if err2 != nil {
-				return nil, err2
-			}
-			points = mergeSeriesPoints(oldPt, newPt)
 		}
-		if err != nil {
-			return nil, err
-		}
+
 
 		var forecast []*metricpb.MetricPoint
 		if req.Forecast != nil && req.Forecast.Enabled {
@@ -254,7 +252,41 @@ func (r *MetricDataRepository) queryAggregatorCH(ctx context.Context, stations [
 		cond = fmt.Sprintf("station_id IN (%s)", strings.Trim(strings.Join(strings.Fields(fmt.Sprint(stations)), ","), "[]"))
 	}
 
-	q := fmt.Sprintf(`SELECT toStartOfInterval(datetime, INTERVAL %d second) AS t, avg(value) AS v, max(trend_anomaly) AS a FROM messages_sharded WHERE %s AND metric_id = %d AND datetime BETWEEN toDateTime('%s') AND toDateTime('%s') GROUP BY t ORDER BY t`, step, cond, metricID, from.Format("2006-01-02 15:04:05"), to.Format("2006-01-02 15:04:05"))
+	q := fmt.Sprintf(`SELECT toStartOfInterval(datetime, INTERVAL %d second) AS t, avg(value) AS v FROM messages_sharded_v2 WHERE %s AND metric_id = %d AND datetime BETWEEN toDateTime('%s') AND toDateTime('%s') GROUP BY t ORDER BY t`, step, cond, metricID, from.Format("2006-01-02 15:04:05"), to.Format("2006-01-02 15:04:05"))
+
+	rows, err := r.chdb.ExecQuery(ctx, q)
+	if err != nil {
+		log.Printf("[error][ch-query] failed CH query: %s", q)
+		return nil, fmt.Errorf("[ch-query] failed: %w", err)
+	}
+	// log.Printf("[debug][ch-query] CH query: %s", q)
+	var pts []*metricpb.MetricPoint
+	for _, r := range rows {
+		ts := r["t"].(time.Time)
+		val, _ := castutil.ToFloat(r["v"])
+		loc, _ := time.LoadLocation("Asia/Ho_Chi_Minh")
+		pts = append(pts, &metricpb.MetricPoint{
+			Datetime:     ts.In(loc).Format(time.RFC3339),
+			Value:        float32(val),
+		})
+	}
+	return pts, nil
+}
+
+func (r *MetricDataRepository) queryAggregatorCHWithAnomaly(ctx context.Context, stations []int32, metricID int32, localErrorThreshold float32, from, to time.Time, step int32) ([]*metricpb.MetricPoint, error) {
+	if len(stations) == 0 {
+		return nil, nil
+	}
+
+	var cond string
+	if len(stations) == 1 {
+		cond = fmt.Sprintf("station_id = %d", stations[0])
+	} else {
+		cond = fmt.Sprintf("station_id IN (%s)", strings.Trim(strings.Join(strings.Fields(fmt.Sprint(stations)), ","), "[]"))
+	}
+
+	// query differ from the original one, we add local_error_threshold then check local_error true or false if larger than threshold
+	q := fmt.Sprintf(`SELECT toStartOfInterval(datetime, INTERVAL %d second) AS t, avg(value) AS v, avg(local_error) as pa, max(trend_anomaly) as ta FROM messages_sharded_v2 WHERE %s AND metric_id = %d AND datetime BETWEEN toDateTime('%s') AND toDateTime('%s') GROUP BY t ORDER BY t`, step, cond, metricID, from.Format("2006-01-02 15:04:05"), to.Format("2006-01-02 15:04:05"))
 
 	rows, err := r.chdb.ExecQuery(ctx, q)
 	if err != nil {
@@ -266,11 +298,15 @@ func (r *MetricDataRepository) queryAggregatorCH(ctx context.Context, stations [
 	for _, r := range rows {
 		ts := r["t"].(time.Time)
 		val, _ := castutil.ToFloat(r["v"])
+		local_error, _ := castutil.ToFloat(r["pa"])
+		loc, _ := time.LoadLocation("Asia/Ho_Chi_Minh")
 		pts = append(pts, &metricpb.MetricPoint{
-			Datetime:     ts.Format(time.RFC3339),
+			Datetime:     ts.In(loc).Format(time.RFC3339),
 			Value:        float32(val),
-			TrendAnomaly: castutil.ToBool(r["a"]),
+			PointAnomaly: bool(local_error > float64(localErrorThreshold)),
+			TrendAnomaly: castutil.ToBool(r["ta"]),
 		})
+		// log.Printf("[Debug] Local error: %v, local_threshold: %v", local_error, localErrorThreshold)
 	}
 	return pts, nil
 }
@@ -404,7 +440,7 @@ func (r *MetricDataRepository) RefreshRedisSeriesData(ctx context.Context, stati
 	ensureSeries(ctx, r.cache, fmt.Sprintf("sensor_%d_%d", stationID, metricID))
 	ensureSet(ctx, r.cache, fmt.Sprintf("trendanomaly:%d:%d", stationID, metricID))
 
-	q := fmt.Sprintf(`SELECT toUnixTimestamp(datetime)*1000 AS ts, value, trend_anomaly FROM messages_sharded WHERE station_id=%d AND metric_id=%d AND datetime BETWEEN toDateTime('%s') AND toDateTime('%s')`, stationID, metricID, from.Format("2006-01-02 15:04:05"), to.Format("2006-01-02 15:04:05"))
+	q := fmt.Sprintf(`SELECT toUnixTimestamp(datetime)*1000 AS ts, value, trend_anomaly FROM messages_sharded_v2 WHERE station_id=%d AND metric_id=%d AND datetime BETWEEN toDateTime('%s') AND toDateTime('%s')`, stationID, metricID, from.Format("2006-01-02 15:04:05"), to.Format("2006-01-02 15:04:05"))
 	rows, err := r.chdb.ExecQuery(ctx, q)
 	if err != nil {
 		return fmt.Errorf("[refresh][CH] exec query failed for station=%d metric=%d: %w", stationID, metricID, err)

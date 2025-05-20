@@ -26,6 +26,9 @@ func (h *MetricDataHandler) GetMetricSeries(
 	ctx context.Context,
 	req *metricdatapb.MetricSeriesRequest,
 ) (*commonpb.StandardResponse, error) {
+	// log raw request
+	log.Printf("GetMetricSeries request: %v", req)
+
 	data, err := h.service.GetMetricSeries(ctx, req)
 	if err != nil {
 		return response.WrapError(fmt.Sprintf("get metric failed: %v", err), nil)

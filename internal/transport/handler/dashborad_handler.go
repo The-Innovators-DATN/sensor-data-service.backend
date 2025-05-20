@@ -67,6 +67,7 @@ func (h *DashboardHandler) CreateDashboard(ctx context.Context, req *dashboardpb
 
 func (h *DashboardHandler) UpdateDashboard(ctx context.Context, req *dashboardpb.UpdateDashboardRequest) (*commonpb.StandardResponse, error) {
 	uid, err := uuid.Parse(req.Uid)
+	log.Print("[info] UpdateDashboard: uid=", uid)
 	if err != nil {
 		return response.WrapError(fmt.Sprintf("Invalid UID format: %v", err), nil)
 	}
@@ -74,6 +75,7 @@ func (h *DashboardHandler) UpdateDashboard(ctx context.Context, req *dashboardpb
 	dashboard := fromProto(req.Dashboard)
 	dashboard.UID = uid
 	dashboard.Version = 0 // Reset version as it should not be input from the proto
+	log.Printf("[info] UpdateDashboard: uid=%s", dashboard.Status)
 	if err := h.svc.UpdateDashboard(ctx, dashboard, req.CreatedBy); err != nil {
 		return response.WrapError(fmt.Sprintf("Failed to update dashboard: %v", err), nil)
 	}
@@ -127,6 +129,7 @@ func fromProto(d *dashboardpb.Dashboard) *model.Dashboard {
 		// Print createdBy and type of createdBy
 		log.Printf("[info] fromProto: createdBy=%d", d.CreatedBy)
 		log.Printf("[info] fromProto: type of createdBy=%T", d.CreatedBy)
+		log.Printf("[info] fromProto: Status=%s", d.Status)
 		return &model.Dashboard{
 			UID:                 uuid.New(),
 			Name:                d.Name,
@@ -152,6 +155,7 @@ func fromProto(d *dashboardpb.Dashboard) *model.Dashboard {
 	log.Printf("[info] fromProto: uid=%s", uid)
 	log.Printf("[info] fromProto: layout=%s", layoutStr)
 	log.Printf("[info] fromProto: created_by=%d", d.CreatedBy)
+	log.Printf("[info] fromProto: Status=%s", d.Status)
 	return &model.Dashboard{
 		UID:                 uid,
 		Name:                d.Name,

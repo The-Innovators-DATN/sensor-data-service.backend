@@ -14,16 +14,16 @@ type ForecastConfig struct {
 }
 
 // AnomalyDetectionConfig represents anomaly detection configuration.
-// type AnomalyDetectionConfig struct {
-// 	Enabled             bool    `json:"enabled"`
-// 	LocalErrorThreshold float32 `json:"local_error_threshold"`
-// }
+type AnomalyDetectionConfig struct {
+	Enabled             bool    `json:"enabled"`
+	LocalErrorThreshold float32 `json:"local_error_threshold"`
+}
 
 // MetricPoint represents a point of data in the metric series.
 type MetricPoint struct {
 	Datetime string  `json:"datetime"`
 	Value    float32 `json:"value"`
-	// LocalError float32 `json:"local_error"`
+	PointAnomaly float32 `json:"point_anomaly"`
 	TrendAnomaly bool `json:"trend_anomaly"`
 }
 
@@ -50,7 +50,7 @@ type MetricSeriesRequest struct {
 	ChartType string         `json:"chart_type"`
 	TimeRange TimeRange      `json:"time_range"`
 	Forecast  ForecastConfig `json:"forecast"`
-	// AnomalyDetection AnomalyDetectionConfig `json:"anomaly_detection"`
+	Anomaly AnomalyDetectionConfig `json:"anomaly"`
 	Series []SeriesSelector `json:"series"`
 }
 
