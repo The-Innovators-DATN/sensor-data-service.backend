@@ -24,9 +24,9 @@ func (s *dashboardServiceImpl) GetDashboardByID(ctx context.Context, uid string,
 	if err != nil {
 		return nil, fmt.Errorf("GetDashboardByID: %w", err)
 	}
-	if d.CreatedBy != userID {
-		return nil, fmt.Errorf("unauthorized access to dashboard %s", uid)
-	}
+	// if d.CreatedBy != userID {
+	// 	return nil, fmt.Errorf("unauthorized access to dashboard %s", uid)
+	// }
 	return d, nil
 }
 

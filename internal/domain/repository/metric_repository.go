@@ -240,6 +240,15 @@ func buildStationQuery(t metricpb.TargetType) (string, error) {
 
 // ----------------------------------------------- ClickHouse aggregator ---------------------------------------------
 
+func computeStep(from, to time.Time, maxPoints int) int32 {
+    duration := to.Unix() - from.Unix()
+    step := duration / int64(maxPoints)
+    if step < 1 {
+        step = 1
+    }
+    return int32(step)
+}
+
 func (r *MetricDataRepository) queryAggregatorCH(ctx context.Context, stations []int32, metricID int32, from, to time.Time, step int32) ([]*metricpb.MetricPoint, error) {
 	if len(stations) == 0 {
 		return nil, nil
@@ -251,6 +260,8 @@ func (r *MetricDataRepository) queryAggregatorCH(ctx context.Context, stations [
 	} else {
 		cond = fmt.Sprintf("station_id IN (%s)", strings.Trim(strings.Join(strings.Fields(fmt.Sprint(stations)), ","), "[]"))
 	}
+	// Nếu biến `step` đã được khai báo từ trước với kiểu int32
+	step = computeStep(from, to, 600)
 
 	q := fmt.Sprintf(`SELECT toStartOfInterval(datetime, INTERVAL %d second) AS t, avg(value) AS v FROM messages_sharded_v2 WHERE %s AND metric_id = %d AND datetime BETWEEN toDateTime('%s') AND toDateTime('%s') GROUP BY t ORDER BY t`, step, cond, metricID, from.Format("2006-01-02 15:04:05"), to.Format("2006-01-02 15:04:05"))
 
@@ -283,7 +294,8 @@ func (r *MetricDataRepository) queryAggregatorCHWithAnomaly(ctx context.Context,
 		cond = fmt.Sprintf("station_id = %d", stations[0])
 	} else {
 		cond = fmt.Sprintf("station_id IN (%s)", strings.Trim(strings.Join(strings.Fields(fmt.Sprint(stations)), ","), "[]"))
-	}
+	}	
+	step = computeStep(from, to, 600)
 
 	// query differ from the original one, we add local_error_threshold then check local_error true or false if larger than threshold
 	q := fmt.Sprintf(`SELECT toStartOfInterval(datetime, INTERVAL %d second) AS t, avg(value) AS v, avg(local_error) as pa, max(trend_anomaly) as ta FROM messages_sharded_v2 WHERE %s AND metric_id = %d AND datetime BETWEEN toDateTime('%s') AND toDateTime('%s') GROUP BY t ORDER BY t`, step, cond, metricID, from.Format("2006-01-02 15:04:05"), to.Format("2006-01-02 15:04:05"))

@@ -23,12 +23,16 @@ func NewDashboardDataRepository(store db.Store, cache cache.Store) *DashboardDat
 func (r *DashboardDataRepository) FindByID(ctx context.Context, uid string, userID int32) (*model.Dashboard, error) {
 	log.Printf("[repo] FindByID: uid=%s user_id=%d", uid, userID)
 
+	// query := `
+	// 	SELECT uid, name, description, layout_configuration, created_by, created_at, updated_at, version, status
+	// 	FROM dashboard
+	// 	WHERE uid = $1 AND created_by = $2`
+
 	query := `
 		SELECT uid, name, description, layout_configuration, created_by, created_at, updated_at, version, status
 		FROM dashboard
-		WHERE uid = $1 AND created_by = $2`
-
-	rows, err := r.store.ExecQuery(ctx, query, uid, userID)
+		WHERE uid = $1`
+	rows, err := r.store.ExecQuery(ctx, query, uid)
 	if err != nil {
 		log.Printf("[repo][error] FindByID query failed: %v", err)
 		return nil, err
@@ -44,8 +48,9 @@ func (r *DashboardDataRepository) FindByID(ctx context.Context, uid string, user
 
 func (r *DashboardDataRepository) FindByIDAndUser(ctx context.Context, uid string, userID int32) (*model.Dashboard, error) {
 	log.Printf("[repo] FindByIDAndUser: uid=%s user=%d", uid, userID)
-	query := `SELECT uid, name, description, layout_configuration, created_by, created_at, updated_at, version, status FROM dashboard WHERE uid = $1 AND created_by = $2`
-	rows, err := r.store.ExecQuery(ctx, query, uid, userID)
+	// query := `SELECT uid, name, description, layout_configuration, created_by, created_at, updated_at, version, status FROM dashboard WHERE uid = $1 AND created_by = $2`
+	query := `SELECT uid, name, description, layout_configuration, created_by, created_at, updated_at, version, status FROM dashboard WHERE uid = $1`
+	rows, err := r.store.ExecQuery(ctx, query, uid)
 	if err != nil || len(rows) == 0 {
 		return nil, err
 	}
